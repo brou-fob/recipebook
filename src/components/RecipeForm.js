@@ -6,6 +6,7 @@ function RecipeForm({ recipe, onSave, onCancel }) {
   const [image, setImage] = useState('');
   const [ingredients, setIngredients] = useState(['']);
   const [steps, setSteps] = useState(['']);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     if (recipe) {
@@ -15,6 +16,10 @@ function RecipeForm({ recipe, onSave, onCancel }) {
       setSteps(recipe.steps?.length > 0 ? recipe.steps : ['']);
     }
   }, [recipe]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [image]);
 
   const handleAddIngredient = () => {
     setIngredients([...ingredients, '']);
@@ -95,9 +100,9 @@ function RecipeForm({ recipe, onSave, onCancel }) {
             onChange={(e) => setImage(e.target.value)}
             placeholder="https://example.com/image.jpg"
           />
-          {image && (
+          {image && !imageError && (
             <div className="image-preview">
-              <img src={image} alt="Preview" onError={(e) => e.target.style.display = 'none'} />
+              <img src={image} alt="Preview" onError={() => setImageError(true)} />
             </div>
           )}
         </div>

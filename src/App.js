@@ -24,9 +24,7 @@ function App() {
 
   // Save recipes to localStorage whenever they change
   useEffect(() => {
-    if (recipes.length > 0) {
-      localStorage.setItem('recipes', JSON.stringify(recipes));
-    }
+    localStorage.setItem('recipes', JSON.stringify(recipes));
   }, [recipes]);
 
   const handleSelectRecipe = (recipe) => {
