@@ -379,6 +379,7 @@ function getSampleRecipes() {
       schwierigkeit: 3,
       kochdauer: 30,
       speisekategorie: 'Main Course',
+      authorId: '', // Will be assigned to first user if exists
       ingredients: [
         '400g Spaghetti',
         '200g Pancetta or Guanciale',
@@ -406,6 +407,7 @@ function getSampleRecipes() {
       schwierigkeit: 2,
       kochdauer: 25,
       speisekategorie: 'Main Course',
+      authorId: '', // Will be assigned to first user if exists
       ingredients: [
         '500g Pizza dough',
         '200g San Marzano tomatoes',
@@ -435,6 +437,7 @@ function getSampleRecipes() {
       schwierigkeit: 1,
       kochdauer: 40,
       speisekategorie: 'Dessert',
+      authorId: '', // Will be assigned to first user if exists
       ingredients: [
         '200g Butter, softened',
         '150g Brown sugar',
