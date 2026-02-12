@@ -382,16 +382,16 @@ function App() {
                 const favoriteGroups = recipeGroups.filter(group => 
                   hasAnyFavoriteInGroup(currentUser?.id, group.allRecipes)
                 );
-                // Flatten back to individual recipes
-                const favoriteRecipes = favoriteGroups.flatMap(group => group.allRecipes);
-                
-                // Apply category filter
-                return favoriteRecipes.filter(recipe => {
-                  if (categoryFilter && recipe.speisekategorie !== categoryFilter) {
-                    return false;
+                // Flatten back to individual recipes and apply category filter
+                const favoriteRecipes = favoriteGroups.flatMap(group => {
+                  // Filter recipes in this group by category
+                  if (categoryFilter) {
+                    return group.allRecipes.filter(recipe => recipe.speisekategorie === categoryFilter);
                   }
-                  return true;
+                  return group.allRecipes;
                 });
+                
+                return favoriteRecipes;
               }
               
               // Normal filtering without favorites
