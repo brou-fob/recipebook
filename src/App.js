@@ -20,9 +20,10 @@ import {
 } from './utils/userManagement';
 import { 
   toggleFavorite,
-  isRecipeFavorite,
-  migrateGlobalFavorites
+  migrateGlobalFavorites,
+  hasAnyFavoriteInGroup
 } from './utils/userFavorites';
+import { groupRecipesByParent } from './utils/recipeVersioning';
 
 function App() {
   const [recipes, setRecipes] = useState([]);
@@ -373,17 +374,35 @@ function App() {
           />
         ) : (
           <RecipeList
-            recipes={recipes.filter(recipe => {
-              // Apply category filter
-              if (categoryFilter && recipe.speisekategorie !== categoryFilter) {
-                return false;
+            recipes={(() => {
+              // If favorites filter is on, we need to filter by groups
+              if (showFavoritesOnly) {
+                const recipeGroups = groupRecipesByParent(recipes);
+                // Keep only groups that have at least one favorite version
+                const favoriteGroups = recipeGroups.filter(group => 
+                  hasAnyFavoriteInGroup(currentUser?.id, group.allRecipes)
+                );
+                // Flatten back to individual recipes and apply category filter
+                const favoriteRecipes = favoriteGroups.flatMap(group => {
+                  // Filter recipes in this group by category
+                  if (categoryFilter) {
+                    return group.allRecipes.filter(recipe => recipe.speisekategorie === categoryFilter);
+                  }
+                  return group.allRecipes;
+                });
+                
+                return favoriteRecipes;
               }
-              // Apply favorites filter - check user-specific favorites
-              if (showFavoritesOnly && !isRecipeFavorite(currentUser?.id, recipe.id)) {
-                return false;
-              }
-              return true;
-            })}
+              
+              // Normal filtering without favorites
+              return recipes.filter(recipe => {
+                // Apply category filter
+                if (categoryFilter && recipe.speisekategorie !== categoryFilter) {
+                  return false;
+                }
+                return true;
+              });
+            })()}
             onSelectRecipe={handleSelectRecipe}
             onAddRecipe={handleAddRecipe}
             categoryFilter={categoryFilter}
