@@ -22,6 +22,7 @@ function App() {
   const [editingMenu, setEditingMenu] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [recipesLoaded, setRecipesLoaded] = useState(false);
 
   // Load recipes from localStorage on mount
   useEffect(() => {
@@ -32,12 +33,15 @@ function App() {
       // Load sample recipes if none exist
       setRecipes(getSampleRecipes());
     }
+    setRecipesLoaded(true);
   }, []);
 
-  // Save recipes to localStorage whenever they change
+  // Save recipes to localStorage whenever they change (but only after initial load)
   useEffect(() => {
-    localStorage.setItem('recipes', JSON.stringify(recipes));
-  }, [recipes]);
+    if (recipesLoaded) {
+      localStorage.setItem('recipes', JSON.stringify(recipes));
+    }
+  }, [recipes, recipesLoaded]);
 
   // Load menus from localStorage on mount
   useEffect(() => {
