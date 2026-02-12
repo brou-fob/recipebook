@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './RecipeForm.css';
 import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
 import { fileToBase64 } from '../utils/imageUtils';
+import { getCustomLists } from '../utils/customLists';
 
 function RecipeForm({ recipe, onSave, onCancel }) {
   const [title, setTitle] = useState('');
@@ -15,6 +16,11 @@ function RecipeForm({ recipe, onSave, onCancel }) {
   const [steps, setSteps] = useState(['']);
   const [imageError, setImageError] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [customLists, setCustomLists] = useState({
+    cuisineTypes: [],
+    mealCategories: [],
+    units: []
+  });
 
   useEffect(() => {
     if (recipe) {
@@ -29,6 +35,10 @@ function RecipeForm({ recipe, onSave, onCancel }) {
       setSteps(recipe.steps?.length > 0 ? recipe.steps : ['']);
     }
   }, [recipe]);
+
+  useEffect(() => {
+    setCustomLists(getCustomLists());
+  }, []);
 
   useEffect(() => {
     setImageError(false);
@@ -233,19 +243,9 @@ function RecipeForm({ recipe, onSave, onCancel }) {
               onChange={(e) => setKulinarik(e.target.value)}
             >
               <option value="">Select cuisine...</option>
-              <option value="Italian">Italian</option>
-              <option value="Thai">Thai</option>
-              <option value="Chinese">Chinese</option>
-              <option value="Japanese">Japanese</option>
-              <option value="Indian">Indian</option>
-              <option value="Mexican">Mexican</option>
-              <option value="French">French</option>
-              <option value="German">German</option>
-              <option value="American">American</option>
-              <option value="Mediterranean">Mediterranean</option>
-              <option value="Vegetarian">Vegetarian</option>
-              <option value="Vegan">Vegan</option>
-              <option value="Other">Other</option>
+              {customLists.cuisineTypes.map((cuisine) => (
+                <option key={cuisine} value={cuisine}>{cuisine}</option>
+              ))}
             </select>
           </div>
 
@@ -257,14 +257,9 @@ function RecipeForm({ recipe, onSave, onCancel }) {
               onChange={(e) => setSpeisekategorie(e.target.value)}
             >
               <option value="">Select category...</option>
-              <option value="Appetizer">Appetizer</option>
-              <option value="Main Course">Main Course</option>
-              <option value="Dessert">Dessert</option>
-              <option value="Soup">Soup</option>
-              <option value="Salad">Salad</option>
-              <option value="Snack">Snack</option>
-              <option value="Beverage">Beverage</option>
-              <option value="Side Dish">Side Dish</option>
+              {customLists.mealCategories.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
             </select>
           </div>
         </div>

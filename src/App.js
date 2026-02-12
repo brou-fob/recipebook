@@ -4,12 +4,14 @@ import RecipeList from './components/RecipeList';
 import RecipeDetail from './components/RecipeDetail';
 import RecipeForm from './components/RecipeForm';
 import Header from './components/Header';
+import Settings from './components/Settings';
 
 function App() {
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Load recipes from localStorage on mount
   useEffect(() => {
@@ -72,10 +74,22 @@ function App() {
     setEditingRecipe(null);
   };
 
+  const handleOpenSettings = () => {
+    setIsSettingsOpen(true);
+    setSelectedRecipe(null);
+    setIsFormOpen(false);
+  };
+
+  const handleCloseSettings = () => {
+    setIsSettingsOpen(false);
+  };
+
   return (
     <div className="App">
-      <Header />
-      {isFormOpen ? (
+      <Header onSettingsClick={handleOpenSettings} />
+      {isSettingsOpen ? (
+        <Settings onBack={handleCloseSettings} />
+      ) : isFormOpen ? (
         <RecipeForm
           recipe={editingRecipe}
           onSave={handleSaveRecipe}
