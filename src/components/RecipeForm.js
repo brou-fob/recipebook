@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './RecipeForm.css';
+import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
+import { fileToBase64 } from '../utils/imageUtils';
 
 function RecipeForm({ recipe, onSave, onCancel }) {
   const [title, setTitle] = useState('');
@@ -12,6 +14,7 @@ function RecipeForm({ recipe, onSave, onCancel }) {
   const [ingredients, setIngredients] = useState(['']);
   const [steps, setSteps] = useState(['']);
   const [imageError, setImageError] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (recipe) {
@@ -63,6 +66,40 @@ function RecipeForm({ recipe, onSave, onCancel }) {
     setSteps(newSteps);
   };
 
+  const handleRemoveEmojisFromTitle = () => {
+    if (containsEmojis(title)) {
+      setTitle(removeEmojis(title));
+    }
+  };
+
+  const handleRemoveEmojisFromIngredients = () => {
+    const cleaned = ingredients.map(ingredient => removeEmojis(ingredient));
+    setIngredients(cleaned);
+  };
+
+  const handleRemoveEmojisFromSteps = () => {
+    const cleaned = steps.map(step => removeEmojis(step));
+    setSteps(cleaned);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    setImageError(false);
+
+    try {
+      const base64 = await fileToBase64(file);
+      setImage(base64);
+    } catch (error) {
+      alert(error.message);
+      setImageError(true);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -95,7 +132,19 @@ function RecipeForm({ recipe, onSave, onCancel }) {
 
       <form className="recipe-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="title">Recipe Title *</label>
+          <div className="form-group-header">
+            <label htmlFor="title">Recipe Title *</label>
+            {containsEmojis(title) && (
+              <button
+                type="button"
+                className="emoji-remove-btn"
+                onClick={handleRemoveEmojisFromTitle}
+                title="Remove emojis from title"
+              >
+                Remove Emojis
+              </button>
+            )}
+          </div>
           <input
             type="text"
             id="title"
@@ -107,17 +156,42 @@ function RecipeForm({ recipe, onSave, onCancel }) {
         </div>
 
         <div className="form-group">
-          <label htmlFor="image">Image URL (optional)</label>
-          <input
-            type="url"
-            id="image"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
+          <label htmlFor="image">Recipe Image (optional)</label>
+          <div className="image-input-container">
+            <div className="image-upload-section">
+              <label htmlFor="imageFile" className="image-upload-label">
+                {uploadingImage ? 'Uploading...' : 'Upload Image'}
+              </label>
+              <input
+                type="file"
+                id="imageFile"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+                disabled={uploadingImage}
+              />
+              <span className="or-separator">or</span>
+            </div>
+            <input
+              type="url"
+              id="image"
+              value={image && !image.startsWith('data:') ? image : ''}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="Enter image URL"
+              disabled={uploadingImage}
+            />
+          </div>
           {image && !imageError && (
             <div className="image-preview">
               <img src={image} alt="Preview" onError={() => setImageError(true)} />
+              <button
+                type="button"
+                className="remove-image-btn"
+                onClick={() => setImage('')}
+                title="Remove image"
+              >
+                ✕ Remove
+              </button>
             </div>
           )}
         </div>
@@ -216,7 +290,19 @@ function RecipeForm({ recipe, onSave, onCancel }) {
         </div>
 
         <div className="form-section">
-          <h3>🥘 Ingredients</h3>
+          <div className="section-header">
+            <h3>🥘 Ingredients</h3>
+            {ingredients.some(i => containsEmojis(i)) && (
+              <button
+                type="button"
+                className="emoji-remove-btn-small"
+                onClick={handleRemoveEmojisFromIngredients}
+                title="Remove emojis from all ingredients"
+              >
+                Remove Emojis
+              </button>
+            )}
+          </div>
           {ingredients.map((ingredient, index) => (
             <div key={index} className="form-list-item">
               <input
@@ -242,7 +328,19 @@ function RecipeForm({ recipe, onSave, onCancel }) {
         </div>
 
         <div className="form-section">
-          <h3>📝 Preparation Steps</h3>
+          <div className="section-header">
+            <h3>📝 Preparation Steps</h3>
+            {steps.some(s => containsEmojis(s)) && (
+              <button
+                type="button"
+                className="emoji-remove-btn-small"
+                onClick={handleRemoveEmojisFromSteps}
+                title="Remove emojis from all steps"
+              >
+                Remove Emojis
+              </button>
+            )}
+          </div>
           {steps.map((step, index) => (
             <div key={index} className="form-list-item">
               <span className="step-number">{index + 1}.</span>
