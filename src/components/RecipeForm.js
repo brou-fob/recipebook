@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './RecipeForm.css';
 import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
-import { fileToBase64 } from '../utils/imageUtils';
+import { fileToBase64, isBase64Image } from '../utils/imageUtils';
 import { getCustomLists } from '../utils/customLists';
 
 function RecipeForm({ recipe, onSave, onCancel }) {
@@ -185,7 +185,7 @@ function RecipeForm({ recipe, onSave, onCancel }) {
             <input
               type="url"
               id="image"
-              value={image && !image.startsWith('data:') ? image : ''}
+              value={image && !isBase64Image(image) ? image : ''}
               onChange={(e) => setImage(e.target.value)}
               placeholder="Enter image URL"
               disabled={uploadingImage}

@@ -39,6 +39,15 @@ export function fileToBase64(file) {
 }
 
 /**
+ * Check if a string is a base64 data URL
+ * @param {string} imageStr - The image string to check
+ * @returns {boolean} - True if it's a base64 data URL
+ */
+export function isBase64Image(imageStr) {
+  return imageStr && imageStr.startsWith('data:image/');
+}
+
+/**
  * Validate if a string is a valid image URL or base64 data
  * @param {string} imageStr - The image URL or base64 string
  * @returns {boolean} - True if valid
@@ -47,7 +56,7 @@ export function isValidImageSource(imageStr) {
   if (!imageStr) return false;
   
   // Check if it's a base64 data URL
-  if (imageStr.startsWith('data:image/')) {
+  if (isBase64Image(imageStr)) {
     return true;
   }
   
