@@ -4,6 +4,7 @@ import { getUsers, updateUserAdminStatus, getAdminCount } from '../utils/userMan
 
 function UserManagement({ onBack, currentUser }) {
   const [users, setUsers] = useState([]);
+  const [message, setMessage] = useState({ text: '', type: '' }); // 'success' or 'error'
 
   useEffect(() => {
     loadUsers();
@@ -19,10 +20,13 @@ function UserManagement({ onBack, currentUser }) {
     
     if (result.success) {
       loadUsers();
-      alert(result.message);
+      setMessage({ text: result.message, type: 'success' });
     } else {
-      alert(result.message);
+      setMessage({ text: result.message, type: 'error' });
     }
+    
+    // Clear message after 3 seconds
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
   const canRemoveAdmin = (userId, isAdmin) => {
@@ -41,6 +45,11 @@ function UserManagement({ onBack, currentUser }) {
       </div>
 
       <div className="user-management-content">
+        {message.text && (
+          <div className={`message ${message.type}`}>
+            {message.text}
+          </div>
+        )}
         <p className="info-text">
           Hier können Sie alle registrierten Benutzerkonten einsehen und Administrator-Rechte verwalten.
         </p>

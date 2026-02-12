@@ -7,6 +7,23 @@ const USERS_STORAGE_KEY = 'users';
 const CURRENT_USER_KEY = 'currentUser';
 
 /**
+ * Simple hash for password storage
+ * Note: This is a basic client-side hash for demonstration purposes.
+ * In production, use proper server-side authentication with bcrypt or similar.
+ * @param {string} password - Plain text password
+ * @returns {string} Hashed password
+ */
+function simpleHash(password) {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(36);
+}
+
+/**
  * Get all registered users from localStorage
  * @returns {Array} Array of user objects
  */
@@ -46,11 +63,11 @@ export const registerUser = (userData) => {
   
   // Create new user
   const newUser = {
-    id: Date.now().toString(),
+    id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
     vorname,
     nachname,
     email: email.toLowerCase(),
-    password, // In a real app, this would be hashed
+    password: simpleHash(password), // Hashed password
     isAdmin: users.length === 0, // First user is automatically admin
     createdAt: new Date().toISOString()
   };
@@ -78,9 +95,10 @@ export const loginUser = (email, password) => {
   }
   
   const users = getUsers();
+  const hashedPassword = simpleHash(password);
   const user = users.find(u => 
     u.email.toLowerCase() === email.toLowerCase() && 
-    u.password === password
+    u.password === hashedPassword
   );
   
   if (!user) {
