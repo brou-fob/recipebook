@@ -5,6 +5,12 @@ import { fileToBase64 } from '../utils/imageUtils';
 import { getCustomLists } from '../utils/customLists';
 import { getUsers } from '../utils/userManagement';
 
+// Helper function to format user display name
+const getUserDisplayName = (user) => {
+  if (!user) return '';
+  return `${user.vorname} ${user.nachname} (${user.email})`;
+};
+
 function RecipeForm({ recipe, onSave, onCancel, currentUser }) {
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
@@ -192,7 +198,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser }) {
               <option value="">Autor auswählen...</option>
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.vorname} {user.nachname} ({user.email})
+                  {getUserDisplayName(user)}
                 </option>
               ))}
             </select>
@@ -200,7 +206,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser }) {
             <input
               type="text"
               id="author"
-              value={currentUser ? `${currentUser.vorname} ${currentUser.nachname}` : ''}
+              value={currentUser ? getUserDisplayName(currentUser) : ''}
               disabled
               className="readonly-input"
             />

@@ -370,12 +370,13 @@ export const canEditRecipe = (user, recipe) => {
 /**
  * Check if user can delete a specific recipe
  * @param {Object} user - User object
- * @param {Object} recipe - Recipe object
+ * @param {Object} recipe - Recipe object (currently unused, reserved for future extensions)
  * @returns {boolean}
  */
 export const canDeleteRecipe = (user, recipe) => {
   if (!user) return false;
   // Only admin can delete recipes
+  // Recipe parameter reserved for future permission extensions
   return user.role === ROLES.ADMIN;
 };
 
