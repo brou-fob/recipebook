@@ -105,7 +105,7 @@
 
 .image-upload-label {
   background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
-  color: white;
+  color: white !important;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
