@@ -15,9 +15,7 @@ import {
   logoutUser, 
   getCurrentUser, 
   registerUser,
-  loginAsGuest,
-  canEditRecipes,
-  canDeleteRecipes
+  loginAsGuest
 } from './utils/userManagement';
 
 function App() {
