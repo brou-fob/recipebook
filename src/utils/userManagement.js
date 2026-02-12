@@ -98,7 +98,7 @@ export const registerUser = (userData) => {
  * Login user
  * @param {string} email - User email
  * @param {string} password - User password
- * @returns {Object} { success: boolean, message: string, user?: Object }
+ * @returns {Object} { success: boolean, message: string, user?: Object, requiresPasswordChange?: boolean }
  */
 export const loginUser = (email, password) => {
   if (!email || !password) {
@@ -123,7 +123,8 @@ export const loginUser = (email, password) => {
   return { 
     success: true, 
     message: 'Anmeldung erfolgreich!',
-    user: currentUser
+    user: currentUser,
+    requiresPasswordChange: user.requiresPasswordChange === true
   };
 };
 
@@ -365,4 +366,149 @@ export const getRoleDisplayName = (role) => {
     [ROLES.GUEST]: 'Gast'
   };
   return roleNames[role] || role;
+};
+
+/**
+ * Update user's profile information (first name and last name)
+ * @param {string} userId - ID of user to update
+ * @param {Object} profileData - Object containing {vorname, nachname}
+ * @returns {Object} { success: boolean, message: string }
+ */
+export const updateUserProfile = (userId, profileData) => {
+  const { vorname, nachname } = profileData;
+  
+  // Validation
+  if (!vorname || !nachname) {
+    return { 
+      success: false, 
+      message: 'Vorname und Nachname müssen ausgefüllt werden.' 
+    };
+  }
+  
+  const users = getUsers();
+  
+  // Find the user
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return { 
+      success: false, 
+      message: 'Benutzer nicht gefunden.' 
+    };
+  }
+  
+  // Update user profile
+  const updatedUsers = users.map(u => 
+    u.id === userId ? { ...u, vorname, nachname } : u
+  );
+  
+  saveUsers(updatedUsers);
+  
+  // Update current user if it's the one being modified
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.id === userId) {
+    const updatedCurrentUser = { ...currentUser, vorname, nachname };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedCurrentUser));
+  }
+  
+  return { 
+    success: true, 
+    message: 'Profil erfolgreich aktualisiert.' 
+  };
+};
+
+/**
+ * Set a temporary password for a user that must be changed on next login
+ * @param {string} userId - ID of user to update
+ * @param {string} tempPassword - Temporary password
+ * @returns {Object} { success: boolean, message: string }
+ */
+export const setTemporaryPassword = (userId, tempPassword) => {
+  // Validate password length
+  if (!tempPassword || tempPassword.length < 6) {
+    return { 
+      success: false, 
+      message: 'Temporäres Passwort muss mindestens 6 Zeichen lang sein.' 
+    };
+  }
+  
+  const users = getUsers();
+  
+  // Find the user
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return { 
+      success: false, 
+      message: 'Benutzer nicht gefunden.' 
+    };
+  }
+  
+  // Update user with temporary password and requiresPasswordChange flag
+  const updatedUsers = users.map(u => 
+    u.id === userId 
+      ? { 
+          ...u, 
+          password: simpleHash(tempPassword),
+          requiresPasswordChange: true 
+        } 
+      : u
+  );
+  
+  saveUsers(updatedUsers);
+  
+  return { 
+    success: true, 
+    message: 'Temporäres Passwort erfolgreich gesetzt.' 
+  };
+};
+
+/**
+ * Change user's password (used when user changes password after temporary password)
+ * @param {string} userId - ID of user
+ * @param {string} newPassword - New password
+ * @returns {Object} { success: boolean, message: string }
+ */
+export const changeUserPassword = (userId, newPassword) => {
+  // Validate password length
+  if (!newPassword || newPassword.length < 6) {
+    return { 
+      success: false, 
+      message: 'Passwort muss mindestens 6 Zeichen lang sein.' 
+    };
+  }
+  
+  const users = getUsers();
+  
+  // Find the user
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return { 
+      success: false, 
+      message: 'Benutzer nicht gefunden.' 
+    };
+  }
+  
+  // Update user with new password and clear requiresPasswordChange flag
+  const updatedUsers = users.map(u => 
+    u.id === userId 
+      ? { 
+          ...u, 
+          password: simpleHash(newPassword),
+          requiresPasswordChange: false 
+        } 
+      : u
+  );
+  
+  saveUsers(updatedUsers);
+  
+  // Update current user if it's the one being modified
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.id === userId) {
+    const updatedCurrentUser = { ...currentUser, requiresPasswordChange: false };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedCurrentUser));
+  }
+  
+  return { 
+    success: true, 
+    message: 'Passwort erfolgreich geändert.' 
+  };
 };

@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import './UserManagement.css';
-import { getUsers, updateUserAdminStatus, getAdminCount } from '../utils/userManagement';
+import { 
+  getUsers, 
+  updateUserAdminStatus, 
+  getAdminCount,
+  updateUserProfile,
+  setTemporaryPassword
+} from '../utils/userManagement';
 
 function UserManagement({ onBack, currentUser }) {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState({ text: '', type: '' }); // 'success' or 'error'
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    vorname: '',
+    nachname: '',
+    tempPassword: ''
+  });
 
   useEffect(() => {
     loadUsers();
@@ -33,6 +45,67 @@ function UserManagement({ onBack, currentUser }) {
     if (!isAdmin) return true;
     const adminCount = getAdminCount();
     return adminCount > 1;
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUserId(user.id);
+    setEditForm({
+      vorname: user.vorname,
+      nachname: user.nachname,
+      tempPassword: ''
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+    setEditForm({
+      vorname: '',
+      nachname: '',
+      tempPassword: ''
+    });
+  };
+
+  const handleSaveEdit = (userId) => {
+    // Update profile
+    const profileResult = updateUserProfile(userId, {
+      vorname: editForm.vorname,
+      nachname: editForm.nachname
+    });
+
+    if (!profileResult.success) {
+      setMessage({ text: profileResult.message, type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      return;
+    }
+
+    // Set temporary password if provided
+    if (editForm.tempPassword) {
+      const passwordResult = setTemporaryPassword(userId, editForm.tempPassword);
+      
+      if (!passwordResult.success) {
+        setMessage({ text: passwordResult.message, type: 'error' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+        return;
+      }
+      
+      setMessage({ 
+        text: 'Profil und temporäres Passwort erfolgreich aktualisiert.', 
+        type: 'success' 
+      });
+    } else {
+      setMessage({ text: profileResult.message, type: 'success' });
+    }
+
+    loadUsers();
+    handleCancelEdit();
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+  };
+
+  const handleFormChange = (field, value) => {
+    setEditForm({
+      ...editForm,
+      [field]: value
+    });
   };
 
   return (
@@ -68,36 +141,124 @@ function UserManagement({ onBack, currentUser }) {
                   <th>E-Mail</th>
                   <th>Registriert am</th>
                   <th>Administrator</th>
+                  <th>Aktionen</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id} className={user.id === currentUser?.id ? 'current-user' : ''}>
-                    <td>{user.vorname}</td>
-                    <td>{user.nachname}</td>
-                    <td>{user.email}</td>
-                    <td>{new Date(user.createdAt).toLocaleDateString('de-DE')}</td>
-                    <td>
-                      <label className="admin-toggle">
-                        <input
-                          type="checkbox"
-                          checked={user.isAdmin}
-                          onChange={() => handleToggleAdmin(user.id, user.isAdmin)}
-                          disabled={!canRemoveAdmin(user.id, user.isAdmin)}
-                          title={
-                            !canRemoveAdmin(user.id, user.isAdmin)
-                              ? 'Es muss mindestens ein Administrator vorhanden sein'
-                              : 'Admin-Status ändern'
-                          }
-                        />
-                        <span className="toggle-slider"></span>
-                      </label>
-                      {user.isAdmin && getAdminCount() === 1 && (
-                        <span className="admin-lock-hint" title="Einziger Administrator">
-                          🔒
-                        </span>
-                      )}
-                    </td>
+                    {editingUserId === user.id ? (
+                      <>
+                        <td>
+                          <input
+                            type="text"
+                            className="edit-input"
+                            value={editForm.vorname}
+                            onChange={(e) => handleFormChange('vorname', e.target.value)}
+                            placeholder="Vorname"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="edit-input"
+                            value={editForm.nachname}
+                            onChange={(e) => handleFormChange('nachname', e.target.value)}
+                            placeholder="Nachname"
+                          />
+                        </td>
+                        <td>{user.email}</td>
+                        <td>{new Date(user.createdAt).toLocaleDateString('de-DE')}</td>
+                        <td>
+                          <label className="admin-toggle">
+                            <input
+                              type="checkbox"
+                              checked={user.isAdmin}
+                              onChange={() => handleToggleAdmin(user.id, user.isAdmin)}
+                              disabled={!canRemoveAdmin(user.id, user.isAdmin)}
+                              title={
+                                !canRemoveAdmin(user.id, user.isAdmin)
+                                  ? 'Es muss mindestens ein Administrator vorhanden sein'
+                                  : 'Admin-Status ändern'
+                              }
+                            />
+                            <span className="toggle-slider"></span>
+                          </label>
+                          {user.isAdmin && getAdminCount() === 1 && (
+                            <span className="admin-lock-hint" title="Einziger Administrator">
+                              🔒
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="edit-actions">
+                            <div className="temp-password-group">
+                              <input
+                                type="password"
+                                className="edit-input temp-password-input"
+                                value={editForm.tempPassword}
+                                onChange={(e) => handleFormChange('tempPassword', e.target.value)}
+                                placeholder="Temp. Passwort (optional)"
+                                title="Temporäres Passwort setzen (mind. 6 Zeichen)"
+                              />
+                            </div>
+                            <div className="button-group">
+                              <button 
+                                className="save-btn"
+                                onClick={() => handleSaveEdit(user.id)}
+                                title="Änderungen speichern"
+                              >
+                                ✓
+                              </button>
+                              <button 
+                                className="cancel-btn"
+                                onClick={handleCancelEdit}
+                                title="Abbrechen"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td>{user.vorname}</td>
+                        <td>{user.nachname}</td>
+                        <td>{user.email}</td>
+                        <td>{new Date(user.createdAt).toLocaleDateString('de-DE')}</td>
+                        <td>
+                          <label className="admin-toggle">
+                            <input
+                              type="checkbox"
+                              checked={user.isAdmin}
+                              onChange={() => handleToggleAdmin(user.id, user.isAdmin)}
+                              disabled={!canRemoveAdmin(user.id, user.isAdmin)}
+                              title={
+                                !canRemoveAdmin(user.id, user.isAdmin)
+                                  ? 'Es muss mindestens ein Administrator vorhanden sein'
+                                  : 'Admin-Status ändern'
+                              }
+                            />
+                            <span className="toggle-slider"></span>
+                          </label>
+                          {user.isAdmin && getAdminCount() === 1 && (
+                            <span className="admin-lock-hint" title="Einziger Administrator">
+                              🔒
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <button 
+                            className="edit-user-btn"
+                            onClick={() => handleEditUser(user)}
+                            title="Benutzer bearbeiten"
+                          >
+                            ✏️ Bearbeiten
+                          </button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>

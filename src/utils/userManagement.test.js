@@ -14,6 +14,9 @@ import {
   canEditRecipes,
   canDeleteRecipes,
   getRoleDisplayName,
+  updateUserProfile,
+  setTemporaryPassword,
+  changeUserPassword,
   ROLES
 } from './userManagement';
 
@@ -565,6 +568,173 @@ describe('User Management Utilities', () => {
 
     test('should return role itself for unknown role', () => {
       expect(getRoleDisplayName('unknown')).toBe('unknown');
+    });
+  });
+
+  describe('updateUserProfile', () => {
+    let testUser;
+
+    beforeEach(() => {
+      const result = registerUser({
+        vorname: 'Test',
+        nachname: 'User',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+      testUser = result.user;
+    });
+
+    test('should update user first name and last name', () => {
+      const result = updateUserProfile(testUser.id, {
+        vorname: 'Updated',
+        nachname: 'Name'
+      });
+
+      expect(result.success).toBe(true);
+
+      const users = getUsers();
+      const updatedUser = users.find(u => u.id === testUser.id);
+      expect(updatedUser.vorname).toBe('Updated');
+      expect(updatedUser.nachname).toBe('Name');
+    });
+
+    test('should require both first name and last name', () => {
+      const result = updateUserProfile(testUser.id, {
+        vorname: 'Updated',
+        nachname: ''
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('müssen ausgefüllt werden');
+    });
+
+    test('should handle non-existent user', () => {
+      const result = updateUserProfile('non-existent-id', {
+        vorname: 'Test',
+        nachname: 'User'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('nicht gefunden');
+    });
+
+    test('should update current user if they are being modified', () => {
+      loginUser('test@example.com', 'password123');
+
+      updateUserProfile(testUser.id, {
+        vorname: 'NewFirst',
+        nachname: 'NewLast'
+      });
+
+      const currentUser = getCurrentUser();
+      expect(currentUser.vorname).toBe('NewFirst');
+      expect(currentUser.nachname).toBe('NewLast');
+    });
+  });
+
+  describe('setTemporaryPassword', () => {
+    let testUser;
+
+    beforeEach(() => {
+      const result = registerUser({
+        vorname: 'Test',
+        nachname: 'User',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+      testUser = result.user;
+    });
+
+    test('should set temporary password and requiresPasswordChange flag', () => {
+      const result = setTemporaryPassword(testUser.id, 'temp123');
+
+      expect(result.success).toBe(true);
+
+      const users = getUsers();
+      const updatedUser = users.find(u => u.id === testUser.id);
+      expect(updatedUser.requiresPasswordChange).toBe(true);
+    });
+
+    test('should validate password length', () => {
+      const result = setTemporaryPassword(testUser.id, '12345');
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('mindestens 6 Zeichen');
+    });
+
+    test('should handle non-existent user', () => {
+      const result = setTemporaryPassword('non-existent-id', 'temp123');
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('nicht gefunden');
+    });
+
+    test('should allow login with temporary password', () => {
+      setTemporaryPassword(testUser.id, 'temp123');
+
+      const loginResult = loginUser('test@example.com', 'temp123');
+
+      expect(loginResult.success).toBe(true);
+      expect(loginResult.requiresPasswordChange).toBe(true);
+    });
+  });
+
+  describe('changeUserPassword', () => {
+    let testUser;
+
+    beforeEach(() => {
+      const result = registerUser({
+        vorname: 'Test',
+        nachname: 'User',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+      testUser = result.user;
+      
+      // Set temporary password
+      setTemporaryPassword(testUser.id, 'temp123');
+    });
+
+    test('should change password and clear requiresPasswordChange flag', () => {
+      const result = changeUserPassword(testUser.id, 'newpassword123');
+
+      expect(result.success).toBe(true);
+
+      const users = getUsers();
+      const updatedUser = users.find(u => u.id === testUser.id);
+      expect(updatedUser.requiresPasswordChange).toBe(false);
+    });
+
+    test('should validate password length', () => {
+      const result = changeUserPassword(testUser.id, '12345');
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('mindestens 6 Zeichen');
+    });
+
+    test('should handle non-existent user', () => {
+      const result = changeUserPassword('non-existent-id', 'newpassword123');
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('nicht gefunden');
+    });
+
+    test('should allow login with new password', () => {
+      changeUserPassword(testUser.id, 'newpassword123');
+
+      const loginResult = loginUser('test@example.com', 'newpassword123');
+
+      expect(loginResult.success).toBe(true);
+      expect(loginResult.requiresPasswordChange).toBe(false);
+    });
+
+    test('should update current user if they are being modified', () => {
+      loginUser('test@example.com', 'temp123');
+      
+      changeUserPassword(testUser.id, 'newpassword123');
+
+      const currentUser = getCurrentUser();
+      expect(currentUser.requiresPasswordChange).toBe(false);
     });
   });
 });

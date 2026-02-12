@@ -10,12 +10,14 @@ import MenuDetail from './components/MenuDetail';
 import MenuForm from './components/MenuForm';
 import Login from './components/Login';
 import Register from './components/Register';
+import ChangePassword from './components/ChangePassword';
 import { 
   loginUser, 
   logoutUser, 
   getCurrentUser, 
   registerUser,
-  loginAsGuest
+  loginAsGuest,
+  changeUserPassword
 } from './utils/userManagement';
 
 function App() {
@@ -34,6 +36,7 @@ function App() {
   const [recipesLoaded, setRecipesLoaded] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [authView, setAuthView] = useState('login'); // 'login' or 'register'
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
 
   // Check for existing user session on mount
   useEffect(() => {
@@ -211,6 +214,7 @@ function App() {
     const result = loginUser(email, password);
     if (result.success) {
       setCurrentUser(result.user);
+      setRequiresPasswordChange(result.requiresPasswordChange);
     }
     return result;
   };
@@ -218,6 +222,7 @@ function App() {
   const handleLogout = () => {
     logoutUser();
     setCurrentUser(null);
+    setRequiresPasswordChange(false);
   };
 
   const handleRegister = (userData) => {
@@ -241,6 +246,18 @@ function App() {
     return result;
   };
 
+  const handlePasswordChange = (newPassword) => {
+    if (!currentUser) {
+      return { success: false, message: 'Kein Benutzer angemeldet.' };
+    }
+    
+    const result = changeUserPassword(currentUser.id, newPassword);
+    if (result.success) {
+      setRequiresPasswordChange(false);
+    }
+    return result;
+  };
+
   // If user is not logged in, show login/register view
   if (!currentUser) {
     return (
@@ -258,6 +275,22 @@ function App() {
             onSwitchToLogin={handleSwitchToLogin}
           />
         )}
+      </div>
+    );
+  }
+
+  // If user requires password change, show password change dialog
+  if (requiresPasswordChange) {
+    return (
+      <div className="App">
+        <Header 
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
+        <ChangePassword 
+          onPasswordChange={handlePasswordChange}
+          user={currentUser}
+        />
       </div>
     );
   }
