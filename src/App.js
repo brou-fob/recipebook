@@ -20,6 +20,9 @@ function App() {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [isMenuFormOpen, setIsMenuFormOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [recipesLoaded, setRecipesLoaded] = useState(false);
 
   // Load recipes from localStorage on mount
   useEffect(() => {
@@ -30,12 +33,15 @@ function App() {
       // Load sample recipes if none exist
       setRecipes(getSampleRecipes());
     }
+    setRecipesLoaded(true);
   }, []);
 
-  // Save recipes to localStorage whenever they change
+  // Save recipes to localStorage whenever they change (but only after initial load)
   useEffect(() => {
-    localStorage.setItem('recipes', JSON.stringify(recipes));
-  }, [recipes]);
+    if (recipesLoaded) {
+      localStorage.setItem('recipes', JSON.stringify(recipes));
+    }
+  }, [recipes, recipesLoaded]);
 
   // Load menus from localStorage on mount
   useEffect(() => {
@@ -118,6 +124,17 @@ function App() {
     setIsFormOpen(false);
     setIsMenuFormOpen(false);
     setIsSettingsOpen(false);
+    // Reset filters when switching views
+    setCategoryFilter('');
+    setShowFavoritesOnly(false);
+  };
+
+  const handleCategoryFilterChange = (category) => {
+    setCategoryFilter(category);
+  };
+
+  const handleToggleFavoritesFilter = () => {
+    setShowFavoritesOnly(!showFavoritesOnly);
   };
 
   // Menu handlers
@@ -172,6 +189,10 @@ function App() {
         onSettingsClick={handleOpenSettings}
         currentView={currentView}
         onViewChange={handleViewChange}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={handleCategoryFilterChange}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavoritesFilter={handleToggleFavoritesFilter}
       />
       {isSettingsOpen ? (
         <Settings onBack={handleCloseSettings} />
@@ -219,7 +240,17 @@ function App() {
           />
         ) : (
           <RecipeList
-            recipes={recipes}
+            recipes={recipes.filter(recipe => {
+              // Apply category filter
+              if (categoryFilter && recipe.speisekategorie !== categoryFilter) {
+                return false;
+              }
+              // Apply favorites filter
+              if (showFavoritesOnly && !recipe.isFavorite) {
+                return false;
+              }
+              return true;
+            })}
             onSelectRecipe={handleSelectRecipe}
             onAddRecipe={handleAddRecipe}
           />
