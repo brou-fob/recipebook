@@ -305,7 +305,7 @@ describe('Recipe Versioning Utilities', () => {
       const versions = [recipeVersion3, recipeVersion1, recipeOriginal];
       const sorted = sortRecipeVersions(versions, otherUser, noFavoriteMock, testRecipes);
       
-      // Should be sorted by version number (0, 1, 2, 3)
+      // Should be sorted by version number (0, 1, 3 - note: version 2 not included in test)
       expect(sorted[0].id).toBe('recipe-1'); // version 0 (original)
       expect(sorted[1].id).toBe('recipe-2'); // version 1
       expect(sorted[2].id).toBe('recipe-4'); // version 3
