@@ -15,13 +15,27 @@ function Settings({ onBack, currentUser }) {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState({ text: '', type: '' }); // 'success' or 'error'
   const [activeTab, setActiveTab] = useState('lists'); // 'lists' or 'users'
+  const isAdmin = isCurrentUserAdmin();
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    let timeoutId;
+    if (message.text) {
+      timeoutId = setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [message.text]);
 
   useEffect(() => {
     setLists(getCustomLists());
-    if (isCurrentUserAdmin()) {
+    if (isAdmin) {
       setUsers(getUsers());
     }
-  }, []);
+  }, [isAdmin]);
 
   const handleSave = () => {
     saveCustomLists(lists);
@@ -97,9 +111,6 @@ function Settings({ onBack, currentUser }) {
     } else {
       setMessage({ text: result.message, type: 'error' });
     }
-    
-    // Clear message after 3 seconds
-    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
   const canRemoveAdmin = (userId, isAdmin) => {
@@ -117,7 +128,7 @@ function Settings({ onBack, currentUser }) {
         <h2>Einstellungen</h2>
       </div>
 
-      {isCurrentUserAdmin() && (
+      {isAdmin && (
         <div className="settings-tabs">
           <button
             className={`tab-button ${activeTab === 'lists' ? 'active' : ''}`}
