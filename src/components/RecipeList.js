@@ -22,11 +22,13 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, show
     onSelectRecipe(group.primaryRecipe);
   };
 
+  // Get all users once to avoid repeated calls
+  const allUsers = getUsers();
+
   // Helper function to get author name
   const getAuthorName = (authorId) => {
     if (!authorId) return null;
-    const users = getUsers();
-    const author = users.find(u => u.id === authorId);
+    const author = allUsers.find(u => u.id === authorId);
     if (!author) return null;
     return `${author.vorname} ${author.nachname}`;
   };
