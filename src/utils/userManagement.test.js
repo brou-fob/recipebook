@@ -995,6 +995,8 @@ describe('User Management Utilities', () => {
       expect(canReadRecipes(readUser)).toBe(true);
     });
 
+    // GUEST is a special temporary role for unauthenticated access
+    // It's not part of the assignable role hierarchy but has read-only access
     test('should return true for guest users', () => {
       const guestUser = { role: ROLES.GUEST };
       expect(canReadRecipes(guestUser)).toBe(true);

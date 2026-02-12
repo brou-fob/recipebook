@@ -382,12 +382,16 @@ export const canCommentOnRecipes = (user) => {
 
 /**
  * Check if user has permission to read recipes
- * All registered users (including guests) can read recipes.
+ * All registered users and guests can read recipes.
+ * Note: GUEST is a special temporary role that has read-only access but is not
+ * part of the assignable role hierarchy.
  * @param {Object} user - User object
  * @returns {boolean}
  */
 export const canReadRecipes = (user) => {
   if (!user) return false;
+  // All users including guests can read recipes
+  // GUEST is a special temporary role for unauthenticated access
   return hasPermission(user, ROLES.READ) || user.role === ROLES.GUEST;
 };
 

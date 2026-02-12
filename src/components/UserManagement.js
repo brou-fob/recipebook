@@ -305,6 +305,7 @@ function UserManagement({ onBack, currentUser }) {
                 onChange={(e) => setSelectedRole(e.target.value)}
                 className="role-select"
               >
+                {/* GUEST role is not included as it's a temporary role for unauthenticated access */}
                 <option value={ROLES.ADMIN}>Administrator</option>
                 <option value={ROLES.EDIT}>Bearbeiten</option>
                 <option value={ROLES.COMMENT}>Kommentieren</option>
