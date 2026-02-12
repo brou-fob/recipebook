@@ -111,7 +111,9 @@ export async function importFromURL(url) {
  */
 function parseNumber(value, min = 1, max = 10000) {
   const num = typeof value === 'number' ? value : parseInt(value);
-  if (isNaN(num) || num === 0) return min;
+  if (isNaN(num)) return min;
+  // Allow 0 as a valid value if it's explicitly set
+  if (num === 0) return 0;
   return Math.min(Math.max(num, min), max);
 }
 
@@ -123,13 +125,19 @@ function parseNumber(value, min = 1, max = 10000) {
  */
 function parseArray(value) {
   if (!value) return [];
-  if (Array.isArray(value)) return value.filter(item => item && item.trim());
+  if (Array.isArray(value)) {
+    return value
+      .map(item => String(item)) // Convert to string to ensure trim() works
+      .filter(item => item && item.trim());
+  }
   if (typeof value === 'string') {
     // Try to parse as JSON array first
     try {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) {
-        return parsed.filter(item => item && item.trim());
+        return parsed
+          .map(item => String(item))
+          .filter(item => item && item.trim());
       }
     } catch {
       // If not JSON, split by common delimiters

@@ -168,8 +168,9 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser }) {
     setSchwierigkeit(importedRecipe.schwierigkeit || 3);
     setKochdauer(importedRecipe.kochdauer || 30);
     setSpeisekategorie(importedRecipe.speisekategorie || '');
-    setIngredients(importedRecipe.ingredients?.length > 0 ? importedRecipe.ingredients : ['']);
-    setSteps(importedRecipe.steps?.length > 0 ? importedRecipe.steps : ['']);
+    // Import always provides non-empty arrays (validated by parseRecipeData)
+    setIngredients(importedRecipe.ingredients || []);
+    setSteps(importedRecipe.steps || []);
     
     // Close the import modal
     setShowImportModal(false);
