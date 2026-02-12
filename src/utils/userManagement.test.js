@@ -13,6 +13,8 @@ import {
   deleteUser,
   canEditRecipes,
   canDeleteRecipes,
+  canEditRecipe,
+  canDeleteRecipe,
   getRoleDisplayName,
   validatePassword,
   updateUserName,
@@ -555,6 +557,62 @@ describe('User Management Utilities', () => {
 
     test('should return false for null user', () => {
       expect(canDeleteRecipes(null)).toBe(false);
+    });
+  });
+
+  describe('canEditRecipe', () => {
+    const recipe = { id: '1', title: 'Test Recipe', authorId: 'user-123' };
+
+    test('should return true for admin users regardless of authorship', () => {
+      const adminUser = { id: 'admin-1', role: ROLES.ADMIN, isAdmin: true };
+      expect(canEditRecipe(adminUser, recipe)).toBe(true);
+    });
+
+    test('should return true for edit users who are the author', () => {
+      const editUser = { id: 'user-123', role: ROLES.EDIT, isAdmin: false };
+      expect(canEditRecipe(editUser, recipe)).toBe(true);
+    });
+
+    test('should return false for edit users who are not the author', () => {
+      const editUser = { id: 'user-456', role: ROLES.EDIT, isAdmin: false };
+      expect(canEditRecipe(editUser, recipe)).toBe(false);
+    });
+
+    test('should return false for read users even if they are the author', () => {
+      const readUser = { id: 'user-123', role: ROLES.READ, isAdmin: false };
+      expect(canEditRecipe(readUser, recipe)).toBe(false);
+    });
+
+    test('should return false for guest users', () => {
+      const guestUser = { id: 'guest-1', role: ROLES.GUEST, isAdmin: false };
+      expect(canEditRecipe(guestUser, recipe)).toBe(false);
+    });
+
+    test('should return false for null user', () => {
+      expect(canEditRecipe(null, recipe)).toBe(false);
+    });
+  });
+
+  describe('canDeleteRecipe', () => {
+    const recipe = { id: '1', title: 'Test Recipe', authorId: 'user-123' };
+
+    test('should return true for admin users', () => {
+      const adminUser = { id: 'admin-1', role: ROLES.ADMIN, isAdmin: true };
+      expect(canDeleteRecipe(adminUser, recipe)).toBe(true);
+    });
+
+    test('should return false for edit users even if they are the author', () => {
+      const editUser = { id: 'user-123', role: ROLES.EDIT, isAdmin: false };
+      expect(canDeleteRecipe(editUser, recipe)).toBe(false);
+    });
+
+    test('should return false for read users', () => {
+      const readUser = { id: 'user-456', role: ROLES.READ, isAdmin: false };
+      expect(canDeleteRecipe(readUser, recipe)).toBe(false);
+    });
+
+    test('should return false for null user', () => {
+      expect(canDeleteRecipe(null, recipe)).toBe(false);
     });
   });
 

@@ -353,6 +353,33 @@ export const canDeleteRecipes = (user) => {
 };
 
 /**
+ * Check if user can edit a specific recipe
+ * @param {Object} user - User object
+ * @param {Object} recipe - Recipe object
+ * @returns {boolean}
+ */
+export const canEditRecipe = (user, recipe) => {
+  if (!user) return false;
+  // Admin can edit any recipe
+  if (user.role === ROLES.ADMIN) return true;
+  // User must have edit role and be the author
+  if (user.role === ROLES.EDIT && recipe.authorId === user.id) return true;
+  return false;
+};
+
+/**
+ * Check if user can delete a specific recipe
+ * @param {Object} user - User object
+ * @param {Object} recipe - Recipe object
+ * @returns {boolean}
+ */
+export const canDeleteRecipe = (user, recipe) => {
+  if (!user) return false;
+  // Only admin can delete recipes
+  return user.role === ROLES.ADMIN;
+};
+
+/**
  * Get display name for a role
  * @param {string} role - Role constant
  * @returns {string}

@@ -101,10 +101,11 @@ function App() {
       // Update existing recipe
       setRecipes(recipes.map(r => r.id === recipe.id ? recipe : r));
     } else {
-      // Add new recipe
+      // Add new recipe with author
       const newRecipe = {
         ...recipe,
-        id: Date.now().toString()
+        id: Date.now().toString(),
+        authorId: recipe.authorId || currentUser?.id || ''
       };
       setRecipes([...recipes, newRecipe]);
     }
@@ -325,6 +326,7 @@ function App() {
             recipe={editingRecipe}
             onSave={handleSaveRecipe}
             onCancel={handleCancelForm}
+            currentUser={currentUser}
           />
         ) : selectedRecipe ? (
           <RecipeDetail
