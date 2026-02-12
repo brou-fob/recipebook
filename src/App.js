@@ -20,7 +20,6 @@ import {
 } from './utils/userManagement';
 import { 
   toggleFavorite,
-  isRecipeFavorite,
   migrateGlobalFavorites,
   hasAnyFavoriteInGroup
 } from './utils/userFavorites';
