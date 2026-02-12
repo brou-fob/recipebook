@@ -84,6 +84,12 @@ function App() {
     setIsSettingsOpen(false);
   };
 
+  const handleToggleFavorite = (recipeId) => {
+    setRecipes(recipes.map(r => 
+      r.id === recipeId ? { ...r, isFavorite: !r.isFavorite } : r
+    ));
+  };
+
   return (
     <div className="App">
       <Header onSettingsClick={handleOpenSettings} />
@@ -101,6 +107,7 @@ function App() {
           onBack={handleBackToList}
           onEdit={handleEditRecipe}
           onDelete={handleDeleteRecipe}
+          onToggleFavorite={handleToggleFavorite}
         />
       ) : (
         <RecipeList
