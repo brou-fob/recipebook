@@ -13,10 +13,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
   const scaleIngredient = (ingredient) => {
     if (servingMultiplier === 1) return ingredient;
     
-    // Match numbers with optional fractions and units
-    const regex = /(\d+(?:[.,]\d+)?|\d+\/\d+)\s*([a-zA-Z]+)?/g;
+    // Match numbers with optional fractions and units at the start or after whitespace
+    // This pattern is designed to match quantities like "200g", "2 cups", "1/2 tsp"
+    const regex = /(?:^|\s)(\d+(?:[.,]\d+)?|\d+\/\d+)\s*([a-zA-Z]+)?/g;
     
     return ingredient.replace(regex, (match, number, unit) => {
+      // Preserve leading whitespace if any
+      const leadingSpace = match.startsWith(' ') ? ' ' : '';
+      
       // Convert fraction to decimal if needed
       let value;
       if (number.includes('/')) {
@@ -29,7 +33,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
       const scaled = value * servingMultiplier;
       const formatted = scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1);
       
-      return unit ? `${formatted} ${unit}` : formatted;
+      return leadingSpace + (unit ? `${formatted} ${unit}` : formatted);
     });
   };
 
@@ -109,7 +113,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
                   -
                 </button>
                 <span className="serving-display">
-                  {currentServings} serving{currentServings !== 1 ? 's' : ''}
+                  {currentServings} {currentServings === 1 ? 'serving' : 'servings'}
                 </span>
                 <button 
                   className="serving-btn"
