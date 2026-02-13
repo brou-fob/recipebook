@@ -267,3 +267,241 @@ describe('RecipeForm - Author Field', () => {
     );
   });
 });
+
+describe('RecipeForm - Multi-Select Fields', () => {
+  const mockOnSave = jest.fn();
+  const mockOnCancel = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('Kulinarik field is a multi-select dropdown', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const kulinarikField = screen.getByLabelText('Kulinarik (Mehrfachauswahl möglich)');
+    expect(kulinarikField.tagName).toBe('SELECT');
+    expect(kulinarikField).toHaveAttribute('multiple');
+  });
+
+  test('Speisekategorie field is a multi-select dropdown', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const speisekategorieField = screen.getByLabelText('Speisekategorie (Mehrfachauswahl möglich)');
+    expect(speisekategorieField.tagName).toBe('SELECT');
+    expect(speisekategorieField).toHaveAttribute('multiple');
+  });
+
+  test('can select multiple cuisines in Kulinarik field', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const kulinarikField = screen.getByLabelText('Kulinarik (Mehrfachauswahl möglich)');
+    
+    // Get the options
+    const italianOption = screen.getByRole('option', { name: 'Italian' });
+    const thaiOption = screen.getByRole('option', { name: 'Thai' });
+    
+    // Select multiple options by setting selected property
+    italianOption.selected = true;
+    thaiOption.selected = true;
+    
+    // Trigger change event
+    fireEvent.change(kulinarikField);
+
+    // Fill in required title
+    fireEvent.change(screen.getByLabelText('Rezepttitel *'), {
+      target: { value: 'Test Recipe' },
+    });
+
+    // Submit form
+    fireEvent.click(screen.getByText('Rezept speichern'));
+
+    // Check that onSave was called with multiple cuisines
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kulinarik: expect.arrayContaining(['Italian', 'Thai']),
+      })
+    );
+  });
+
+  test('can select multiple categories in Speisekategorie field', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const speisekategorieField = screen.getByLabelText('Speisekategorie (Mehrfachauswahl möglich)');
+    
+    // Get the options
+    const appetizerOption = screen.getByRole('option', { name: 'Appetizer' });
+    const mainCourseOption = screen.getByRole('option', { name: 'Main Course' });
+    
+    // Select multiple options by setting selected property
+    appetizerOption.selected = true;
+    mainCourseOption.selected = true;
+    
+    // Trigger change event
+    fireEvent.change(speisekategorieField);
+
+    // Fill in required title
+    fireEvent.change(screen.getByLabelText('Rezepttitel *'), {
+      target: { value: 'Test Recipe' },
+    });
+
+    // Submit form
+    fireEvent.click(screen.getByText('Rezept speichern'));
+
+    // Check that onSave was called with multiple categories
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        speisekategorie: expect.arrayContaining(['Appetizer', 'Main Course']),
+      })
+    );
+  });
+
+  test('loads existing recipe with array kulinarik correctly', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    const existingRecipe = {
+      id: 'recipe-1',
+      title: 'Existing Recipe',
+      authorId: 'user-1',
+      portionen: 4,
+      kulinarik: ['Italian', 'Chinese'],
+      schwierigkeit: 3,
+      kochdauer: 30,
+      speisekategorie: ['Main Course'],
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+      image: '',
+    };
+
+    render(
+      <RecipeForm
+        recipe={existingRecipe}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const kulinarikField = screen.getByLabelText('Kulinarik (Mehrfachauswahl möglich)');
+    
+    // Check that Italian and Chinese are selected
+    const options = Array.from(kulinarikField.selectedOptions).map(opt => opt.value);
+    expect(options).toContain('Italian');
+    expect(options).toContain('Chinese');
+  });
+
+  test('converts old string format speisekategorie to array', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    const existingRecipe = {
+      id: 'recipe-1',
+      title: 'Existing Recipe',
+      authorId: 'user-1',
+      portionen: 4,
+      kulinarik: ['Italian'],
+      schwierigkeit: 3,
+      kochdauer: 30,
+      speisekategorie: 'Dessert', // Old string format
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+      image: '',
+    };
+
+    render(
+      <RecipeForm
+        recipe={existingRecipe}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Submit form
+    fireEvent.click(screen.getByText('Rezept aktualisieren'));
+
+    // Check that speisekategorie was converted to array
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        speisekategorie: ['Dessert'],
+      })
+    );
+  });
+});

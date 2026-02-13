@@ -112,6 +112,11 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     ? recipe.kulinarik.join(', ') 
     : recipe.kulinarik;
 
+  // Handle both array and string formats for speisekategorie
+  const categoryDisplay = Array.isArray(recipe.speisekategorie)
+    ? recipe.speisekategorie.join(', ')
+    : recipe.speisekategorie;
+
   return (
     <div className="recipe-detail-container">
       <div className="recipe-detail-header">
@@ -194,10 +199,10 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
             </div>
           )}
           
-          {recipe.speisekategorie && (
+          {categoryDisplay && (
             <div className="metadata-item">
               <span className="metadata-label">Kategorie:</span>
-              <span className="metadata-value">{recipe.speisekategorie}</span>
+              <span className="metadata-value">{categoryDisplay}</span>
             </div>
           )}
           
