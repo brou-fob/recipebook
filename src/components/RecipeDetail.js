@@ -8,6 +8,15 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   const [servingMultiplier, setServingMultiplier] = useState(1);
   const [selectedRecipe, setSelectedRecipe] = useState(initialRecipe);
 
+  // Get portion units from custom lists
+  const [portionUnits, setPortionUnits] = useState([]);
+
+  useEffect(() => {
+    const { getCustomLists } = require('../utils/customLists');
+    const lists = getCustomLists();
+    setPortionUnits(lists.portionUnits || []);
+  }, []);
+
   // Get all versions for this recipe
   const parentRecipe = getParentRecipe(allRecipes, selectedRecipe) || (!isRecipeVersion(selectedRecipe) ? selectedRecipe : null);
   const unsortedVersions = parentRecipe ? [parentRecipe, ...getRecipeVersions(allRecipes, parentRecipe.id)] : [selectedRecipe];
@@ -61,6 +70,11 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   };
 
   const currentServings = (recipe.portionen || 4) * servingMultiplier;
+
+  // Get the portion unit for the recipe
+  const portionUnitId = recipe.portionUnitId || 'portion';
+  const portionUnit = portionUnits.find(u => u.id === portionUnitId) || { singular: 'Portion', plural: 'Portionen' };
+  const portionLabel = currentServings === 1 ? portionUnit.singular : portionUnit.plural;
 
   // Handle both array and string formats for kulinarik
   const cuisineDisplay = Array.isArray(recipe.kulinarik) 
@@ -178,13 +192,13 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
               <div className="serving-control">
                 <button 
                   className="serving-btn"
-                  onClick={() => setServingMultiplier(Math.max(0.5, servingMultiplier - 0.5))}
-                  disabled={servingMultiplier <= 0.5}
+                  onClick={() => setServingMultiplier(Math.max(1 / (recipe.portionen || 4), servingMultiplier - 0.5))}
+                  disabled={servingMultiplier <= 1 / (recipe.portionen || 4)}
                 >
                   -
                 </button>
                 <span className="serving-display">
-                  {currentServings} {currentServings === 1 ? 'Portion' : 'Portionen'}
+                  {currentServings} {portionLabel}
                 </span>
                 <button 
                   className="serving-btn"
