@@ -50,6 +50,8 @@ export const DEFAULT_PORTION_UNITS = [
   { id: 'person', singular: 'Person', plural: 'Personen' }
 ];
 
+export const DEFAULT_SLOGAN = 'Unsere Besten';
+
 /**
  * Get customizable lists from localStorage or return defaults
  */
@@ -95,4 +97,19 @@ export function resetCustomLists() {
   };
   saveCustomLists(defaultLists);
   return defaultLists;
+}
+
+/**
+ * Get the header slogan from localStorage or return default
+ */
+export function getHeaderSlogan() {
+  const stored = localStorage.getItem('headerSlogan');
+  return stored || DEFAULT_SLOGAN;
+}
+
+/**
+ * Save the header slogan to localStorage
+ */
+export function saveHeaderSlogan(slogan) {
+  localStorage.setItem('headerSlogan', slogan);
 }
