@@ -202,6 +202,7 @@
   opacity: 0.5;
 }
 
+/* Shared styles for version and author captions */
 .version-caption,
 .author-caption {
   font-size: 0.85rem;
@@ -209,6 +210,7 @@
   font-weight: 500;
 }
 
+/* Additional styles specific to version caption */
 .version-caption {
   min-width: 80px;
   text-align: center;
