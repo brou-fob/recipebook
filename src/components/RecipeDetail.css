@@ -202,18 +202,16 @@
   opacity: 0.5;
 }
 
-.version-caption {
-  font-size: 0.85rem;
-  color: #666;
-  font-weight: 500;
-  min-width: 80px;
-  text-align: center;
-}
-
+.version-caption,
 .author-caption {
   font-size: 0.85rem;
   color: #666;
   font-weight: 500;
+}
+
+.version-caption {
+  min-width: 80px;
+  text-align: center;
 }
 
 .recipe-detail-image {

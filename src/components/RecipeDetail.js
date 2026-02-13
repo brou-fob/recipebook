@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './RecipeDetail.css';
 import { canDirectlyEditRecipe, canCreateNewVersion, canDeleteRecipe } from '../utils/userManagement';
 import { isRecipeVersion, getVersionNumber, getRecipeVersions, getParentRecipe, sortRecipeVersions } from '../utils/recipeVersioning';
@@ -55,14 +55,13 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   };
 
   // Get author name
-  const getAuthorName = useCallback((authorId) => {
-    if (!authorId || !allUsers || allUsers.length === 0) return null;
-    const author = allUsers.find(u => u.id === authorId);
+  const authorName = useMemo(() => {
+    if (!recipe.authorId || !allUsers || allUsers.length === 0) return null;
+    const author = allUsers.find(u => u.id === recipe.authorId);
     if (!author) return null;
     return `${author.vorname} ${author.nachname}`;
-  }, [allUsers]);
+  }, [recipe.authorId, allUsers]);
 
-  const authorName = useMemo(() => getAuthorName(recipe.authorId), [getAuthorName, recipe.authorId]);
   const versionNumber = useMemo(() => 
     hasMultipleVersions ? getVersionNumber(allRecipes, recipe) : 0, 
     [hasMultipleVersions, allRecipes, recipe]
