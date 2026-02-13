@@ -67,24 +67,13 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
                 onClick={() => onSelectMenu(menu)}
               >
                 <div className="menu-card-badges">
-                  {isFavorite && (
-                    <button
-                      className="favorite-badge favorite-active"
-                      onClick={(e) => handleToggleFavorite(e, menu.id)}
-                      title="Aus Favoriten entfernen"
-                    >
-                      ★
-                    </button>
-                  )}
-                  {!isFavorite && (
-                    <button
-                      className="favorite-badge"
-                      onClick={(e) => handleToggleFavorite(e, menu.id)}
-                      title="Zu Favoriten hinzufügen"
-                    >
-                      ☆
-                    </button>
-                  )}
+                  <button
+                    className={`favorite-badge ${isFavorite ? 'favorite-active' : ''}`}
+                    onClick={(e) => handleToggleFavorite(e, menu.id)}
+                    title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  >
+                    {isFavorite ? '★' : '☆'}
+                  </button>
                   {menu.isPrivate && (
                     <span className="private-badge" title="Privates Menü">
                       🔒 Privat

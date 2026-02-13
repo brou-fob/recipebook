@@ -226,7 +226,7 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
                     value={newSectionName}
                     onChange={(e) => setNewSectionName(e.target.value)}
                     placeholder="z.B. Fingerfood, Amuse-Bouche"
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         handleAddSection();

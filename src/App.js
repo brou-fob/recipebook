@@ -258,8 +258,8 @@ function App() {
     // Toggle in menu-specific favorites storage
     toggleMenuFavorite(currentUser.id, menuId);
     
-    // Trigger a re-render by updating state
-    setMenus([...menus]);
+    // Force re-render by updating a timestamp
+    setMenus(prevMenus => [...prevMenus]);
     
     // Update selectedMenu if it's the one being toggled
     if (selectedMenu && selectedMenu.id === menuId) {
