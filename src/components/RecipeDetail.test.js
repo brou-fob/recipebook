@@ -30,7 +30,7 @@ describe('RecipeDetail - Portion Slider', () => {
     nachname: 'User'
   };
 
-  test('should increment servings by whole numbers only', () => {
+  test('should increment servings by whole numbers only (multiplier by 1)', () => {
     render(
       <RecipeDetail
         recipe={mockRecipe}
@@ -43,18 +43,18 @@ describe('RecipeDetail - Portion Slider', () => {
       />
     );
 
-    // Initial state should be 4 Portionen
+    // Initial state should be 4 Portionen (multiplier = 1)
     expect(screen.getByText('4 Portionen')).toBeInTheDocument();
 
-    // Click the + button
+    // Click the + button to increment multiplier by 1
     const plusButton = screen.getAllByRole('button').find(btn => btn.textContent === '+');
     fireEvent.click(plusButton);
 
-    // Should now be 8 Portionen (4 * 2), not 6 (4 * 1.5)
+    // Should now be 8 Portionen (4 base portions * 2 multiplier), not 6 (4 * 1.5)
     expect(screen.getByText('8 Portionen')).toBeInTheDocument();
   });
 
-  test('should decrement servings by whole numbers only', () => {
+  test('should decrement servings by whole numbers only (multiplier by 1)', () => {
     render(
       <RecipeDetail
         recipe={mockRecipe}
@@ -67,20 +67,22 @@ describe('RecipeDetail - Portion Slider', () => {
       />
     );
 
-    // Initial state should be 4 Portionen
+    // Initial state should be 4 Portionen (multiplier = 1)
     expect(screen.getByText('4 Portionen')).toBeInTheDocument();
 
-    // Click the + button twice to get to 12
+    // Click the + button twice to get to multiplier 3
     const plusButton = screen.getAllByRole('button').find(btn => btn.textContent === '+');
     fireEvent.click(plusButton);
     fireEvent.click(plusButton);
+    
+    // Should be 12 Portionen (4 base * 3 multiplier)
     expect(screen.getByText('12 Portionen')).toBeInTheDocument();
 
-    // Click the - button once
+    // Click the - button once to decrement multiplier by 1
     const minusButton = screen.getAllByRole('button').find(btn => btn.textContent === '-');
     fireEvent.click(minusButton);
 
-    // Should now be 8 Portionen (not 10)
+    // Should now be 8 Portionen (4 base * 2 multiplier), not 10 (4 * 2.5)
     expect(screen.getByText('8 Portionen')).toBeInTheDocument();
   });
 
