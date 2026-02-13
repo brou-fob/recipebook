@@ -26,6 +26,17 @@ import {
 } from './utils/userFavorites';
 import { groupRecipesByParent } from './utils/recipeVersioning';
 
+// Helper function to check if a recipe matches the category filter
+function matchesCategoryFilter(recipe, categoryFilter) {
+  if (!categoryFilter) return true;
+  
+  // Handle both array and string formats for speisekategorie
+  if (Array.isArray(recipe.speisekategorie)) {
+    return recipe.speisekategorie.includes(categoryFilter);
+  }
+  return recipe.speisekategorie === categoryFilter;
+}
+
 function App() {
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -388,13 +399,7 @@ function App() {
                 const favoriteRecipes = favoriteGroups.flatMap(group => {
                   // Filter recipes in this group by category
                   if (categoryFilter) {
-                    return group.allRecipes.filter(recipe => {
-                      // Handle both array and string formats for speisekategorie
-                      if (Array.isArray(recipe.speisekategorie)) {
-                        return recipe.speisekategorie.includes(categoryFilter);
-                      }
-                      return recipe.speisekategorie === categoryFilter;
-                    });
+                    return group.allRecipes.filter(recipe => matchesCategoryFilter(recipe, categoryFilter));
                   }
                   return group.allRecipes;
                 });
@@ -403,17 +408,7 @@ function App() {
               }
               
               // Normal filtering without favorites
-              return recipes.filter(recipe => {
-                // Apply category filter
-                if (categoryFilter) {
-                  // Handle both array and string formats for speisekategorie
-                  if (Array.isArray(recipe.speisekategorie)) {
-                    return recipe.speisekategorie.includes(categoryFilter);
-                  }
-                  return recipe.speisekategorie === categoryFilter;
-                }
-                return true;
-              });
+              return recipes.filter(recipe => matchesCategoryFilter(recipe, categoryFilter));
             })()}
             onSelectRecipe={handleSelectRecipe}
             onAddRecipe={handleAddRecipe}
