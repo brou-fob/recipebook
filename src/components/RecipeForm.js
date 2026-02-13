@@ -14,7 +14,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const [kulinarik, setKulinarik] = useState([]);
   const [schwierigkeit, setSchwierigkeit] = useState(3);
   const [kochdauer, setKochdauer] = useState(30);
-  const [speisekategorie, setSpeisekategorie] = useState('');
+  const [speisekategorie, setSpeisekategorie] = useState([]);
   const [ingredients, setIngredients] = useState(['']);
   const [steps, setSteps] = useState(['']);
   const [imageError, setImageError] = useState(false);
@@ -45,7 +45,14 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       }
       setSchwierigkeit(recipe.schwierigkeit || 3);
       setKochdauer(recipe.kochdauer || 30);
-      setSpeisekategorie(recipe.speisekategorie || '');
+      // Handle both old string format and new array format for speisekategorie
+      if (Array.isArray(recipe.speisekategorie)) {
+        setSpeisekategorie(recipe.speisekategorie);
+      } else if (recipe.speisekategorie) {
+        setSpeisekategorie([recipe.speisekategorie]);
+      } else {
+        setSpeisekategorie([]);
+      }
       setIngredients(recipe.ingredients?.length > 0 ? recipe.ingredients : ['']);
       setSteps(recipe.steps?.length > 0 ? recipe.steps : ['']);
       
@@ -155,7 +162,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       kulinarik: kulinarik,
       schwierigkeit: parseInt(schwierigkeit) || 3,
       kochdauer: parseInt(kochdauer) || 30,
-      speisekategorie: speisekategorie.trim(),
+      speisekategorie: speisekategorie,
       ingredients: ingredients.filter(i => i.trim() !== ''),
       steps: steps.filter(s => s.trim() !== ''),
       authorId: authorId,
@@ -185,7 +192,16 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     
     setSchwierigkeit(importedRecipe.schwierigkeit || 3);
     setKochdauer(importedRecipe.kochdauer || 30);
-    setSpeisekategorie(importedRecipe.speisekategorie || '');
+    
+    // Handle speisekategorie as array
+    if (Array.isArray(importedRecipe.speisekategorie)) {
+      setSpeisekategorie(importedRecipe.speisekategorie);
+    } else if (importedRecipe.speisekategorie) {
+      setSpeisekategorie([importedRecipe.speisekategorie]);
+    } else {
+      setSpeisekategorie([]);
+    }
+    
     // Import always provides non-empty arrays (validated by parseRecipeData)
     setIngredients(importedRecipe.ingredients || []);
     setSteps(importedRecipe.steps || []);
@@ -347,39 +363,48 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
 
         <div className="form-group">
           <label htmlFor="kulinarik">Kulinarik (Mehrfachauswahl möglich)</label>
-          <div className="cuisine-multi-select">
+          <select
+            id="kulinarik"
+            multiple
+            value={kulinarik}
+            onChange={(e) => {
+              const options = Array.from(e.target.selectedOptions, option => option.value);
+              setKulinarik(options);
+            }}
+            size={Math.min(customLists.cuisineTypes.length, 8)}
+          >
             {customLists.cuisineTypes.map((cuisine) => (
-              <label key={cuisine} className="cuisine-checkbox">
-                <input
-                  type="checkbox"
-                  value={cuisine}
-                  checked={kulinarik.includes(cuisine)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setKulinarik([...kulinarik, cuisine]);
-                    } else {
-                      setKulinarik(kulinarik.filter(c => c !== cuisine));
-                    }
-                  }}
-                />
-                <span>{cuisine}</span>
-              </label>
+              <option key={cuisine} value={cuisine}>{cuisine}</option>
             ))}
-          </div>
+          </select>
+          {kulinarik.length > 0 && (
+            <div className="selected-items">
+              Ausgewählt: {kulinarik.join(', ')}
+            </div>
+          )}
         </div>
 
         <div className="form-group">
-          <label htmlFor="speisekategorie">Speisekategorie</label>
+          <label htmlFor="speisekategorie">Speisekategorie (Mehrfachauswahl möglich)</label>
           <select
             id="speisekategorie"
+            multiple
             value={speisekategorie}
-            onChange={(e) => setSpeisekategorie(e.target.value)}
+            onChange={(e) => {
+              const options = Array.from(e.target.selectedOptions, option => option.value);
+              setSpeisekategorie(options);
+            }}
+            size={Math.min(customLists.mealCategories.length, 8)}
           >
-            <option value="">Kategorie auswählen...</option>
             {customLists.mealCategories.map((category) => (
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
+          {speisekategorie.length > 0 && (
+            <div className="selected-items">
+              Ausgewählt: {speisekategorie.join(', ')}
+            </div>
+          )}
         </div>
 
         <div className="form-group">
