@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { getCustomLists, saveCustomLists, resetCustomLists } from '../utils/customLists';
+import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan } from '../utils/customLists';
 import { isCurrentUserAdmin } from '../utils/userManagement';
 import UserManagement from './UserManagement';
 
@@ -16,16 +16,19 @@ function Settings({ onBack, currentUser }) {
   const [newUnit, setNewUnit] = useState('');
   const [newPortionSingular, setNewPortionSingular] = useState('');
   const [newPortionPlural, setNewPortionPlural] = useState('');
-  const [activeTab, setActiveTab] = useState('lists'); // 'lists', 'portionUnits', or 'users'
+  const [headerSlogan, setHeaderSlogan] = useState('');
+  const [activeTab, setActiveTab] = useState('general'); // 'general', 'lists', or 'users'
   const isAdmin = isCurrentUserAdmin();
 
   // Cleanup timeout on unmount
   useEffect(() => {
     setLists(getCustomLists());
+    setHeaderSlogan(getHeaderSlogan());
   }, []);
 
   const handleSave = () => {
     saveCustomLists(lists);
+    saveHeaderSlogan(headerSlogan);
     alert('Einstellungen erfolgreich gespeichert!');
   };
 
@@ -127,16 +130,16 @@ function Settings({ onBack, currentUser }) {
       {isAdmin && (
         <div className="settings-tabs">
           <button
+            className={`tab-button ${activeTab === 'general' ? 'active' : ''}`}
+            onClick={() => setActiveTab('general')}
+          >
+            Allgemein
+          </button>
+          <button
             className={`tab-button ${activeTab === 'lists' ? 'active' : ''}`}
             onClick={() => setActiveTab('lists')}
           >
             Listen & Kategorien
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'portionUnits' ? 'active' : ''}`}
-            onClick={() => setActiveTab('portionUnits')}
-          >
-            Portionseinheiten
           </button>
           <button
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
@@ -148,7 +151,30 @@ function Settings({ onBack, currentUser }) {
       )}
 
       <div className="settings-content">
-        {activeTab === 'lists' ? (
+        {activeTab === 'general' ? (
+          <>
+            <div className="settings-section">
+              <h3>Header-Slogan</h3>
+              <p className="section-description">
+                Passen Sie den Slogan an, der im Header unter "DishBook" angezeigt wird.
+              </p>
+              <div className="list-input">
+                <input
+                  type="text"
+                  value={headerSlogan}
+                  onChange={(e) => setHeaderSlogan(e.target.value)}
+                  placeholder="Header-Slogan eingeben..."
+                />
+              </div>
+            </div>
+
+            <div className="settings-actions">
+              <button className="save-button" onClick={handleSave}>
+                Einstellungen speichern
+              </button>
+            </div>
+          </>
+        ) : activeTab === 'lists' ? (
           <>
             <div className="settings-section">
           <h3>Kulinarik-Typen</h3>
@@ -234,6 +260,43 @@ function Settings({ onBack, currentUser }) {
           </div>
         </div>
 
+        <div className="settings-section">
+          <h3>Portionseinheiten</h3>
+          <p className="section-description">
+            Definieren Sie benutzerdefinierte Portionseinheiten mit Singular- und Pluralformen (z.B. Pizza/Pizzen, Drink/Drinks).
+          </p>
+          <div className="list-input portion-unit-input">
+            <input
+              type="text"
+              value={newPortionSingular}
+              onChange={(e) => setNewPortionSingular(e.target.value)}
+              placeholder="Singular (z.B. Pizza)"
+            />
+            <input
+              type="text"
+              value={newPortionPlural}
+              onChange={(e) => setNewPortionPlural(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addPortionUnit()}
+              placeholder="Plural (z.B. Pizzen)"
+            />
+            <button onClick={addPortionUnit}>Hinzufügen</button>
+          </div>
+          <div className="list-items">
+            {lists.portionUnits.map((unit) => (
+              <div key={unit.id} className="list-item">
+                <span>{unit.singular} / {unit.plural}</span>
+                <button
+                  className="remove-btn"
+                  onClick={() => removePortionUnit(unit.id)}
+                  title="Entfernen"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="settings-actions">
           <button className="reset-button" onClick={handleReset}>
             Auf Standard zurücksetzen
@@ -243,56 +306,8 @@ function Settings({ onBack, currentUser }) {
           </button>
         </div>
       </>
-        ) : activeTab === 'portionUnits' ? (
-          <>
-            <div className="settings-section">
-              <h3>Portionseinheiten</h3>
-              <p className="section-description">
-                Definieren Sie benutzerdefinierte Portionseinheiten mit Singular- und Pluralformen (z.B. Pizza/Pizzen, Drink/Drinks).
-              </p>
-              <div className="list-input portion-unit-input">
-                <input
-                  type="text"
-                  value={newPortionSingular}
-                  onChange={(e) => setNewPortionSingular(e.target.value)}
-                  placeholder="Singular (z.B. Pizza)"
-                />
-                <input
-                  type="text"
-                  value={newPortionPlural}
-                  onChange={(e) => setNewPortionPlural(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addPortionUnit()}
-                  placeholder="Plural (z.B. Pizzen)"
-                />
-                <button onClick={addPortionUnit}>Hinzufügen</button>
-              </div>
-              <div className="list-items">
-                {lists.portionUnits.map((unit) => (
-                  <div key={unit.id} className="list-item">
-                    <span>{unit.singular} / {unit.plural}</span>
-                    <button
-                      className="remove-btn"
-                      onClick={() => removePortionUnit(unit.id)}
-                      title="Entfernen"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="settings-actions">
-              <button className="reset-button" onClick={handleReset}>
-                Auf Standard zurücksetzen
-              </button>
-              <button className="save-button" onClick={handleSave}>
-                Einstellungen speichern
-              </button>
-            </div>
-          </>
         ) : (
-          <UserManagement onBack={() => setActiveTab('lists')} currentUser={currentUser} />
+          <UserManagement onBack={() => setActiveTab('general')} currentUser={currentUser} />
         )}
       </div>
     </div>

@@ -24,10 +24,7 @@ export const getDefaultSections = () => {
     'Vorspeise',
     'Hauptspeise',
     'Dessert',
-    'Beilagen',
-    'Salat',
-    'Getränke',
-    'Suppe'
+    'Drinks'
   ];
 };
 

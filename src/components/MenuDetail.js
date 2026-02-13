@@ -60,7 +60,7 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
           <h1 className="menu-title">{menu.name}</h1>
           {menu.isPrivate && (
             <span className="private-indicator" title="Privates Menü">
-              🔒 Privat
+              Privat
             </span>
           )}
         </div>
