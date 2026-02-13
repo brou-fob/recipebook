@@ -293,6 +293,92 @@ Kulinarik: Italienisch, Mediterran
       const result = parseNotionMarkdown(markdown);
       expect(result.steps).toEqual(['First step', 'Second step', 'Third step']);
     });
+
+    test('handles Notion export with --- separators', () => {
+      const markdown = `# Pizza Bianco al Tartufo
+
+Erstellt von: Benjamin Rousselli
+Favorit: Benjamin Rousselli
+Gang: Hauptspeise
+Menü: Geburtstagsmenü | 28. Feb. 26
+
+---
+
+- **1 Teil** Pizzateig Napoletana
+- **75 g** Mozzarella
+- **50 g** Stracciatella di Burrata
+- **½ Teelöffel** Trüffelöl
+- frischer Trüffel
+- Pfeffer
+
+---
+
+1. Arbeite mit den Fingerspitzen von der Mitte nach außen und forme den Teig durch leichtes Ziehen und Drehen zu einer gleichmäßigen Pizza.
+2. Verteile den zerrupften Mozzarella auf der Pizza.
+3. Backe die Pizza im gut vorgeheizten Pizzaofen, bis der Rand das typische Leopardenmuster zeigt und knusprig aufgegangen ist. Drehe sie dabei regelmäßig.
+4. Hole die Pizza nach ca. 2 Minuten aus dem Ofen und garniere sie direkt vor dem Servieren mit cremiger Burrata, Trüffelöl üund fein gehobeltem Trüffel.
+5. **Küchenmagie vollbracht! Genieße dein Meisterwerk und lass dich kulinarisch umarmen.**
+
+---
+`;
+      const result = parseNotionMarkdown(markdown);
+      
+      expect(result.title).toBe('Pizza Bianco al Tartufo');
+      expect(result.ingredients).toHaveLength(6);
+      expect(result.ingredients[0]).toBe('1 Teil Pizzateig Napoletana');
+      expect(result.ingredients[1]).toBe('75 g Mozzarella');
+      expect(result.steps).toHaveLength(5);
+      expect(result.steps[4]).toBe('Küchenmagie vollbracht! Genieße dein Meisterwerk und lass dich kulinarisch umarmen.');
+    });
+
+    test('removes all ** bold markers from content', () => {
+      const markdown = `# Test Recipe
+
+**Portionen:** 4
+**Kulinarik:** **Italienisch**
+
+---
+
+- **500g** Mehl
+- **2** Eier
+
+---
+
+1. **Mix** everything
+2. **Bake** for 30 minutes
+
+---
+`;
+      const result = parseNotionMarkdown(markdown);
+      
+      expect(result.portionen).toBe(4);
+      expect(result.kulinarik).toEqual(['Italienisch']);
+      expect(result.ingredients[0]).toBe('500g Mehl');
+      expect(result.ingredients[1]).toBe('2 Eier');
+      expect(result.steps[0]).toBe('Mix everything');
+      expect(result.steps[1]).toBe('Bake for 30 minutes');
+    });
+
+    test('handles multiple --- separators correctly', () => {
+      const markdown = `# Test
+
+---
+
+- Ingredient 1
+
+---
+
+1. Step 1
+
+---
+
+Extra content after third separator should be ignored
+`;
+      const result = parseNotionMarkdown(markdown);
+      
+      expect(result.ingredients).toEqual(['Ingredient 1']);
+      expect(result.steps).toEqual(['Step 1']);
+    });
   });
 
   describe('parseNotionCSV', () => {
