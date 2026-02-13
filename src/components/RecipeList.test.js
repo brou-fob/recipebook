@@ -224,3 +224,130 @@ describe('RecipeList - Version Display Order', () => {
     expect(screen.getByText('Original Recipe')).toBeInTheDocument();
   });
 });
+
+describe('RecipeList - Version Count Display', () => {
+  const mockRecipe1 = {
+    id: 'recipe-1',
+    title: 'Recipe with 1 Version',
+    authorId: 'user-1',
+    ingredients: ['ingredient1'],
+    steps: ['step1'],
+  };
+
+  const mockRecipe2 = {
+    id: 'recipe-2',
+    title: 'Recipe Original',
+    authorId: 'user-2',
+    ingredients: ['ingredient1'],
+    steps: ['step1'],
+  };
+
+  const mockRecipe2Version = {
+    id: 'recipe-3',
+    title: 'Recipe Version',
+    parentRecipeId: 'recipe-2',
+    authorId: 'user-3',
+    ingredients: ['ingredient1', 'ingredient2'],
+    steps: ['step1'],
+  };
+
+  const currentUser = {
+    id: 'user-1',
+    vorname: 'Test',
+    nachname: 'User',
+  };
+
+  beforeEach(() => {
+    const users = [
+      currentUser,
+      { id: 'user-2', vorname: 'User', nachname: 'Two' },
+      { id: 'user-3', vorname: 'User', nachname: 'Three' },
+    ];
+    localStorage.setItem('users', JSON.stringify(users));
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  test('displays version count for recipe with single version', () => {
+    render(
+      <RecipeList
+        recipes={[mockRecipe1]}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.getByText('1 Version')).toBeInTheDocument();
+  });
+
+  test('displays version count for recipe with multiple versions', () => {
+    render(
+      <RecipeList
+        recipes={[mockRecipe2, mockRecipe2Version]}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Check both the badge and footer version count exist
+    const versionTexts = screen.getAllByText(/2 Versionen/);
+    expect(versionTexts.length).toBeGreaterThanOrEqual(1);
+    
+    // Verify the footer version count specifically
+    const versionCount = document.querySelector('.version-count');
+    expect(versionCount).toHaveTextContent('2 Versionen');
+  });
+
+  test('version count has correct CSS class for orange color', () => {
+    render(
+      <RecipeList
+        recipes={[mockRecipe2, mockRecipe2Version]}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    const versionCount = document.querySelector('.version-count');
+    expect(versionCount).toBeInTheDocument();
+    expect(versionCount).toHaveClass('version-count');
+  });
+
+  test('displays author name when present', () => {
+    render(
+      <RecipeList
+        recipes={[mockRecipe1]}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+  });
+
+  test('version count and author are displayed in footer', () => {
+    render(
+      <RecipeList
+        recipes={[mockRecipe2, mockRecipe2Version]}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    const footer = document.querySelector('.recipe-footer');
+    expect(footer).toBeInTheDocument();
+    
+    // Check that both version count and author are within the footer
+    const versionCount = footer.querySelector('.version-count');
+    const author = footer.querySelector('.recipe-author');
+    
+    expect(versionCount).toBeInTheDocument();
+    expect(author).toBeInTheDocument();
+  });
+});
