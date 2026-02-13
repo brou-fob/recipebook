@@ -59,6 +59,42 @@ This is the easiest and most reliable method.
 6. Mit Trüffelöl beträufeln und servieren
 ```
 
+#### Alternative: Notion Export with Separators
+
+The parser also supports Notion exports that use `---` separators instead of section headers. This format is automatically converted:
+
+```markdown
+# Pizza Bianco al Tartufo
+
+Erstellt von: Benjamin Rousselli
+Favorit: Benjamin Rousselli
+Gang: Hauptspeise
+
+---
+
+- **1 Teil** Pizzateig Napoletana
+- **75 g** Mozzarella
+- **50 g** Stracciatella di Burrata
+- **½ Teelöffel** Trüffelöl
+- frischer Trüffel
+- Pfeffer
+
+---
+
+1. Arbeite mit den Fingerspitzen von der Mitte nach außen und forme den Teig.
+2. Verteile den zerrupften Mozzarella auf der Pizza.
+3. Backe die Pizza im gut vorgeheizten Pizzaofen.
+4. Hole die Pizza nach ca. 2 Minuten aus dem Ofen und garniere sie.
+
+---
+```
+
+**Note:** The parser automatically:
+- Removes all `**` bold markers
+- Converts the first `---` to `## Zutaten`
+- Converts the second `---` to `## Zubereitung`
+- Removes the third `---`
+
 ### 2. JSON Format
 
 For programmatic imports or if you prefer structured data.
