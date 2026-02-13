@@ -24,11 +24,6 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
     return true;
   });
 
-  const handleToggleFavorite = (e, menuId) => {
-    e.stopPropagation(); // Prevent menu selection when clicking favorite button
-    onToggleMenuFavorite(menuId);
-  };
-
   return (
     <div className="menu-list-container">
       <div className="menu-list-header">
@@ -67,17 +62,8 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
                 onClick={() => onSelectMenu(menu)}
               >
                 <div className="menu-card-badges">
-                  <button
-                    className={`favorite-badge ${isFavorite ? 'favorite-active' : ''}`}
-                    onClick={(e) => handleToggleFavorite(e, menu.id)}
-                    title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
-                  >
-                    {isFavorite ? '★' : '☆'}
-                  </button>
-                  {menu.isPrivate && (
-                    <span className="private-badge" title="Privates Menü">
-                      🔒 Privat
-                    </span>
+                  {isFavorite && (
+                    <div className="favorite-badge favorite-active">★</div>
                   )}
                 </div>
                 <div className="menu-card-content">
@@ -88,6 +74,13 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
                   <div className="menu-meta">
                     <span>{getRecipeCount(menu)} Rezepte</span>
                   </div>
+                  {menu.isPrivate && (
+                    <div className="menu-footer">
+                      <span className="private-badge" title="Privates Menü">
+                        Privat
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
