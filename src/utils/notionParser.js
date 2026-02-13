@@ -10,6 +10,41 @@
  */
 
 /**
+ * Preprocess Notion Markdown to handle special formatting
+ * - Removes all ** bold markers
+ * - Replaces first --- with ## Zutaten
+ * - Replaces second --- with ## Zubereitung
+ * - Removes third ---
+ * @param {string} content - Raw Notion markdown content
+ * @returns {string} - Preprocessed markdown content
+ */
+function preprocessNotionMarkdown(content) {
+  // Remove all ** bold markers
+  let processed = content.replace(/\*\*/g, '');
+  
+  // Replace --- separators with appropriate section headers
+  let separatorCount = 0;
+  const lines = processed.split('\n');
+  const processedLines = lines.map(line => {
+    const trimmed = line.trim();
+    if (trimmed === '---') {
+      separatorCount++;
+      if (separatorCount === 1) {
+        return '## Zutaten';
+      } else if (separatorCount === 2) {
+        return '## Zubereitung';
+      } else {
+        // Remove third and subsequent separators
+        return '';
+      }
+    }
+    return line;
+  });
+  
+  return processedLines.join('\n');
+}
+
+/**
  * Parse Notion Markdown content into recipe data
  * @param {string} markdownContent - Notion exported Markdown content
  * @returns {Object} - Parsed recipe object
@@ -19,7 +54,9 @@ export function parseNotionMarkdown(markdownContent) {
     throw new Error('Ungültiger Markdown-Inhalt');
   }
 
-  const lines = markdownContent.split('\n');
+  // Preprocess the markdown to handle Notion-specific formatting
+  const preprocessed = preprocessNotionMarkdown(markdownContent);
+  const lines = preprocessed.split('\n');
   const recipe = {
     title: '',
     image: '',
