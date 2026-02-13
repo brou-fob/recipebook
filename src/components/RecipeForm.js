@@ -10,6 +10,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
   const [portionen, setPortionen] = useState(4);
+  const [portionUnitId, setPortionUnitId] = useState('portion');
   const [kulinarik, setKulinarik] = useState([]);
   const [schwierigkeit, setSchwierigkeit] = useState(3);
   const [kochdauer, setKochdauer] = useState(30);
@@ -24,7 +25,8 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const [customLists, setCustomLists] = useState({
     cuisineTypes: [],
     mealCategories: [],
-    units: []
+    units: [],
+    portionUnits: []
   });
 
   useEffect(() => {
@@ -32,6 +34,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       setTitle(recipe.title || '');
       setImage(recipe.image || '');
       setPortionen(recipe.portionen || 4);
+      setPortionUnitId(recipe.portionUnitId || 'portion');
       // Handle both old string format and new array format for kulinarik
       if (Array.isArray(recipe.kulinarik)) {
         setKulinarik(recipe.kulinarik);
@@ -148,6 +151,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       title: title.trim(),
       image: image.trim(),
       portionen: parseInt(portionen) || 4,
+      portionUnitId: portionUnitId,
       kulinarik: kulinarik,
       schwierigkeit: parseInt(schwierigkeit) || 3,
       kochdauer: parseInt(kochdauer) || 30,
@@ -168,6 +172,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     setTitle(importedRecipe.title || '');
     setImage(importedRecipe.image || '');
     setPortionen(importedRecipe.portionen || 4);
+    setPortionUnitId(importedRecipe.portionUnitId || 'portion');
     
     // Handle kulinarik as array
     if (Array.isArray(importedRecipe.kulinarik)) {
@@ -309,6 +314,21 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
               max="100"
               placeholder="4"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="portionUnit">Portionseinheit</label>
+            <select
+              id="portionUnit"
+              value={portionUnitId}
+              onChange={(e) => setPortionUnitId(e.target.value)}
+            >
+              {(customLists.portionUnits || []).map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.singular} / {unit.plural}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">

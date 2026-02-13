@@ -42,6 +42,14 @@ export const DEFAULT_UNITS = [
   'pinch'
 ];
 
+export const DEFAULT_PORTION_UNITS = [
+  { id: 'portion', singular: 'Portion', plural: 'Portionen' },
+  { id: 'pizza', singular: 'Pizza', plural: 'Pizzen' },
+  { id: 'drink', singular: 'Drink', plural: 'Drinks' },
+  { id: 'serving', singular: 'Serving', plural: 'Servings' },
+  { id: 'person', singular: 'Person', plural: 'Personen' }
+];
+
 /**
  * Get customizable lists from localStorage or return defaults
  */
@@ -49,7 +57,12 @@ export function getCustomLists() {
   const stored = localStorage.getItem('customLists');
   if (stored) {
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Ensure portionUnits exists for backward compatibility
+      if (!parsed.portionUnits) {
+        parsed.portionUnits = DEFAULT_PORTION_UNITS;
+      }
+      return parsed;
     } catch (e) {
       console.error('Error parsing custom lists:', e);
     }
@@ -58,7 +71,8 @@ export function getCustomLists() {
   return {
     cuisineTypes: DEFAULT_CUISINE_TYPES,
     mealCategories: DEFAULT_MEAL_CATEGORIES,
-    units: DEFAULT_UNITS
+    units: DEFAULT_UNITS,
+    portionUnits: DEFAULT_PORTION_UNITS
   };
 }
 
@@ -76,7 +90,8 @@ export function resetCustomLists() {
   const defaultLists = {
     cuisineTypes: DEFAULT_CUISINE_TYPES,
     mealCategories: DEFAULT_MEAL_CATEGORIES,
-    units: DEFAULT_UNITS
+    units: DEFAULT_UNITS,
+    portionUnits: DEFAULT_PORTION_UNITS
   };
   saveCustomLists(defaultLists);
   return defaultLists;

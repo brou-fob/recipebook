@@ -8,12 +8,15 @@ function Settings({ onBack, currentUser }) {
   const [lists, setLists] = useState({
     cuisineTypes: [],
     mealCategories: [],
-    units: []
+    units: [],
+    portionUnits: []
   });
   const [newCuisine, setNewCuisine] = useState('');
   const [newCategory, setNewCategory] = useState('');
   const [newUnit, setNewUnit] = useState('');
-  const [activeTab, setActiveTab] = useState('lists'); // 'lists' or 'users'
+  const [newPortionSingular, setNewPortionSingular] = useState('');
+  const [newPortionPlural, setNewPortionPlural] = useState('');
+  const [activeTab, setActiveTab] = useState('lists'); // 'lists', 'portionUnits', or 'users'
   const isAdmin = isCurrentUserAdmin();
 
   // Cleanup timeout on unmount
@@ -85,6 +88,33 @@ function Settings({ onBack, currentUser }) {
     });
   };
 
+  const addPortionUnit = () => {
+    if (newPortionSingular.trim() && newPortionPlural.trim()) {
+      const newId = newPortionSingular.toLowerCase().replace(/\s+/g, '-');
+      const exists = lists.portionUnits.some(pu => pu.id === newId);
+      
+      if (!exists) {
+        setLists({
+          ...lists,
+          portionUnits: [...lists.portionUnits, {
+            id: newId,
+            singular: newPortionSingular.trim(),
+            plural: newPortionPlural.trim()
+          }]
+        });
+        setNewPortionSingular('');
+        setNewPortionPlural('');
+      }
+    }
+  };
+
+  const removePortionUnit = (unitId) => {
+    setLists({
+      ...lists,
+      portionUnits: lists.portionUnits.filter(pu => pu.id !== unitId)
+    });
+  };
+
   return (
     <div className="settings-container">
       <div className="settings-header">
@@ -101,6 +131,12 @@ function Settings({ onBack, currentUser }) {
             onClick={() => setActiveTab('lists')}
           >
             Listen & Kategorien
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'portionUnits' ? 'active' : ''}`}
+            onClick={() => setActiveTab('portionUnits')}
+          >
+            Portionseinheiten
           </button>
           <button
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
@@ -207,6 +243,54 @@ function Settings({ onBack, currentUser }) {
           </button>
         </div>
       </>
+        ) : activeTab === 'portionUnits' ? (
+          <>
+            <div className="settings-section">
+              <h3>Portionseinheiten</h3>
+              <p className="section-description">
+                Definieren Sie benutzerdefinierte Portionseinheiten mit Singular- und Pluralformen (z.B. Pizza/Pizzen, Drink/Drinks).
+              </p>
+              <div className="list-input portion-unit-input">
+                <input
+                  type="text"
+                  value={newPortionSingular}
+                  onChange={(e) => setNewPortionSingular(e.target.value)}
+                  placeholder="Singular (z.B. Pizza)"
+                />
+                <input
+                  type="text"
+                  value={newPortionPlural}
+                  onChange={(e) => setNewPortionPlural(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addPortionUnit()}
+                  placeholder="Plural (z.B. Pizzen)"
+                />
+                <button onClick={addPortionUnit}>Hinzufügen</button>
+              </div>
+              <div className="list-items">
+                {lists.portionUnits.map((unit) => (
+                  <div key={unit.id} className="list-item">
+                    <span>{unit.singular} / {unit.plural}</span>
+                    <button
+                      className="remove-btn"
+                      onClick={() => removePortionUnit(unit.id)}
+                      title="Entfernen"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="settings-actions">
+              <button className="reset-button" onClick={handleReset}>
+                Auf Standard zurücksetzen
+              </button>
+              <button className="save-button" onClick={handleSave}>
+                Einstellungen speichern
+              </button>
+            </div>
+          </>
         ) : (
           <UserManagement onBack={() => setActiveTab('lists')} currentUser={currentUser} />
         )}
