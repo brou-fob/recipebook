@@ -6,6 +6,8 @@ import UserManagement from './UserManagement';
 import { getCategoryImages, addCategoryImage, updateCategoryImage, removeCategoryImage, getAlreadyAssignedCategories } from '../utils/categoryImages';
 import { fileToBase64 } from '../utils/imageUtils';
 
+const CATEGORY_ALREADY_ASSIGNED_ERROR = 'Die folgenden Kategorien sind bereits einem anderen Bild zugeordnet: {categories}\n\nBitte wählen Sie andere Kategorien.';
+
 function Settings({ onBack, currentUser }) {
   const [lists, setLists] = useState({
     cuisineTypes: [],
@@ -146,7 +148,7 @@ function Settings({ onBack, currentUser }) {
         // Add new image with selected categories
         const alreadyAssigned = getAlreadyAssignedCategories(selectedCategories);
         if (alreadyAssigned.length > 0) {
-          alert(`Die folgenden Kategorien sind bereits einem anderen Bild zugeordnet: ${alreadyAssigned.join(', ')}\n\nBitte wählen Sie andere Kategorien.`);
+          alert(CATEGORY_ALREADY_ASSIGNED_ERROR.replace('{categories}', alreadyAssigned.join(', ')));
           setUploadingImage(false);
           return;
         }
@@ -192,7 +194,7 @@ function Settings({ onBack, currentUser }) {
 
     const alreadyAssigned = getAlreadyAssignedCategories(selectedCategories, editingImageId);
     if (alreadyAssigned.length > 0) {
-      alert(`Die folgenden Kategorien sind bereits einem anderen Bild zugeordnet: ${alreadyAssigned.join(', ')}\n\nBitte wählen Sie andere Kategorien.`);
+      alert(CATEGORY_ALREADY_ASSIGNED_ERROR.replace('{categories}', alreadyAssigned.join(', ')));
       return;
     }
 
