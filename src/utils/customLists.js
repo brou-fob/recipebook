@@ -1,6 +1,9 @@
 /**
  * Default configuration values for customizable lists
  */
+import { db } from '../firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+
 export const DEFAULT_CUISINE_TYPES = [
   'Italian',
   'Thai',
@@ -52,9 +55,6 @@ export const DEFAULT_PORTION_UNITS = [
 
 export const DEFAULT_SLOGAN = 'Unsere Besten';
 export const DEFAULT_FAVICON_TEXT = 'DishBook';
-
-import { db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 // Cache for settings to avoid repeated Firestore reads
 let settingsCache = null;

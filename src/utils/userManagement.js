@@ -18,10 +18,8 @@ import {
   setDoc,
   collection,
   getDocs,
-  query,
   updateDoc,
-  deleteDoc,
-  where
+  deleteDoc
 } from 'firebase/firestore';
 
 // Permission roles

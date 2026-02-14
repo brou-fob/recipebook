@@ -14,7 +14,6 @@ import PasswordChangeModal from './components/PasswordChangeModal';
 import { 
   loginUser, 
   logoutUser, 
-  getCurrentUser, 
   registerUser,
   loginAsGuest,
   getUsers,
