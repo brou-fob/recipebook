@@ -24,6 +24,7 @@ import {
   migrateGlobalFavorites
 } from './utils/userFavorites';
 import { toggleMenuFavorite } from './utils/menuFavorites';
+import { applyFaviconSettings } from './utils/faviconUtils';
 
 // Helper function to check if a recipe matches the category filter
 function matchesCategoryFilter(recipe, categoryFilter) {
@@ -60,6 +61,11 @@ function App() {
     if (user) {
       setCurrentUser(user);
     }
+  }, []);
+
+  // Apply favicon settings on mount
+  useEffect(() => {
+    applyFaviconSettings();
   }, []);
 
   // Load recipes from localStorage on mount

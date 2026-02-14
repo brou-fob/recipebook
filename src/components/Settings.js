@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan } from '../utils/customLists';
+import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText } from '../utils/customLists';
 import { isCurrentUserAdmin } from '../utils/userManagement';
 import UserManagement from './UserManagement';
 import { getCategoryImages, addCategoryImage, updateCategoryImage, removeCategoryImage, getAlreadyAssignedCategories } from '../utils/categoryImages';
 import { fileToBase64 } from '../utils/imageUtils';
+import { updateFavicon, updatePageTitle } from '../utils/faviconUtils';
 
 const CATEGORY_ALREADY_ASSIGNED_ERROR = 'Die folgenden Kategorien sind bereits einem anderen Bild zugeordnet: {categories}\n\nBitte wählen Sie andere Kategorien.';
 
@@ -30,16 +31,30 @@ function Settings({ onBack, currentUser }) {
   const [editingImageId, setEditingImageId] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
+  // Favicon state
+  const [faviconImage, setFaviconImage] = useState(null);
+  const [faviconText, setFaviconText] = useState('');
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     setLists(getCustomLists());
     setHeaderSlogan(getHeaderSlogan());
     setCategoryImages(getCategoryImages());
+    setFaviconImage(getFaviconImage());
+    setFaviconText(getFaviconText());
   }, []);
 
   const handleSave = () => {
     saveCustomLists(lists);
     saveHeaderSlogan(headerSlogan);
+    saveFaviconImage(faviconImage);
+    saveFaviconText(faviconText);
+    
+    // Apply favicon changes immediately
+    updateFavicon(faviconImage);
+    updatePageTitle(faviconText);
+    
     alert('Einstellungen erfolgreich gespeichert!');
   };
 
@@ -209,6 +224,27 @@ function Settings({ onBack, currentUser }) {
     setSelectedCategories([]);
   };
 
+  // Favicon handlers
+  const handleFaviconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingFavicon(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      setFaviconImage(base64);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
+  const handleRemoveFavicon = () => {
+    setFaviconImage(null);
+  };
+
   return (
     <div className="settings-container">
       <div className="settings-header">
@@ -256,6 +292,69 @@ function Settings({ onBack, currentUser }) {
                   onChange={(e) => setHeaderSlogan(e.target.value)}
                   placeholder="Header-Slogan eingeben..."
                 />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Favicon</h3>
+              <p className="section-description">
+                Personalisieren Sie das Favicon (Browser-Tab-Symbol) und den Titel Ihrer Recipebook-Instanz.
+              </p>
+              
+              {/* Favicon Text */}
+              <div className="favicon-text-section">
+                <label htmlFor="faviconText">Favicon-Text (Browser-Tab-Titel):</label>
+                <div className="list-input">
+                  <input
+                    type="text"
+                    id="faviconText"
+                    value={faviconText}
+                    onChange={(e) => setFaviconText(e.target.value)}
+                    placeholder="z.B. DishBook"
+                    maxLength={50}
+                  />
+                </div>
+                <p className="input-hint">Maximale Länge: 50 Zeichen</p>
+              </div>
+
+              {/* Favicon Image */}
+              <div className="favicon-image-section">
+                <label>Favicon-Bild:</label>
+                {faviconImage ? (
+                  <div className="favicon-preview">
+                    <img src={faviconImage} alt="Favicon" style={{ width: '32px', height: '32px' }} />
+                    <div className="favicon-actions">
+                      <label htmlFor="faviconImageFile" className="favicon-change-btn">
+                        {uploadingFavicon ? 'Hochladen...' : '🔄 Ändern'}
+                      </label>
+                      <button 
+                        className="favicon-remove-btn" 
+                        onClick={handleRemoveFavicon}
+                        disabled={uploadingFavicon}
+                      >
+                        ✕ Entfernen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="favicon-upload">
+                    <label htmlFor="faviconImageFile" className="image-upload-label">
+                      {uploadingFavicon ? 'Hochladen...' : '📷 Favicon hochladen'}
+                    </label>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="faviconImageFile"
+                  accept="image/*"
+                  onChange={handleFaviconUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingFavicon}
+                />
+                <p className="input-hint">
+                  Unterstützte Formate: JPEG, PNG, GIF, WebP. Maximale Größe: 5MB. 
+                  Empfohlene Größe: 32x32 oder 64x64 Pixel.
+                </p>
               </div>
             </div>
 

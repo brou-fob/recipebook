@@ -51,6 +51,7 @@ export const DEFAULT_PORTION_UNITS = [
 ];
 
 export const DEFAULT_SLOGAN = 'Unsere Besten';
+export const DEFAULT_FAVICON_TEXT = 'DishBook';
 
 /**
  * Get customizable lists from localStorage or return defaults
@@ -112,4 +113,41 @@ export function getHeaderSlogan() {
  */
 export function saveHeaderSlogan(slogan) {
   localStorage.setItem('headerSlogan', slogan);
+}
+
+/**
+ * Get the favicon image from localStorage
+ * @returns {string|null} Base64 encoded image or null
+ */
+export function getFaviconImage() {
+  return localStorage.getItem('faviconImage');
+}
+
+/**
+ * Save the favicon image to localStorage
+ * @param {string} imageBase64 - Base64 encoded image
+ */
+export function saveFaviconImage(imageBase64) {
+  if (imageBase64) {
+    localStorage.setItem('faviconImage', imageBase64);
+  } else {
+    localStorage.removeItem('faviconImage');
+  }
+}
+
+/**
+ * Get the favicon text from localStorage or return default
+ * @returns {string} Favicon text
+ */
+export function getFaviconText() {
+  const stored = localStorage.getItem('faviconText');
+  return stored || DEFAULT_FAVICON_TEXT;
+}
+
+/**
+ * Save the favicon text to localStorage
+ * @param {string} text - Favicon text
+ */
+export function saveFaviconText(text) {
+  localStorage.setItem('faviconText', text || DEFAULT_FAVICON_TEXT);
 }
