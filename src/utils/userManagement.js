@@ -1,10 +1,26 @@
 /**
  * User Management Utilities
- * Handles user data storage, authentication, and admin management
+ * Handles user data storage, authentication, and admin management using Firebase
  */
 
-const USERS_STORAGE_KEY = 'users';
-const CURRENT_USER_KEY = 'currentUser';
+import { auth, db } from '../firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInAnonymously,
+  signOut,
+  updatePassword as firebaseUpdatePassword,
+  onAuthStateChanged
+} from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs,
+  updateDoc,
+  deleteDoc
+} from 'firebase/firestore';
 
 // Permission roles
 export const ROLES = {
@@ -15,46 +31,61 @@ export const ROLES = {
   GUEST: 'guest'
 };
 
-/**
- * Simple hash for password storage
- * Note: This is a basic client-side hash for demonstration purposes.
- * In production, use proper server-side authentication with bcrypt or similar.
- * @param {string} password - Plain text password
- * @returns {string} Hashed password
- */
-function simpleHash(password) {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash.toString(36);
-}
+// Cache for current user profile data
+let currentUserCache = null;
 
 /**
- * Get all registered users from localStorage
- * @returns {Array} Array of user objects
+ * Get all registered users from Firestore
+ * @returns {Promise<Array>} Promise resolving to array of user objects
  */
-export const getUsers = () => {
-  const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
-  return usersJson ? JSON.parse(usersJson) : [];
+export const getUsers = async () => {
+  try {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    const users = [];
+    snapshot.forEach((doc) => {
+      users.push({ id: doc.id, ...doc.data() });
+    });
+    return users;
+  } catch (error) {
+    console.error('Error getting users:', error);
+    return [];
+  }
 };
 
 /**
- * Save users array to localStorage
- * @param {Array} users - Array of user objects
+ * Get user profile from Firestore
+ * @param {string} userId - User ID
+ * @returns {Promise<Object|null>} User profile data
  */
-export const saveUsers = (users) => {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+export const getUserProfile = async (userId) => {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      return { id: userDoc.id, ...userDoc.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    return null;
+  }
+};
+
+/**
+ * Check if this is the first user (determines admin status)
+ * @returns {Promise<boolean>} True if no users exist yet
+ */
+const isFirstUser = async () => {
+  const users = await getUsers();
+  return users.length === 0;
 };
 
 /**
  * Register a new user
  * @param {Object} userData - User data {vorname, nachname, email, password}
- * @returns {Object} { success: boolean, message: string, user?: Object }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string, user?: Object }
  */
-export const registerUser = (userData) => {
+export const registerUser = async (userData) => {
   const { vorname, nachname, email, password } = userData;
   
   // Validation
@@ -62,86 +93,149 @@ export const registerUser = (userData) => {
     return { success: false, message: 'Alle Felder müssen ausgefüllt werden.' };
   }
   
-  // Check if email already exists
-  const users = getUsers();
-  const existingUser = users.find(u => u.email === email.toLowerCase().trim());
-  
-  if (existingUser) {
-    return { success: false, message: 'Diese E-Mail-Adresse ist bereits registriert.' };
+  try {
+    // Create Firebase Auth user
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email.toLowerCase().trim(),
+      password
+    );
+    
+    const userId = userCredential.user.uid;
+    const firstUser = await isFirstUser();
+    
+    // Create user profile in Firestore
+    const userProfile = {
+      vorname,
+      nachname,
+      email: email.toLowerCase().trim(),
+      isAdmin: firstUser,
+      role: firstUser ? ROLES.ADMIN : ROLES.READ,
+      createdAt: new Date().toISOString()
+    };
+    
+    await setDoc(doc(db, 'users', userId), userProfile);
+    
+    return {
+      success: true,
+      message: 'Registrierung erfolgreich!',
+      user: { id: userId, ...userProfile }
+    };
+  } catch (error) {
+    console.error('Registration error:', error);
+    
+    // Handle specific Firebase Auth errors
+    if (error.code === 'auth/email-already-in-use') {
+      return { success: false, message: 'Diese E-Mail-Adresse ist bereits registriert.' };
+    } else if (error.code === 'auth/invalid-email') {
+      return { success: false, message: 'Ungültige E-Mail-Adresse.' };
+    } else if (error.code === 'auth/weak-password') {
+      return { success: false, message: 'Das Passwort ist zu schwach. Mindestens 6 Zeichen erforderlich.' };
+    }
+    
+    return { success: false, message: 'Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.' };
   }
-  
-  // Create new user
-  const isFirstUser = users.length === 0;
-  const newUser = {
-    id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
-    vorname,
-    nachname,
-    email: email.toLowerCase().trim(),
-    password: simpleHash(password), // Hashed password
-    isAdmin: isFirstUser, // First user is automatically admin
-    role: isFirstUser ? ROLES.ADMIN : ROLES.READ, // First user gets admin role, others get read
-    createdAt: new Date().toISOString()
-  };
-  
-  // Save user
-  const updatedUsers = [...users, newUser];
-  saveUsers(updatedUsers);
-  
-  return { 
-    success: true, 
-    message: 'Registrierung erfolgreich!',
-    user: { ...newUser, password: undefined } // Don't return password
-  };
 };
 
 /**
  * Login user
  * @param {string} email - User email
  * @param {string} password - User password
- * @returns {Object} { success: boolean, message: string, user?: Object, requiresPasswordChange?: boolean }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string, user?: Object, requiresPasswordChange?: boolean }
  */
-export const loginUser = (email, password) => {
+export const loginUser = async (email, password) => {
   if (!email || !password) {
     return { success: false, message: 'E-Mail und Passwort erforderlich.' };
   }
   
-  const users = getUsers();
-  const hashedPassword = simpleHash(password);
-  const user = users.find(u => 
-    u.email === email.toLowerCase().trim() && 
-    u.password === hashedPassword
-  );
-  
-  if (!user) {
-    return { success: false, message: 'Ungültige E-Mail oder Passwort.' };
+  try {
+    // Sign in with Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email.toLowerCase().trim(),
+      password
+    );
+    
+    const userId = userCredential.user.uid;
+    
+    // Get user profile from Firestore
+    const userProfile = await getUserProfile(userId);
+    
+    if (!userProfile) {
+      return { success: false, message: 'Benutzerprofil nicht gefunden.' };
+    }
+    
+    const currentUser = { id: userId, ...userProfile };
+    currentUserCache = currentUser;
+    
+    return {
+      success: true,
+      message: 'Anmeldung erfolgreich!',
+      user: currentUser,
+      requiresPasswordChange: userProfile.requiresPasswordChange || false
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    // Handle specific Firebase Auth errors
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      return { success: false, message: 'Ungültige E-Mail oder Passwort.' };
+    } else if (error.code === 'auth/invalid-email') {
+      return { success: false, message: 'Ungültige E-Mail-Adresse.' };
+    } else if (error.code === 'auth/too-many-requests') {
+      return { success: false, message: 'Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen Sie es später erneut.' };
+    }
+    
+    return { success: false, message: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.' };
   }
-  
-  // Save current user (without password)
-  const currentUser = { ...user, password: undefined };
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
-  
-  return { 
-    success: true, 
-    message: 'Anmeldung erfolgreich!',
-    user: currentUser,
-    requiresPasswordChange: user.requiresPasswordChange || false
-  };
 };
 
 /**
  * Logout current user
+ * @returns {Promise<void>}
  */
-export const logoutUser = () => {
-  localStorage.removeItem(CURRENT_USER_KEY);
+export const logoutUser = async () => {
+  try {
+    await signOut(auth);
+    currentUserCache = null;
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
 };
 
 /**
  * Get current logged-in user
+ * Returns cached user profile or null
  * @returns {Object|null} Current user object or null
  */
 export const getCurrentUser = () => {
-  const userJson = localStorage.getItem(CURRENT_USER_KEY);
-  return userJson ? JSON.parse(userJson) : null;
+  return currentUserCache;
+};
+
+/**
+ * Set up auth state observer
+ * @param {Function} callback - Callback function receiving user object or null
+ * @returns {Function} Unsubscribe function
+ */
+export const onAuthStateChange = (callback) => {
+  return onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      // User is signed in
+      const userProfile = await getUserProfile(firebaseUser.uid);
+      if (userProfile) {
+        const user = { id: firebaseUser.uid, ...userProfile };
+        currentUserCache = user;
+        callback(user);
+      } else {
+        currentUserCache = null;
+        callback(null);
+      }
+    } else {
+      // User is signed out
+      currentUserCache = null;
+      callback(null);
+    }
+  });
 };
 
 /**
@@ -157,179 +251,209 @@ export const isCurrentUserAdmin = () => {
  * Update user's admin status
  * @param {string} userId - ID of user to update
  * @param {boolean} isAdmin - New admin status
- * @returns {Object} { success: boolean, message: string }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
  */
-export const updateUserAdminStatus = (userId, isAdmin) => {
-  const users = getUsers();
-  
-  // If removing admin status, check if there's at least one other admin
-  if (!isAdmin) {
-    const adminUsers = users.filter(u => u.isAdmin);
-    if (adminUsers.length === 1 && adminUsers[0].id === userId) {
-      return { 
-        success: false, 
-        message: 'Es muss mindestens ein Administrator vorhanden sein.' 
-      };
+export const updateUserAdminStatus = async (userId, isAdmin) => {
+  try {
+    // If removing admin status, check if there's at least one other admin
+    if (!isAdmin) {
+      const users = await getUsers();
+      const adminUsers = users.filter(u => u.isAdmin);
+      if (adminUsers.length === 1 && adminUsers[0].id === userId) {
+        return {
+          success: false,
+          message: 'Es muss mindestens ein Administrator vorhanden sein.'
+        };
+      }
     }
+    
+    // Update user in Firestore
+    await updateDoc(doc(db, 'users', userId), { isAdmin });
+    
+    // Update cache if it's the current user
+    if (currentUserCache && currentUserCache.id === userId) {
+      currentUserCache = { ...currentUserCache, isAdmin };
+    }
+    
+    return {
+      success: true,
+      message: 'Admin-Status erfolgreich aktualisiert.'
+    };
+  } catch (error) {
+    console.error('Error updating admin status:', error);
+    return {
+      success: false,
+      message: 'Fehler beim Aktualisieren des Admin-Status.'
+    };
   }
-  
-  // Update user
-  const updatedUsers = users.map(u => 
-    u.id === userId ? { ...u, isAdmin } : u
-  );
-  
-  saveUsers(updatedUsers);
-  
-  // Update current user if it's the one being modified
-  const currentUser = getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    const updatedCurrentUser = { ...currentUser, isAdmin };
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedCurrentUser));
-  }
-  
-  return { 
-    success: true, 
-    message: 'Admin-Status erfolgreich aktualisiert.' 
-  };
 };
 
 /**
  * Get count of admin users
- * @returns {number}
+ * @returns {Promise<number>} Number of admin users
  */
-export const getAdminCount = () => {
-  const users = getUsers();
+export const getAdminCount = async () => {
+  const users = await getUsers();
   return users.filter(u => u.isAdmin).length;
 };
 
 /**
  * Guest login - creates a temporary session without registration
- * @returns {Object} { success: boolean, message: string, user?: Object }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string, user?: Object }
  */
-export const loginAsGuest = () => {
-  const guestUser = {
-    id: 'guest-' + Date.now().toString(),
-    vorname: 'Gast',
-    nachname: '',
-    email: 'guest@local',
-    isAdmin: false,
-    role: ROLES.GUEST,
-    isGuest: true,
-    createdAt: new Date().toISOString()
-  };
-  
-  // Save as current user (without storing in users list)
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(guestUser));
-  
-  return {
-    success: true,
-    message: 'Als Gast angemeldet.',
-    user: guestUser
-  };
+export const loginAsGuest = async () => {
+  try {
+    // Sign in anonymously with Firebase
+    const userCredential = await signInAnonymously(auth);
+    
+    const guestUser = {
+      id: userCredential.user.uid,
+      vorname: 'Gast',
+      nachname: '',
+      email: 'guest@local',
+      isAdmin: false,
+      role: ROLES.GUEST,
+      isGuest: true,
+      createdAt: new Date().toISOString()
+    };
+    
+    currentUserCache = guestUser;
+    
+    return {
+      success: true,
+      message: 'Als Gast angemeldet.',
+      user: guestUser
+    };
+  } catch (error) {
+    console.error('Guest login error:', error);
+    return {
+      success: false,
+      message: 'Gast-Anmeldung fehlgeschlagen.'
+    };
+  }
 };
 
 /**
  * Update user's role/permission
  * @param {string} userId - ID of user to update
  * @param {string} role - New role (from ROLES constant)
- * @returns {Object} { success: boolean, message: string }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
  */
-export const updateUserRole = (userId, role) => {
-  const users = getUsers();
-  
+export const updateUserRole = async (userId, role) => {
   // Validate role
   if (!Object.values(ROLES).includes(role)) {
-    return { 
-      success: false, 
-      message: 'Ungültige Berechtigung.' 
+    return {
+      success: false,
+      message: 'Ungültige Berechtigung.'
     };
   }
   
-  // Find the user
-  const user = users.find(u => u.id === userId);
-  if (!user) {
-    return { 
-      success: false, 
-      message: 'Benutzer nicht gefunden.' 
-    };
-  }
-  
-  // If changing from admin role, check if there's at least one other admin
-  if (user.isAdmin && role !== ROLES.ADMIN) {
-    const adminUsers = users.filter(u => u.isAdmin);
-    if (adminUsers.length === 1) {
-      return { 
-        success: false, 
-        message: 'Es muss mindestens ein Administrator vorhanden sein.' 
+  try {
+    const users = await getUsers();
+    
+    // Find the user
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return {
+        success: false,
+        message: 'Benutzer nicht gefunden.'
       };
     }
+    
+    // If changing from admin role, check if there's at least one other admin
+    if (user.isAdmin && role !== ROLES.ADMIN) {
+      const adminUsers = users.filter(u => u.isAdmin);
+      if (adminUsers.length === 1) {
+        return {
+          success: false,
+          message: 'Es muss mindestens ein Administrator vorhanden sein.'
+        };
+      }
+    }
+    
+    // Update user in Firestore
+    const updateData = {
+      role,
+      isAdmin: role === ROLES.ADMIN
+    };
+    await updateDoc(doc(db, 'users', userId), updateData);
+    
+    // Update cache if it's the current user
+    if (currentUserCache && currentUserCache.id === userId) {
+      currentUserCache = { ...currentUserCache, ...updateData };
+    }
+    
+    return {
+      success: true,
+      message: 'Berechtigung erfolgreich aktualisiert.'
+    };
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    return {
+      success: false,
+      message: 'Fehler beim Aktualisieren der Berechtigung.'
+    };
   }
-  
-  // Update user
-  const updatedUsers = users.map(u => 
-    u.id === userId ? { ...u, role, isAdmin: role === ROLES.ADMIN } : u
-  );
-  
-  saveUsers(updatedUsers);
-  
-  // Update current user if it's the one being modified
-  const currentUser = getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    const updatedCurrentUser = { ...currentUser, role, isAdmin: role === ROLES.ADMIN };
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedCurrentUser));
-  }
-  
-  return { 
-    success: true, 
-    message: 'Berechtigung erfolgreich aktualisiert.' 
-  };
 };
 
 /**
  * Delete a user
+ * NOTE: This deletes the user profile from Firestore but does not delete the Firebase Auth account.
+ * Deleting the Auth account requires re-authentication and should be done via Firebase Admin SDK.
+ * The orphaned Auth account can still log in but will have no profile data.
  * @param {string} userId - ID of user to delete
- * @returns {Object} { success: boolean, message: string }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
  */
-export const deleteUser = (userId) => {
-  const users = getUsers();
-  
-  // Find the user
-  const user = users.find(u => u.id === userId);
-  if (!user) {
-    return { 
-      success: false, 
-      message: 'Benutzer nicht gefunden.' 
-    };
-  }
-  
-  // If deleting an admin, check if there's at least one other admin
-  if (user.isAdmin) {
-    const adminUsers = users.filter(u => u.isAdmin);
-    if (adminUsers.length === 1) {
-      return { 
-        success: false, 
-        message: 'Der letzte Administrator kann nicht gelöscht werden.' 
+export const deleteUser = async (userId) => {
+  try {
+    const users = await getUsers();
+    
+    // Find the user
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return {
+        success: false,
+        message: 'Benutzer nicht gefunden.'
       };
     }
-  }
-  
-  // Check if trying to delete current user
-  const currentUser = getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    return { 
-      success: false, 
-      message: 'Sie können sich nicht selbst löschen.' 
+    
+    // If deleting an admin, check if there's at least one other admin
+    if (user.isAdmin) {
+      const adminUsers = users.filter(u => u.isAdmin);
+      if (adminUsers.length === 1) {
+        return {
+          success: false,
+          message: 'Der letzte Administrator kann nicht gelöscht werden.'
+        };
+      }
+    }
+    
+    // Check if trying to delete current user
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.id === userId) {
+      return {
+        success: false,
+        message: 'Sie können sich nicht selbst löschen.'
+      };
+    }
+    
+    // Delete user from Firestore
+    await deleteDoc(doc(db, 'users', userId));
+    
+    // Note: Firebase Auth user deletion requires re-authentication
+    // and should be handled separately if needed
+    
+    return {
+      success: true,
+      message: 'Benutzer erfolgreich gelöscht.'
+    };
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return {
+      success: false,
+      message: 'Fehler beim Löschen des Benutzers.'
     };
   }
-  
-  // Delete user
-  const updatedUsers = users.filter(u => u.id !== userId);
-  saveUsers(updatedUsers);
-  
-  return { 
-    success: true, 
-    message: 'Benutzer erfolgreich gelöscht.' 
-  };
 };
 
 /**
@@ -501,139 +625,152 @@ export const validatePassword = (password) => {
  * @param {string} userId - ID of user to update
  * @param {string} vorname - New first name
  * @param {string} nachname - New last name
- * @returns {Object} { success: boolean, message: string }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
  */
-export const updateUserName = (userId, vorname, nachname) => {
+export const updateUserName = async (userId, vorname, nachname) => {
   // Validation
   if (!vorname || !nachname) {
-    return { 
-      success: false, 
-      message: 'Vorname und Nachname dürfen nicht leer sein.' 
+    return {
+      success: false,
+      message: 'Vorname und Nachname dürfen nicht leer sein.'
     };
   }
 
-  const users = getUsers();
-  
-  // Find the user
-  const user = users.find(u => u.id === userId);
-  if (!user) {
-    return { 
-      success: false, 
-      message: 'Benutzer nicht gefunden.' 
+  try {
+    const users = await getUsers();
+    
+    // Find the user
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return {
+        success: false,
+        message: 'Benutzer nicht gefunden.'
+      };
+    }
+    
+    // Update user in Firestore
+    await updateDoc(doc(db, 'users', userId), { vorname, nachname });
+    
+    // Update cache if it's the current user
+    if (currentUserCache && currentUserCache.id === userId) {
+      currentUserCache = { ...currentUserCache, vorname, nachname };
+    }
+    
+    return {
+      success: true,
+      message: 'Name erfolgreich aktualisiert.'
+    };
+  } catch (error) {
+    console.error('Error updating user name:', error);
+    return {
+      success: false,
+      message: 'Fehler beim Aktualisieren des Namens.'
     };
   }
-  
-  // Update user
-  const updatedUsers = users.map(u => 
-    u.id === userId ? { ...u, vorname, nachname } : u
-  );
-  
-  saveUsers(updatedUsers);
-  
-  // Update current user if it's the one being modified
-  const currentUser = getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    const updatedCurrentUser = { ...currentUser, vorname, nachname };
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedCurrentUser));
-  }
-  
-  return { 
-    success: true, 
-    message: 'Name erfolgreich aktualisiert.' 
-  };
 };
 
 /**
  * Set a temporary password for a user
+ * NOTE: Due to Firebase client SDK limitations, this function only sets the requiresPasswordChange flag.
+ * Actual password reset must be done through Firebase password reset email or implemented via Firebase Admin SDK.
  * @param {string} userId - ID of user to update
- * @param {string} tempPassword - Temporary password (plain text)
- * @returns {Object} { success: boolean, message: string }
+ * @param {string} tempPassword - Temporary password (plain text) - Currently not used, kept for API compatibility
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
  */
-export const setTemporaryPassword = (userId, tempPassword) => {
+export const setTemporaryPassword = async (userId, tempPassword) => {
   // Validate password
   const validation = validatePassword(tempPassword);
   if (!validation.valid) {
-    return { 
-      success: false, 
-      message: validation.message 
+    return {
+      success: false,
+      message: validation.message
     };
   }
 
-  const users = getUsers();
-  
-  // Find the user
-  const user = users.find(u => u.id === userId);
-  if (!user) {
-    return { 
-      success: false, 
-      message: 'Benutzer nicht gefunden.' 
+  try {
+    const users = await getUsers();
+    
+    // Find the user
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return {
+        success: false,
+        message: 'Benutzer nicht gefunden.'
+      };
+    }
+    
+    // Update user with temporary password flag in Firestore
+    // NOTE: Firebase doesn't allow admins to set passwords for other users client-side
+    // This would need to be implemented with Firebase Admin SDK on the server
+    // For now, we'll just set the flag and the user will need to reset via email
+    await updateDoc(doc(db, 'users', userId), { requiresPasswordChange: true });
+    
+    return {
+      success: true,
+      message: 'Benutzer muss Passwort zurücksetzen.'
+    };
+  } catch (error) {
+    console.error('Error setting temporary password:', error);
+    return {
+      success: false,
+      message: 'Fehler beim Setzen des temporären Passworts.'
     };
   }
-  
-  // Update user with temporary password flag
-  const updatedUsers = users.map(u => 
-    u.id === userId ? { 
-      ...u, 
-      password: simpleHash(tempPassword),
-      requiresPasswordChange: true 
-    } : u
-  );
-  
-  saveUsers(updatedUsers);
-  
-  return { 
-    success: true, 
-    message: 'Temporäres Passwort erfolgreich gesetzt.' 
-  };
 };
 
 /**
  * Change user's own password
  * @param {string} userId - ID of user
  * @param {string} newPassword - New password (plain text)
- * @returns {Object} { success: boolean, message: string }
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
  */
-export const changePassword = (userId, newPassword) => {
+export const changePassword = async (userId, newPassword) => {
   // Validate password
   const validation = validatePassword(newPassword);
   if (!validation.valid) {
-    return { 
-      success: false, 
-      message: validation.message 
+    return {
+      success: false,
+      message: validation.message
     };
   }
 
-  const users = getUsers();
-  
-  // Find the user
-  const user = users.find(u => u.id === userId);
-  if (!user) {
-    return { 
-      success: false, 
-      message: 'Benutzer nicht gefunden.' 
+  try {
+    const user = auth.currentUser;
+    if (!user || user.uid !== userId) {
+      return {
+        success: false,
+        message: 'Benutzer nicht angemeldet oder IDs stimmen nicht überein.'
+      };
+    }
+    
+    // Update password in Firebase Auth
+    await firebaseUpdatePassword(user, newPassword);
+    
+    // Update Firestore to remove temporary password flag
+    await updateDoc(doc(db, 'users', userId), { requiresPasswordChange: false });
+    
+    // Update cache
+    if (currentUserCache && currentUserCache.id === userId) {
+      currentUserCache = { ...currentUserCache, requiresPasswordChange: false };
+    }
+    
+    return {
+      success: true,
+      message: 'Passwort erfolgreich geändert.'
+    };
+  } catch (error) {
+    console.error('Error changing password:', error);
+    
+    if (error.code === 'auth/requires-recent-login') {
+      return {
+        success: false,
+        message: 'Für diese Aktion ist eine erneute Anmeldung erforderlich.'
+      };
+    }
+    
+    return {
+      success: false,
+      message: 'Fehler beim Ändern des Passworts.'
     };
   }
-  
-  // Update user password and remove temporary flag
-  const updatedUsers = users.map(u => 
-    u.id === userId ? { 
-      ...u, 
-      password: simpleHash(newPassword),
-      requiresPasswordChange: false 
-    } : u
-  );
-  
-  saveUsers(updatedUsers);
-  
-  // Update current user if it's the one being modified
-  const currentUser = getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    const updatedCurrentUser = { ...currentUser, requiresPasswordChange: false };
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedCurrentUser));
-  }
-  
-  return { 
-    success: true, 
-    message: 'Passwort erfolgreich geändert.' 
-  };
 };

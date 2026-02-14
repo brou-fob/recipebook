@@ -14,10 +14,10 @@ import PasswordChangeModal from './components/PasswordChangeModal';
 import { 
   loginUser, 
   logoutUser, 
-  getCurrentUser, 
   registerUser,
   loginAsGuest,
-  getUsers
+  getUsers,
+  onAuthStateChange
 } from './utils/userManagement';
 import { 
   toggleFavorite,
@@ -25,6 +25,19 @@ import {
 } from './utils/userFavorites';
 import { toggleMenuFavorite } from './utils/menuFavorites';
 import { applyFaviconSettings } from './utils/faviconUtils';
+import {
+  subscribeToRecipes,
+  addRecipe as addRecipeToFirestore,
+  updateRecipe as updateRecipeInFirestore,
+  deleteRecipe as deleteRecipeFromFirestore,
+  seedSampleRecipes
+} from './utils/recipeFirestore';
+import {
+  subscribeToMenus,
+  addMenu as addMenuToFirestore,
+  updateMenu as updateMenuInFirestore,
+  deleteMenu as deleteMenuFromFirestore
+} from './utils/menuFirestore';
 
 // Helper function to check if a recipe matches the category filter
 function matchesCategoryFilter(recipe, categoryFilter) {
@@ -54,31 +67,55 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authView, setAuthView] = useState('login'); // 'login' or 'register'
   const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState([]);
 
-  // Check for existing user session on mount
+  // Set up Firebase auth state observer
   useEffect(() => {
-    const user = getCurrentUser();
-    if (user) {
+    const unsubscribe = onAuthStateChange((user) => {
       setCurrentUser(user);
-    }
+      if (user && user.requiresPasswordChange) {
+        setRequiresPasswordChange(true);
+      }
+      setAuthLoading(false);
+    });
+    
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
+
+  // Load all users when current user is authenticated (for admin features)
+  useEffect(() => {
+    if (currentUser) {
+      const loadUsers = async () => {
+        const users = await getUsers();
+        setAllUsers(users);
+      };
+      loadUsers();
+    }
+  }, [currentUser]);
 
   // Apply favicon settings on mount
   useEffect(() => {
     applyFaviconSettings();
   }, []);
 
-  // Load recipes from localStorage on mount
+  // Set up real-time listener for recipes from Firestore
   useEffect(() => {
-    const savedRecipes = localStorage.getItem('recipes');
-    if (savedRecipes) {
-      setRecipes(JSON.parse(savedRecipes));
-    } else {
-      // Load sample recipes if none exist
-      setRecipes(getSampleRecipes());
-    }
-    setRecipesLoaded(true);
-  }, []);
+    if (!currentUser) return;
+
+    const unsubscribe = subscribeToRecipes((recipesFromFirestore) => {
+      setRecipes(recipesFromFirestore);
+      setRecipesLoaded(true);
+      
+      // Seed sample recipes if collection is empty (only for first user)
+      if (recipesFromFirestore.length === 0 && currentUser) {
+        seedSampleRecipes(currentUser.id);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   // Migrate old global favorites to user-specific favorites (one-time migration)
   useEffect(() => {
@@ -87,25 +124,16 @@ function App() {
     }
   }, [currentUser, recipesLoaded, recipes]);
 
-  // Save recipes to localStorage whenever they change (but only after initial load)
+  // Set up real-time listener for menus from Firestore
   useEffect(() => {
-    if (recipesLoaded) {
-      localStorage.setItem('recipes', JSON.stringify(recipes));
-    }
-  }, [recipes, recipesLoaded]);
+    if (!currentUser) return;
 
-  // Load menus from localStorage on mount
-  useEffect(() => {
-    const savedMenus = localStorage.getItem('menus');
-    if (savedMenus) {
-      setMenus(JSON.parse(savedMenus));
-    }
-  }, []);
+    const unsubscribe = subscribeToMenus(currentUser.id, (menusFromFirestore) => {
+      setMenus(menusFromFirestore);
+    });
 
-  // Save menus to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('menus', JSON.stringify(menus));
-  }, [menus]);
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const handleSelectRecipe = (recipe) => {
     setSelectedRecipe(recipe);
@@ -137,26 +165,37 @@ function App() {
     setSelectedRecipe(null);
   };
 
-  const handleSaveRecipe = (recipe) => {
-    if (editingRecipe && !isCreatingVersion) {
-      // Update existing recipe (direct edit)
-      setRecipes(recipes.map(r => r.id === recipe.id ? recipe : r));
-    } else {
-      // Add new recipe or new version
-      const newRecipe = {
-        ...recipe,
-        id: Date.now().toString()
-      };
-      setRecipes([...recipes, newRecipe]);
+  const handleSaveRecipe = async (recipe) => {
+    if (!currentUser) return;
+
+    try {
+      if (editingRecipe && !isCreatingVersion) {
+        // Update existing recipe (direct edit)
+        const { id, ...updates } = recipe;
+        await updateRecipeInFirestore(id, updates);
+      } else {
+        // Add new recipe or new version
+        await addRecipeToFirestore(recipe, currentUser.id);
+      }
+      setIsFormOpen(false);
+      setEditingRecipe(null);
+      setIsCreatingVersion(false);
+    } catch (error) {
+      console.error('Error saving recipe:', error);
+      alert('Fehler beim Speichern des Rezepts. Bitte versuchen Sie es erneut.');
     }
-    setIsFormOpen(false);
-    setEditingRecipe(null);
-    setIsCreatingVersion(false);
   };
 
-  const handleDeleteRecipe = (recipeId) => {
-    setRecipes(recipes.filter(r => r.id !== recipeId));
-    setSelectedRecipe(null);
+  const handleDeleteRecipe = async (recipeId) => {
+    if (!currentUser) return;
+
+    try {
+      await deleteRecipeFromFirestore(recipeId);
+      setSelectedRecipe(null);
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      alert('Fehler beim Löschen des Rezepts. Bitte versuchen Sie es erneut.');
+    }
   };
 
   const handleCancelForm = () => {
@@ -175,19 +214,22 @@ function App() {
     setIsSettingsOpen(false);
   };
 
-  const handleToggleFavorite = (recipeId) => {
+  const handleToggleFavorite = async (recipeId) => {
     if (!currentUser) return;
     
-    // Toggle in user-specific favorites storage
-    toggleFavorite(currentUser.id, recipeId);
-    
-    // Trigger a re-render by updating state (but we don't modify the recipe objects anymore)
-    // Force update by setting state to a new array reference
-    setRecipes([...recipes]);
-    
-    // Update selectedRecipe to trigger re-render if it's the one being toggled
-    if (selectedRecipe && selectedRecipe.id === recipeId) {
-      setSelectedRecipe({ ...selectedRecipe });
+    try {
+      // Toggle in user-specific favorites storage in Firestore
+      await toggleFavorite(currentUser.id, recipeId);
+      
+      // Trigger a re-render by updating state
+      setRecipes([...recipes]);
+      
+      // Update selectedRecipe to trigger re-render if it's the one being toggled
+      if (selectedRecipe && selectedRecipe.id === recipeId) {
+        setSelectedRecipe({ ...selectedRecipe });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 
@@ -226,25 +268,36 @@ function App() {
     setSelectedMenu(null);
   };
 
-  const handleSaveMenu = (menu) => {
-    if (editingMenu) {
-      // Update existing menu
-      setMenus(menus.map(m => m.id === menu.id ? menu : m));
-    } else {
-      // Add new menu
-      const newMenu = {
-        ...menu,
-        id: Date.now().toString()
-      };
-      setMenus([...menus, newMenu]);
+  const handleSaveMenu = async (menu) => {
+    if (!currentUser) return;
+
+    try {
+      if (editingMenu) {
+        // Update existing menu
+        const { id, ...updates } = menu;
+        await updateMenuInFirestore(id, updates);
+      } else {
+        // Add new menu
+        await addMenuToFirestore(menu, currentUser.id);
+      }
+      setIsMenuFormOpen(false);
+      setEditingMenu(null);
+    } catch (error) {
+      console.error('Error saving menu:', error);
+      alert('Fehler beim Speichern des Menüs. Bitte versuchen Sie es erneut.');
     }
-    setIsMenuFormOpen(false);
-    setEditingMenu(null);
   };
 
-  const handleDeleteMenu = (menuId) => {
-    setMenus(menus.filter(m => m.id !== menuId));
-    setSelectedMenu(null);
+  const handleDeleteMenu = async (menuId) => {
+    if (!currentUser) return;
+
+    try {
+      await deleteMenuFromFirestore(menuId);
+      setSelectedMenu(null);
+    } catch (error) {
+      console.error('Error deleting menu:', error);
+      alert('Fehler beim Löschen des Menüs. Bitte versuchen Sie es erneut.');
+    }
   };
 
   const handleCancelMenuForm = () => {
@@ -252,26 +305,30 @@ function App() {
     setEditingMenu(null);
   };
 
-  const handleToggleMenuFavorite = (menuId) => {
+  const handleToggleMenuFavorite = async (menuId) => {
     if (!currentUser) return;
     
-    // Toggle in menu-specific favorites storage
-    toggleMenuFavorite(currentUser.id, menuId);
-    
-    // Force re-render by updating a timestamp
-    setMenus(prevMenus => [...prevMenus]);
-    
-    // Update selectedMenu if it's the one being toggled
-    if (selectedMenu && selectedMenu.id === menuId) {
-      setSelectedMenu({ ...selectedMenu });
+    try {
+      // Toggle in menu-specific favorites storage in Firestore
+      await toggleMenuFavorite(currentUser.id, menuId);
+      
+      // Force re-render by updating state
+      setMenus(prevMenus => [...prevMenus]);
+      
+      // Update selectedMenu if it's the one being toggled
+      if (selectedMenu && selectedMenu.id === menuId) {
+        setSelectedMenu({ ...selectedMenu });
+      }
+    } catch (error) {
+      console.error('Error toggling menu favorite:', error);
     }
   };
 
   // User authentication handlers
-  const handleLogin = (email, password) => {
-    const result = loginUser(email, password);
+  const handleLogin = async (email, password) => {
+    const result = await loginUser(email, password);
     if (result.success) {
-      setCurrentUser(result.user);
+      // User state will be updated by onAuthStateChange observer
       if (result.requiresPasswordChange) {
         setRequiresPasswordChange(true);
       }
@@ -281,21 +338,17 @@ function App() {
 
   const handlePasswordChanged = () => {
     setRequiresPasswordChange(false);
-    // Refresh current user to update the requiresPasswordChange flag
-    const user = getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
-    }
+    // User state will be updated by onAuthStateChange observer
   };
 
-  const handleLogout = () => {
-    logoutUser();
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await logoutUser();
+    // User state will be updated by onAuthStateChange observer
     setRequiresPasswordChange(false);
   };
 
-  const handleRegister = (userData) => {
-    const result = registerUser(userData);
+  const handleRegister = async (userData) => {
+    const result = await registerUser(userData);
     return result;
   };
 
@@ -307,13 +360,23 @@ function App() {
     setAuthView('register');
   };
 
-  const handleGuestLogin = () => {
-    const result = loginAsGuest();
-    if (result.success) {
-      setCurrentUser(result.user);
-    }
+  const handleGuestLogin = async () => {
+    const result = await loginAsGuest();
+    // User state will be updated by onAuthStateChange observer
     return result;
   };
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="App">
+        <Header />
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          Laden...
+        </div>
+      </div>
+    );
+  }
 
   // If user is not logged in, show login/register view
   if (!currentUser) {
@@ -360,7 +423,7 @@ function App() {
           onCreateVersion={handleCreateVersion}
           currentUser={currentUser}
           allRecipes={recipes}
-          allUsers={getUsers()}
+          allUsers={allUsers}
         />
       ) : currentView === 'menus' ? (
         // Menu views
@@ -421,99 +484,6 @@ function App() {
       )}
     </div>
   );
-}
-
-function getSampleRecipes() {
-  return [
-    {
-      id: '1',
-      title: 'Spaghetti Carbonara',
-      image: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=400',
-      portionen: 4,
-      kulinarik: 'Italian',
-      schwierigkeit: 3,
-      kochdauer: 30,
-      speisekategorie: 'Main Course',
-      ingredients: [
-        '400g Spaghetti',
-        '200g Pancetta or Guanciale',
-        '4 egg yolks',
-        '100g Pecorino Romano cheese',
-        'Black pepper',
-        'Salt'
-      ],
-      steps: [
-        'Cook spaghetti in salted boiling water according to package instructions.',
-        'While pasta cooks, cut pancetta into small pieces and fry until crispy.',
-        'In a bowl, mix egg yolks with grated Pecorino Romano and black pepper.',
-        'Drain pasta, reserving 1 cup of pasta water.',
-        'Add hot pasta to pancetta pan, remove from heat.',
-        'Quickly mix in egg mixture, adding pasta water to create a creamy sauce.',
-        'Serve immediately with extra cheese and black pepper.'
-      ]
-    },
-    {
-      id: '2',
-      title: 'Classic Margherita Pizza',
-      image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400',
-      portionen: 2,
-      kulinarik: 'Italian',
-      schwierigkeit: 2,
-      kochdauer: 25,
-      speisekategorie: 'Main Course',
-      ingredients: [
-        '500g Pizza dough',
-        '200g San Marzano tomatoes',
-        '200g Fresh mozzarella',
-        'Fresh basil leaves',
-        '2 tbsp Olive oil',
-        'Salt',
-        'Oregano'
-      ],
-      steps: [
-        'Preheat oven to 250°C (480°F).',
-        'Roll out pizza dough to desired thickness.',
-        'Crush tomatoes and spread evenly on dough, leaving a border.',
-        'Season with salt and oregano.',
-        'Tear mozzarella and distribute over the pizza.',
-        'Drizzle with olive oil.',
-        'Bake for 10-12 minutes until crust is golden.',
-        'Top with fresh basil leaves before serving.'
-      ]
-    },
-    {
-      id: '3',
-      title: 'Chocolate Chip Cookies',
-      image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400',
-      portionen: 24,
-      kulinarik: 'American',
-      schwierigkeit: 1,
-      kochdauer: 40,
-      speisekategorie: 'Dessert',
-      ingredients: [
-        '200g Butter, softened',
-        '150g Brown sugar',
-        '100g White sugar',
-        '2 Eggs',
-        '2 tsp Vanilla extract',
-        '300g All-purpose flour',
-        '1 tsp Baking soda',
-        '1/2 tsp Salt',
-        '300g Chocolate chips'
-      ],
-      steps: [
-        'Preheat oven to 180°C (350°F).',
-        'Cream together butter and both sugars until fluffy.',
-        'Beat in eggs and vanilla extract.',
-        'In separate bowl, mix flour, baking soda, and salt.',
-        'Gradually blend dry ingredients into wet mixture.',
-        'Fold in chocolate chips.',
-        'Drop spoonfuls of dough onto baking sheets.',
-        'Bake for 10-12 minutes until edges are golden.',
-        'Cool on baking sheet for 5 minutes before transferring.'
-      ]
-    }
-  ];
 }
 
 export default App;
