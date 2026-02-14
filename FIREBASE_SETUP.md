@@ -264,7 +264,7 @@ Nachdem Sie Firebase erfolgreich eingerichtet haben, folgen hier die wichtigsten
 ### 2. Benutzerverwaltung einrichten
 
 #### Weitere Benutzer hinzufügen
-1. Andere Benutzer können sich über die Registrierungsseite anmelden
+1. Andere Benutzer können sich über die Registrierungsseite registrieren
 2. Neue Benutzer erhalten standardmäßig **Lesen**-Rechte
 3. Als Administrator können Sie die Berechtigungen anpassen
 
