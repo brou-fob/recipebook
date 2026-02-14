@@ -21,10 +21,11 @@ const firebaseConfig = {
 
 // Validate that all required environment variables are present
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error(
-    'Firebase configuration is missing. Please create a .env.local file with your Firebase credentials. ' +
-    'See .env.example for the required format.'
-  );
+  const errorMessage = 
+    'Firebase configuration is missing! Please create a .env.local file with your Firebase credentials. ' +
+    'Copy .env.example to .env.local and fill in your Firebase project details from https://console.firebase.google.com/';
+  console.error(errorMessage);
+  throw new Error(errorMessage);
 }
 
 // Initialize Firebase

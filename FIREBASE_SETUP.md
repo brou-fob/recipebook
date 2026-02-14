@@ -52,10 +52,7 @@ Das Firebase SDK ist bereits in diesem Projekt installiert. Falls Sie es in eine
 npm install firebase
 ```
 
-Für zusätzliche Firebase-Services (bereits installiert):
-```bash
-npm install @firebase/firestore @firebase/auth
-```
+**Hinweis**: Das `firebase` Paket enthält alle benötigten Module (Firestore, Auth, etc.) und wird modular importiert. Es ist nicht notwendig, zusätzliche Pakete wie `@firebase/firestore` oder `@firebase/auth` separat zu installieren.
 
 ## Schritt 4: Firebase konfigurieren
 
