@@ -118,7 +118,11 @@ The app is live and available at: **[https://brou-cgn.github.io/recipebook](http
 
 This application is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
 
+**⚠️ WICHTIG:** Für das Deployment müssen Firebase Secrets als GitHub Actions Secrets konfiguriert werden.  
+👉 **[GitHub Secrets Setup Anleitung](GITHUB_SECRETS_SETUP.md)** - Schritt-für-Schritt Anleitung zur Behebung der leeren Seite
+
 ### Documentation:
+- **[GITHUB_SECRETS_SETUP.md](GITHUB_SECRETS_SETUP.md)** - 🔒 Anleitung zum Einrichten der GitHub Secrets (ERFORDERLICH)
 - **[PUBLIKATION.md](PUBLIKATION.md)** - 🇩🇪 Vollständiger Leitfaden für die Veröffentlichung (Deutsch, für Laien verständlich)
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - 🇩🇪 Technische Deployment-Details (Deutsch)
 - **[VERÖFFENTLICHUNG.md](VERÖFFENTLICHUNG.md)** - 🇩🇪 Zusammenfassung der durchgeführten Schritte
