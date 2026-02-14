@@ -111,6 +111,37 @@ describe('User Management Utilities', () => {
       expect(result.success).toBe(true);
       expect(result.user.email).toBe('max@example.com');
     });
+
+    test('should trim whitespace from email', () => {
+      const result = registerUser({
+        vorname: 'Benjamin',
+        nachname: 'Rousselli',
+        email: '  benjamin.rousselli@googlemail.com  ',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user.email).toBe('benjamin.rousselli@googlemail.com');
+    });
+
+    test('should prevent duplicate registration with whitespace-trimmed emails', () => {
+      registerUser({
+        vorname: 'User1',
+        nachname: 'Test',
+        email: 'duplicate@example.com',
+        password: 'password123'
+      });
+
+      const result = registerUser({
+        vorname: 'User2',
+        nachname: 'Test',
+        email: '  duplicate@example.com  ',
+        password: 'password456'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('bereits registriert');
+    });
   });
 
   describe('loginUser', () => {
@@ -149,6 +180,31 @@ describe('User Management Utilities', () => {
       const result = loginUser('TEST@EXAMPLE.COM', 'password123');
 
       expect(result.success).toBe(true);
+    });
+
+    test('should trim whitespace from email during login', () => {
+      const result = loginUser('  test@example.com  ', 'password123');
+
+      expect(result.success).toBe(true);
+      expect(result.user.email).toBe('test@example.com');
+    });
+
+    test('should handle whitespace in email for user registered with whitespace', () => {
+      // Register a user with email containing whitespace
+      registerUser({
+        vorname: 'Benjamin',
+        nachname: 'Rousselli',
+        email: '  benjamin.rousselli@googlemail.com  ',
+        password: 'testpass123'
+      });
+
+      // Should be able to login without whitespace
+      const result1 = loginUser('benjamin.rousselli@googlemail.com', 'testpass123');
+      expect(result1.success).toBe(true);
+
+      // Should also be able to login with whitespace
+      const result2 = loginUser('  benjamin.rousselli@googlemail.com  ', 'testpass123');
+      expect(result2.success).toBe(true);
     });
 
     test('should set current user on successful login', () => {
