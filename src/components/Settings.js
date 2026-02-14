@@ -320,6 +320,15 @@ function Settings({ onBack, currentUser }) {
                   <div key={img.id} className="category-image-item">
                     <div className="category-image-preview">
                       <img src={img.image} alt="Category" />
+                      {editingImageId !== img.id && (
+                        <button
+                          className="category-image-remove-icon"
+                          onClick={() => handleRemoveCategoryImage(img.id)}
+                          title="Bild entfernen"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                     
                     {editingImageId === img.id ? (
@@ -384,13 +393,6 @@ function Settings({ onBack, currentUser }) {
                             title="Kategorien bearbeiten"
                           >
                             ✏️ Bearbeiten
-                          </button>
-                          <button 
-                            className="remove-image-btn" 
-                            onClick={() => handleRemoveCategoryImage(img.id)}
-                            title="Bild entfernen"
-                          >
-                            🗑️ Entfernen
                           </button>
                         </div>
                       </div>
