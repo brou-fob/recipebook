@@ -682,3 +682,103 @@
     padding: 0.4rem 0.6rem;
   }
 }
+
+/* Favicon Settings Styles */
+.favicon-text-section,
+.favicon-image-section {
+  margin-top: 1rem;
+}
+
+.favicon-text-section label,
+.favicon-image-section label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.input-hint {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+.favicon-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  margin-top: 0.5rem;
+}
+
+.favicon-preview img {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  padding: 4px;
+}
+
+.favicon-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.favicon-change-btn,
+.favicon-remove-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.favicon-change-btn {
+  background: #DF7A00;
+  color: white;
+  flex: 1;
+}
+
+.favicon-change-btn:hover {
+  background: #f57c00;
+  transform: translateY(-1px);
+}
+
+.favicon-remove-btn {
+  background: #f44336;
+  color: white;
+}
+
+.favicon-remove-btn:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+}
+
+.favicon-remove-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.favicon-upload {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .favicon-preview {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .favicon-actions {
+    width: 100%;
+  }
+}
