@@ -25,8 +25,8 @@ function Register({ onRegister, onSwitchToLogin }) {
     setSuccess('');
     
     // Trim all inputs to prevent whitespace issues (especially on mobile)
-    const trimmedPassword = formData.password.trim();
-    const trimmedConfirmPassword = formData.confirmPassword.trim();
+    const trimmedPassword = (formData.password || '').trim();
+    const trimmedConfirmPassword = (formData.confirmPassword || '').trim();
     
     // Validate passwords match
     if (trimmedPassword !== trimmedConfirmPassword) {
@@ -41,9 +41,9 @@ function Register({ onRegister, onSwitchToLogin }) {
     }
     
     const result = onRegister({
-      vorname: formData.vorname.trim(),
-      nachname: formData.nachname.trim(),
-      email: formData.email.trim(),
+      vorname: (formData.vorname || '').trim(),
+      nachname: (formData.nachname || '').trim(),
+      email: (formData.email || '').trim(),
       password: trimmedPassword
     });
     
