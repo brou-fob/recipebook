@@ -64,7 +64,7 @@ export const registerUser = (userData) => {
   
   // Check if email already exists
   const users = getUsers();
-  const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const existingUser = users.find(u => u.email === email.toLowerCase().trim());
   
   if (existingUser) {
     return { success: false, message: 'Diese E-Mail-Adresse ist bereits registriert.' };
@@ -76,7 +76,7 @@ export const registerUser = (userData) => {
     id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
     vorname,
     nachname,
-    email: email.toLowerCase(),
+    email: email.toLowerCase().trim(),
     password: simpleHash(password), // Hashed password
     isAdmin: isFirstUser, // First user is automatically admin
     role: isFirstUser ? ROLES.ADMIN : ROLES.READ, // First user gets admin role, others get read
@@ -108,7 +108,7 @@ export const loginUser = (email, password) => {
   const users = getUsers();
   const hashedPassword = simpleHash(password);
   const user = users.find(u => 
-    u.email.toLowerCase() === email.toLowerCase() && 
+    u.email === email.toLowerCase().trim() && 
     u.password === hashedPassword
   );
   
