@@ -305,7 +305,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
             )}
             {userCanCreateVersion && !userCanDirectlyEdit && (
               <button className="version-button" onClick={() => onCreateVersion(recipe)}>
-                Neue Version erstellen
+                Eigene Version erstellen
               </button>
             )}
             {userCanDelete && (
@@ -360,7 +360,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
             )}
             {userCanCreateVersion && !userCanDirectlyEdit && (
               <button className="version-button" onClick={() => onCreateVersion(recipe)}>
-                Neue Version erstellen
+                Eigene Version erstellen
               </button>
             )}
             {userCanDelete && (
