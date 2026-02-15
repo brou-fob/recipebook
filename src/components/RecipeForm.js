@@ -239,7 +239,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     <div className="recipe-form-container">
       <div className="recipe-form-header">
         <h2>
-          {isCreatingVersion ? 'Neue Version erstellen' : (recipe ? 'Rezept bearbeiten' : 'Neues Rezept hinzufügen')}
+          {isCreatingVersion ? 'Eigene Version erstellen' : (recipe ? 'Rezept bearbeiten' : 'Neues Rezept hinzufügen')}
         </h2>
         {!recipe && !isCreatingVersion && (
           <button
@@ -257,7 +257,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
         <div className="version-info-banner">
           <span className="version-info-icon">ℹ️</span>
           <div className="version-info-text">
-            <strong>Neue Version erstellen</strong>
+            <strong>Eigene Version erstellen</strong>
             <p>Sie erstellen eine neue Version von "{recipe?.title}". Das Original bleibt unverändert.</p>
           </div>
         </div>
