@@ -247,7 +247,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
               
               {recipe.schwierigkeit && (
                 <div className="metadata-item difficulty-item">
-                  <span className="metadata-label">Schwierigkeitsgrad</span>
+                  <span className="metadata-label">Schwierigkeitsgrad:</span>
                   <div className="difficulty-stars">
                     {[1, 2, 3, 4, 5].map(star => (
                       <span 

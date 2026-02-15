@@ -231,8 +231,8 @@ describe('RecipeDetail - Rating Stars Color', () => {
       />
     );
 
-    // Check that "Schwierigkeitsgrad" label is present
-    expect(screen.getByText('Schwierigkeitsgrad')).toBeInTheDocument();
+    // Check that "Schwierigkeitsgrad:" label is present
+    expect(screen.getByText('Schwierigkeitsgrad:')).toBeInTheDocument();
     
     // Check that the difficulty-stars class is present in the document
     const difficultyStars = document.querySelector('.difficulty-stars');
@@ -272,14 +272,14 @@ describe('RecipeDetail - Rating Stars Color', () => {
     );
 
     // Metadata should be visible by default
-    expect(screen.getByText('Schwierigkeitsgrad')).toBeInTheDocument();
+    expect(screen.getByText('Schwierigkeitsgrad:')).toBeInTheDocument();
 
     // Find and click the toggle button
     const toggleButton = screen.getByRole('button', { name: /Details ausblenden/i });
     fireEvent.click(toggleButton);
 
     // Metadata should now be hidden
-    expect(screen.queryByText('Schwierigkeitsgrad')).not.toBeInTheDocument();
+    expect(screen.queryByText('Schwierigkeitsgrad:')).not.toBeInTheDocument();
 
     // Button text should change
     expect(screen.getByRole('button', { name: /Details einblenden/i })).toBeInTheDocument();
@@ -289,6 +289,6 @@ describe('RecipeDetail - Rating Stars Color', () => {
     fireEvent.click(showButton);
 
     // Metadata should be visible again
-    expect(screen.getByText('Schwierigkeitsgrad')).toBeInTheDocument();
+    expect(screen.getByText('Schwierigkeitsgrad:')).toBeInTheDocument();
   });
 });
