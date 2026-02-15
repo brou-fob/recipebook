@@ -96,8 +96,6 @@ function OcrScanModal({ onImport, onCancel }) {
 
   // Apply crop and proceed to OCR
   const applyCrop = async () => {
-    setError('');
-    
     // Validate crop selection
     if (!completedCrop || !completedCrop.width || !completedCrop.height) {
       // No crop area selected or invalid crop, use the full image
@@ -111,6 +109,7 @@ function OcrScanModal({ onImport, onCancel }) {
       return;
     }
 
+    setError('');
     try {
       // Convert pixel crop to actual crop coordinates
       const pixelCrop = {
