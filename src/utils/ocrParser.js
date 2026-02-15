@@ -2,11 +2,50 @@
  * OCR Recipe Parser
  * Parses OCR-recognized text into structured recipe data
  * 
+ * This parser takes the raw text output from Tesseract.js (or any OCR engine)
+ * and extracts structured recipe information including title, ingredients,
+ * preparation steps, and metadata (servings, cooking time, etc.).
+ * 
  * Supports:
- * - German keywords (Zutaten, Zubereitung, Portionen)
- * - English keywords (Ingredients, Instructions, Directions, Servings)
+ * - German keywords (Zutaten, Zubereitung, Portionen, für X Personen)
+ * - English keywords (Ingredients, Instructions, Directions, Servings, for X people)
  * - Quantity recognition in ingredients (200g, 2 EL, etc.)
  * - Compatible with parseRecipeData() from recipeImport.js
+ * 
+ * Usage:
+ * ```javascript
+ * import { parseOcrText } from './ocrParser';
+ * 
+ * const ocrText = `Spaghetti Carbonara
+ * Portionen: 4
+ * 
+ * Zutaten
+ * 400g Spaghetti
+ * 200g Pancetta
+ * 
+ * Zubereitung
+ * 1. Nudeln kochen
+ * 2. Pancetta braten`;
+ * 
+ * const recipe = parseOcrText(ocrText, 'de');
+ * // Returns: { title, ingredients, steps, portionen, ... }
+ * ```
+ * 
+ * Integration with OCR Service:
+ * ```javascript
+ * import { recognizeText } from './ocrService';
+ * import { parseOcrText } from './ocrParser';
+ * import { parseRecipeData } from './recipeImport';
+ * 
+ * // 1. Extract text from image
+ * const ocrResult = await recognizeText(imageBase64, 'deu');
+ * 
+ * // 2. Parse into structured recipe
+ * const recipe = parseOcrText(ocrResult.text, 'de');
+ * 
+ * // 3. Validate and normalize
+ * const validated = parseRecipeData(recipe);
+ * ```
  */
 
 /**
