@@ -4,6 +4,7 @@ import { canDirectlyEditRecipe, canCreateNewVersion, canDeleteRecipe } from '../
 import { isRecipeVersion, getVersionNumber, getRecipeVersions, getParentRecipe, sortRecipeVersions } from '../utils/recipeVersioning';
 import { getUserFavorites } from '../utils/userFavorites';
 import ChefHatIcon from './icons/ChefHatIcon';
+import { isRecipeLink, parseRecipeLink } from '../utils/recipeLinkUtils';
 
 // Mobile breakpoint constant
 const MOBILE_BREAKPOINT = 480;
@@ -201,8 +202,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   const handleRecipeLinkClick = (recipeId) => {
     const linkedRecipe = allRecipes.find(r => r.id === recipeId);
     if (linkedRecipe) {
-      // Save current recipe to history
-      setRecipeHistory([...recipeHistory, selectedRecipe]);
+      // Save current recipe to history using concat for better performance
+      setRecipeHistory(recipeHistory.concat(selectedRecipe));
       // Navigate to linked recipe
       setSelectedRecipe(linkedRecipe);
       // Reset serving multiplier for new recipe
@@ -231,7 +232,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
 
   const scaleIngredient = (ingredient) => {
     // Don't scale recipe links
-    if (ingredient.startsWith('RECIPE_LINK:')) {
+    if (isRecipeLink(ingredient)) {
       return ingredient;
     }
     
@@ -263,14 +264,15 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
 
   const renderIngredient = (ingredient) => {
     // Check if ingredient is a recipe link
-    if (ingredient.startsWith('RECIPE_LINK:')) {
-      const parts = ingredient.split(':');
-      const recipeId = parts[1];
-      const recipeTitle = parts[2] || 'Unbekanntes Rezept';
+    if (isRecipeLink(ingredient)) {
+      const parsed = parseRecipeLink(ingredient);
+      if (!parsed) {
+        return ingredient; // Fallback to raw string if parsing fails
+      }
       
       return (
         <span 
-          onClick={() => handleRecipeLinkClick(recipeId)}
+          onClick={() => handleRecipeLinkClick(parsed.recipeId)}
           style={{ 
             color: '#2196F3', 
             cursor: 'pointer', 
@@ -280,7 +282,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
           onMouseEnter={(e) => e.target.style.textDecoration = 'none'}
           onMouseLeave={(e) => e.target.style.textDecoration = 'underline'}
         >
-          🔗 {recipeTitle}
+          🔗 {parsed.recipeTitle}
         </span>
       );
     }

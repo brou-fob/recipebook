@@ -6,6 +6,12 @@ import { getCustomLists } from '../utils/customLists';
 import { getUsers } from '../utils/userManagement';
 import { getImageForCategories } from '../utils/categoryImages';
 import RecipeImportModal from './RecipeImportModal';
+import { 
+  RECIPE_SEARCH_PREFIX, 
+  formatRecipeLink, 
+  isRecipeLink, 
+  getRecipeLinkTitle 
+} from '../utils/recipeLinkUtils';
 
 function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion = false, allRecipes = [] }) {
   const [title, setTitle] = useState('');
@@ -109,7 +115,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
 
   const handleSelectRecipeSuggestion = (index, recipeId, recipeTitle) => {
     const newIngredients = [...ingredients];
-    newIngredients[index] = `RECIPE_LINK:${recipeId}:${recipeTitle}`;
+    newIngredients[index] = formatRecipeLink(recipeId, recipeTitle);
     setIngredients(newIngredients);
     setIngredientSuggestions([]);
     setActiveSuggestionIndex(-1);
@@ -120,8 +126,8 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     newIngredients[index] = value;
     setIngredients(newIngredients);
     
-    // Show recipe suggestions if user types "@" followed by text
-    if (value.startsWith('@') && value.length > 1) {
+    // Show recipe suggestions if user types the search prefix followed by text
+    if (value.startsWith(RECIPE_SEARCH_PREFIX) && value.length > 1) {
       const searchTerm = value.slice(1).toLowerCase();
       const suggestions = allRecipes
         .filter(r => r.title.toLowerCase().includes(searchTerm))
@@ -493,9 +499,9 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
             )}
           </div>
           {ingredients.map((ingredient, index) => {
-            const isRecipeLink = ingredient.startsWith('RECIPE_LINK:');
-            const displayValue = isRecipeLink 
-              ? ingredient.split(':')[2] || ingredient 
+            const isLink = isRecipeLink(ingredient);
+            const displayValue = isLink 
+              ? getRecipeLinkTitle(ingredient) 
               : ingredient;
             
             return (
@@ -504,15 +510,15 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
                   type="text"
                   value={displayValue}
                   onChange={(e) => handleIngredientChange(index, e.target.value)}
-                  placeholder={`Zutat ${index + 1} (oder @ für Rezeptsuche)`}
-                  style={isRecipeLink ? { 
+                  placeholder={`Zutat ${index + 1} (oder ${RECIPE_SEARCH_PREFIX} für Rezeptsuche)`}
+                  style={isLink ? { 
                     fontWeight: 'bold', 
                     color: '#2196F3',
                     backgroundColor: '#e3f2fd'
                   } : {}}
-                  disabled={isRecipeLink}
+                  disabled={isLink}
                 />
-                {isRecipeLink && (
+                {isLink && (
                   <button
                     type="button"
                     className="remove-button"

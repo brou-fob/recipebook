@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import RecipeForm from './RecipeForm';
 import RecipeDetail from './RecipeDetail';
+import { formatRecipeLink } from '../utils/recipeLinkUtils';
 
 describe('Recipe Linking Feature', () => {
   const mockRecipes = [
@@ -95,7 +96,7 @@ describe('Recipe Linking Feature', () => {
       const recipeWithLink = {
         id: '4',
         title: 'Pizza',
-        ingredients: ['RECIPE_LINK:1:Pasta Sauce', '200g cheese'],
+        ingredients: [formatRecipeLink('1', 'Pasta Sauce'), '200g cheese'],
         steps: ['assemble', 'bake'],
       };
 
@@ -129,7 +130,7 @@ describe('Recipe Linking Feature', () => {
         id: '4',
         title: 'Pizza',
         portionen: 4,
-        ingredients: ['RECIPE_LINK:1:Pasta Sauce', '200g cheese'],
+        ingredients: [formatRecipeLink('1', 'Pasta Sauce'), '200g cheese'],
         steps: ['assemble', 'bake'],
       };
 
@@ -162,7 +163,7 @@ describe('Recipe Linking Feature', () => {
         id: '4',
         title: 'Pizza',
         portionen: 4,
-        ingredients: ['RECIPE_LINK:1:Pasta Sauce', '200g cheese'],
+        ingredients: [formatRecipeLink('1', 'Pasta Sauce'), '200g cheese'],
         steps: ['assemble', 'bake'],
       };
 
@@ -196,7 +197,7 @@ describe('Recipe Linking Feature', () => {
         id: '4',
         title: 'Pizza',
         portionen: 4,
-        ingredients: ['RECIPE_LINK:1:Pasta Sauce', '200g cheese'],
+        ingredients: [formatRecipeLink('1', 'Pasta Sauce'), '200g cheese'],
         steps: ['assemble', 'bake'],
       };
 
