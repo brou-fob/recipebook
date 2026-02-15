@@ -9,6 +9,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   const [selectedRecipe, setSelectedRecipe] = useState(initialRecipe);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [cookingMode, setCookingMode] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   const wakeLockRef = useRef(null);
 
   // Get portion units from custom lists
@@ -21,6 +22,29 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
       setPortionUnits(lists.portionUnits || []);
     };
     loadPortionUnits();
+  }, []);
+
+  // Track window size for responsive design with debouncing
+  useEffect(() => {
+    let timeoutId = null;
+    
+    const handleResize = () => {
+      // Debounce resize events to avoid excessive re-renders
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth <= 480);
+      }, 150);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Load favorite IDs when user changes
@@ -277,7 +301,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
           onClick={toggleCookingMode}
           title={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren - Bildschirm bleibt an'}
         >
-          {cookingMode ? '👨‍🍳 Aktiv' : '👨‍🍳 Kochmodus'}
+          {isMobile ? '🥄' : (cookingMode ? '👨‍🍳 Aktiv' : '👨‍🍳 Kochmodus')}
         </button>
         
         <div className="action-buttons">

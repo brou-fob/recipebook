@@ -477,7 +477,7 @@
 
 @media (max-width: 480px) {
   .recipe-detail-container {
-    padding-top: 0.5rem;
+    padding-top: 0;
   }
 
   .recipe-detail-header {
@@ -486,15 +486,34 @@
   }
   
   .back-button,
-  .cooking-mode-button,
   .action-buttons {
     width: 100%;
   }
 
-  .back-button,
-  .cooking-mode-button {
+  .back-button {
     padding: 0.875rem 1.5rem;
     font-size: 1rem;
+  }
+
+  .cooking-mode-button {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .cooking-mode-button.active {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
   }
   
   .action-buttons {
@@ -504,6 +523,50 @@
   .edit-button,
   .delete-button {
     flex: 1;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .favorite-button {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Remove hover effects on mobile/touch devices */
+  @media (hover: none) {
+    .cooking-mode-button:hover,
+    .cooking-mode-button.active:hover,
+    .favorite-button:hover,
+    .edit-button:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .cooking-mode-button:hover {
+      background: white;
+    }
+    
+    .cooking-mode-button.active:hover {
+      background: #4CAF50;
+    }
+    
+    .favorite-button:hover {
+      background: white;
+    }
+    
+    .favorite-button.is-favorite:hover {
+      background: #DF7A00;
+    }
+    
+    .edit-button:hover {
+      background: white;
+      color: #402C1C;
+    }
   }
   
   .recipe-detail-image {
