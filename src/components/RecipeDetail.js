@@ -45,6 +45,9 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   useEffect(() => {
     if (!onHeaderVisibilityChange) return;
 
+    // Mobile breakpoint constant
+    const MOBILE_BREAKPOINT = 768;
+    
     let lastScrollY = window.scrollY;
     let ticking = false;
 
@@ -70,7 +73,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     };
 
     // Hide header initially on mobile
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     if (isMobile) {
       onHeaderVisibilityChange(false);
     }
@@ -86,6 +89,21 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
 
   // Cooking mode: Wake Lock API integration
   useEffect(() => {
+    let wakeLock = null;
+    
+    const handleVisibilityChange = async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible' && cookingMode) {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLockRef.current = wakeLock;
+          }
+        } catch (err) {
+          console.error('Error re-acquiring wake lock:', err);
+        }
+      }
+    };
+
     const requestWakeLock = async () => {
       if (!cookingMode) {
         // Release wake lock if it exists
@@ -97,30 +115,19 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
             console.error('Error releasing wake lock:', err);
           }
         }
+        // Remove visibility change listener
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
         return;
       }
 
       // Request wake lock
       try {
         if ('wakeLock' in navigator) {
-          wakeLockRef.current = await navigator.wakeLock.request('screen');
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLockRef.current = wakeLock;
           
           // Re-acquire wake lock if page becomes visible again
-          const handleVisibilityChange = async () => {
-            if (wakeLockRef.current !== null && document.visibilityState === 'visible' && cookingMode) {
-              try {
-                wakeLockRef.current = await navigator.wakeLock.request('screen');
-              } catch (err) {
-                console.error('Error re-acquiring wake lock:', err);
-              }
-            }
-          };
-          
           document.addEventListener('visibilitychange', handleVisibilityChange);
-          
-          return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-          };
         }
       } catch (err) {
         console.error('Error requesting wake lock:', err);
@@ -129,8 +136,9 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
 
     requestWakeLock();
 
-    // Cleanup on unmount
+    // Cleanup on unmount or when cookingMode changes
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (wakeLockRef.current) {
         wakeLockRef.current.release().catch(err => {
           console.error('Error releasing wake lock on unmount:', err);
