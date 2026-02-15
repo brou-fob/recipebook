@@ -175,7 +175,6 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     }
 
     const recipeData = {
-      id: isCreatingVersion ? undefined : recipe?.id,
       title: title.trim(),
       image: finalImage,
       portionen: parseInt(portionen) || 4,
@@ -187,10 +186,15 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       ingredients: ingredients.filter(i => i.trim() !== ''),
       steps: steps.filter(s => s.trim() !== ''),
       authorId: authorId,
-      parentRecipeId: parentRecipeId || undefined,
+      parentRecipeId: parentRecipeId || null,
       createdAt: isCreatingVersion ? new Date().toISOString() : recipe?.createdAt,
-      versionCreatedFrom: isCreatingVersion ? recipe?.title : undefined
+      versionCreatedFrom: isCreatingVersion ? recipe?.title : null
     };
+
+    // Add id only if it exists (editing existing recipe)
+    if (!isCreatingVersion && recipe?.id) {
+      recipeData.id = recipe.id;
+    }
 
     onSave(recipeData);
   };

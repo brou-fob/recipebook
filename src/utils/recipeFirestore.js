@@ -16,6 +16,18 @@ import {
 } from 'firebase/firestore';
 
 /**
+ * Remove undefined fields from an object
+ * Firestore does not accept undefined values, so we need to filter them out
+ * @param {Object} obj - Object to filter
+ * @returns {Object} Object with undefined fields removed
+ */
+const removeUndefinedFields = (obj) => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, value]) => value !== undefined)
+  );
+};
+
+/**
  * Set up real-time listener for recipes
  * @param {Function} callback - Callback function that receives recipes array
  * @returns {Function} Unsubscribe function
@@ -75,11 +87,14 @@ export const addRecipe = async (recipe, authorId) => {
       updatedAt: serverTimestamp()
     };
     
-    const docRef = await addDoc(collection(db, 'recipes'), recipeData);
+    // Remove undefined fields before sending to Firestore
+    const cleanedData = removeUndefinedFields(recipeData);
+    
+    const docRef = await addDoc(collection(db, 'recipes'), cleanedData);
     
     return {
       id: docRef.id,
-      ...recipeData
+      ...cleanedData
     };
   } catch (error) {
     console.error('Error adding recipe:', error);
@@ -96,10 +111,15 @@ export const addRecipe = async (recipe, authorId) => {
 export const updateRecipe = async (recipeId, updates) => {
   try {
     const recipeRef = doc(db, 'recipes', recipeId);
-    await updateDoc(recipeRef, {
+    const updateData = {
       ...updates,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    // Remove undefined fields before sending to Firestore
+    const cleanedData = removeUndefinedFields(updateData);
+    
+    await updateDoc(recipeRef, cleanedData);
   } catch (error) {
     console.error('Error updating recipe:', error);
     throw error;
