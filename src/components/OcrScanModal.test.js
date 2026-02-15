@@ -446,4 +446,35 @@ describe('OcrScanModal', () => {
       expect(screen.getByText('📁 Bild hochladen')).toBeInTheDocument();
     });
   });
+
+  test('progress callback is passed to recognizeText', async () => {
+    const { fileToBase64 } = require('../utils/imageUtils');
+    const { recognizeText } = require('../utils/ocrService');
+    
+    fileToBase64.mockResolvedValue('data:image/png;base64,test');
+    recognizeText.mockResolvedValue({
+      text: 'Test Recipe',
+      confidence: 90
+    });
+
+    render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
+
+    const fileInput = screen.getByLabelText('📁 Bild hochladen');
+    const file = new File(['test'], 'test.png', { type: 'image/png' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      const skipButton = screen.getByText('Zuschneiden überspringen');
+      fireEvent.click(skipButton);
+    });
+
+    await waitFor(() => {
+      expect(recognizeText).toHaveBeenCalled();
+    }, { timeout: OCR_TIMEOUT });
+
+    // Verify that recognizeText was called with a progress callback function
+    const recognizeTextCall = recognizeText.mock.calls[0];
+    expect(recognizeTextCall).toHaveLength(3);
+    expect(recognizeTextCall[2]).toBeInstanceOf(Function); // Progress callback
+  });
 });
