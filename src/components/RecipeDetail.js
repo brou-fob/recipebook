@@ -71,16 +71,14 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
 
   // Scroll to content on mobile to hide header buttons initially (pull-to-reveal effect)
   useEffect(() => {
-    const isMobileView = window.innerWidth <= MOBILE_BREAKPOINT;
-    
-    if (isMobileView && contentRef.current) {
+    if (isMobile && contentRef.current) {
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         // Scroll to the content element to hide the header above
         contentRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
       });
     }
-  }, [initialRecipe]); // Re-run when recipe changes
+  }, [initialRecipe, isMobile]); // Re-run when recipe or mobile state changes
 
   // Mobile header visibility: hide header on mount, show on scroll up
   useEffect(() => {
