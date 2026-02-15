@@ -4,13 +4,17 @@ import { canDirectlyEditRecipe, canCreateNewVersion, canDeleteRecipe } from '../
 import { isRecipeVersion, getVersionNumber, getRecipeVersions, getParentRecipe, sortRecipeVersions } from '../utils/recipeVersioning';
 import { getUserFavorites } from '../utils/userFavorites';
 
+// Mobile breakpoint constant
+const MOBILE_BREAKPOINT = 480;
+
 function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggleFavorite, onCreateVersion, currentUser, allRecipes = [], allUsers = [], onHeaderVisibilityChange }) {
   const [servingMultiplier, setServingMultiplier] = useState(1);
   const [selectedRecipe, setSelectedRecipe] = useState(initialRecipe);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [cookingMode, setCookingMode] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
   const wakeLockRef = useRef(null);
+  const contentRef = useRef(null);
 
   // Get portion units from custom lists
   const [portionUnits, setPortionUnits] = useState([]);
@@ -34,7 +38,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
         clearTimeout(timeoutId);
       }
       timeoutId = setTimeout(() => {
-        setIsMobile(window.innerWidth <= 480);
+        setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
       }, 150);
     };
     
@@ -64,6 +68,17 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   useEffect(() => {
     setSelectedRecipe(initialRecipe);
   }, [initialRecipe]);
+
+  // Scroll to content on mobile to hide header buttons initially (pull-to-reveal effect)
+  useEffect(() => {
+    if (isMobile && contentRef.current) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        // Scroll to the content element to hide the header above
+        contentRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
+      });
+    }
+  }, [initialRecipe, isMobile]); // Re-run when recipe or mobile state changes
 
   // Mobile header visibility: hide header on mount, show on scroll up
   useEffect(() => {
@@ -340,7 +355,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
         </div>
       </div>
 
-      <div className="recipe-detail-content">
+      <div className="recipe-detail-content" ref={contentRef}>
         {recipe.image && (
           <div className="recipe-detail-image">
             <img src={recipe.image} alt={recipe.title} />
