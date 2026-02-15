@@ -29,6 +29,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     units: [],
     portionUnits: []
   });
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
     if (recipe) {
@@ -77,7 +78,12 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       const lists = await getCustomLists();
       setCustomLists(lists);
     };
+    const loadUsers = async () => {
+      const users = await getUsers();
+      setAllUsers(users);
+    };
     loadCustomLists();
+    loadUsers();
   }, []);
 
   useEffect(() => {
@@ -316,7 +322,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
               value={authorId}
               onChange={(e) => setAuthorId(e.target.value)}
             >
-              {getUsers().map((user) => (
+              {allUsers.map((user) => (
                 <option key={user.id} value={user.id}>
                   {user.vorname} {user.nachname} ({user.email})
                 </option>
