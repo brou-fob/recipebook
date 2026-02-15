@@ -23,6 +23,7 @@ function UserManagement({ onBack, currentUser }) {
   const [roleEditUser, setRoleEditUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
   const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
+  const [adminCount, setAdminCount] = useState(0);
 
   useEffect(() => {
     loadUsers();
@@ -31,13 +32,15 @@ function UserManagement({ onBack, currentUser }) {
   const loadUsers = async () => {
     const users = await getUsers();
     setUsers(users);
+    const count = await getAdminCount();
+    setAdminCount(count);
   };
 
-  const handleRoleChange = (userId, newRole) => {
-    const result = updateUserRole(userId, newRole);
+  const handleRoleChange = async (userId, newRole) => {
+    const result = await updateUserRole(userId, newRole);
     
     if (result.success) {
-      loadUsers();
+      await loadUsers();
       setMessage({ text: result.message, type: 'success' });
       setRoleEditUser(null);
       setSelectedRole('');
@@ -59,11 +62,11 @@ function UserManagement({ onBack, currentUser }) {
     setSelectedRole('');
   };
 
-  const handleDeleteUser = (userId) => {
-    const result = deleteUser(userId);
+  const handleDeleteUser = async (userId) => {
+    const result = await deleteUser(userId);
     
     if (result.success) {
-      loadUsers();
+      await loadUsers();
       setMessage({ text: result.message, type: 'success' });
       setDeleteConfirmUser(null);
     } else {
@@ -87,11 +90,11 @@ function UserManagement({ onBack, currentUser }) {
     setEditForm({ vorname: user.vorname, nachname: user.nachname });
   };
 
-  const handleSaveEdit = () => {
-    const result = updateUserName(editingUser.id, editForm.vorname, editForm.nachname);
+  const handleSaveEdit = async () => {
+    const result = await updateUserName(editingUser.id, editForm.vorname, editForm.nachname);
     
     if (result.success) {
-      loadUsers();
+      await loadUsers();
       setMessage({ text: result.message, type: 'success' });
       setEditingUser(null);
       setEditForm({ vorname: '', nachname: '' });
@@ -113,7 +116,7 @@ function UserManagement({ onBack, currentUser }) {
     setPasswordError('');
   };
 
-  const handleSetTemporaryPassword = () => {
+  const handleSetTemporaryPassword = async () => {
     // Validate password
     const validation = validatePassword(tempPassword);
     if (!validation.valid) {
@@ -121,7 +124,7 @@ function UserManagement({ onBack, currentUser }) {
       return;
     }
 
-    const result = setTemporaryPassword(passwordResetUser.id, tempPassword);
+    const result = await setTemporaryPassword(passwordResetUser.id, tempPassword);
     
     if (result.success) {
       setMessage({ text: result.message, type: 'success' });
@@ -245,7 +248,7 @@ function UserManagement({ onBack, currentUser }) {
             <strong>Gesamt:</strong> {users.length} Benutzer
           </div>
           <div className="stat-item">
-            <strong>Administratoren:</strong> {getAdminCount()}
+            <strong>Administratoren:</strong> {adminCount}
           </div>
         </div>
       </div>
