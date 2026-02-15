@@ -85,26 +85,39 @@ function OcrScanModal({ onImport, onCancel }) {
 
   // Skip crop (use full image)
   const skipCrop = () => {
+    if (!imageBase64) {
+      setError('Kein Bild geladen. Bitte laden Sie zuerst ein Bild hoch.');
+      return;
+    }
+    setError('');
     setStep('scan');
     performOcr(imageBase64);
   };
 
   // Apply crop and proceed to OCR
   const applyCrop = async () => {
-    // If no crop area is selected, use the full image
-    if (!completedCrop) {
+    setError('');
+    
+    // Validate crop selection
+    if (!completedCrop || !completedCrop.width || !completedCrop.height) {
+      // No crop area selected or invalid crop, use the full image
       skipCrop();
       return;
     }
 
-    setError('');
+    // Check for minimum crop dimensions (at least 50x50 pixels)
+    if (completedCrop.width < 50 || completedCrop.height < 50) {
+      setError('Die Auswahl ist zu klein. Bitte wählen Sie einen größeren Bereich aus oder überspringen Sie das Zuschneiden.');
+      return;
+    }
+
     try {
       // Convert pixel crop to actual crop coordinates
       const pixelCrop = {
-        x: completedCrop.x,
-        y: completedCrop.y,
-        width: completedCrop.width,
-        height: completedCrop.height
+        x: Math.round(completedCrop.x),
+        y: Math.round(completedCrop.y),
+        width: Math.round(completedCrop.width),
+        height: Math.round(completedCrop.height)
       };
 
       const croppedImage = await processCroppedImage(imageBase64, pixelCrop);
@@ -117,6 +130,13 @@ function OcrScanModal({ onImport, onCancel }) {
 
   // Perform OCR
   const performOcr = async (imageToProcess) => {
+    // Validate input
+    if (!imageToProcess) {
+      setError('Kein Bild zum Scannen verfügbar. Bitte laden Sie ein Bild hoch.');
+      setStep('upload');
+      return;
+    }
+
     setScanning(true);
     setScanProgress(0);
     setError('');
