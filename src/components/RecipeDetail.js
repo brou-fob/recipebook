@@ -24,14 +24,27 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     loadPortionUnits();
   }, []);
 
-  // Track window size for responsive design
+  // Track window size for responsive design with debouncing
   useEffect(() => {
+    let timeoutId = null;
+    
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
+      // Debounce resize events to avoid excessive re-renders
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth <= 480);
+      }, 150);
     };
     
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Load favorite IDs when user changes
