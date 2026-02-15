@@ -17,6 +17,6 @@
  */
 export const removeUndefinedFields = (obj) => {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, value]) => value !== undefined)
+    Object.entries(obj).filter(([, value]) => value !== undefined)
   );
 };
