@@ -327,12 +327,86 @@
   height: 300px;
   overflow: hidden;
   background: #f0f0f0;
+  position: relative;
 }
 
 .recipe-detail-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.image-overlay-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.image-overlay-actions > * {
+  pointer-events: auto;
+}
+
+.overlay-cooking-mode {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #4CAF50;
+  color: #4CAF50;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.overlay-cooking-mode:active {
+  transform: scale(0.95);
+}
+
+.overlay-cooking-mode.active {
+  background: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+  animation: pulse 2s infinite;
+}
+
+.overlay-back-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #666;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.overlay-back-button:active {
+  transform: scale(0.95);
+}
+
+.mobile-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .recipe-title {
@@ -484,80 +558,46 @@
   }
 
   .recipe-detail-header {
-    flex-direction: column;
+    display: none;
+  }
+  
+  .mobile-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
-    margin-bottom: 0;
     padding: 1rem;
   }
-  
-  .back-button,
-  .action-buttons {
-    width: 100%;
-  }
 
-  .back-button {
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
-  }
-
-  .cooking-mode-button {
+  .mobile-action-buttons .favorite-button {
     width: 48px;
     height: 48px;
     padding: 0;
-    border-radius: 50%;
     font-size: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
-    color: #4CAF50;
-    border: 2px solid #4CAF50;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
   }
 
-  .cooking-mode-button.active {
-    background: #4CAF50;
-    color: white;
-    border-color: #4CAF50;
-  }
-  
-  .action-buttons {
-    justify-content: space-between;
-  }
-  
-  .edit-button,
-  .delete-button {
+  .mobile-action-buttons .edit-button,
+  .mobile-action-buttons .version-button,
+  .mobile-action-buttons .delete-button {
     flex: 1;
-    padding: 0.6rem 0.75rem;
-    font-size: 0.85rem;
-  }
-
-  .favorite-button {
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-width: calc(50% - 0.375rem);
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
   }
 
   /* Remove hover effects on mobile/touch devices */
   @media (hover: none) {
-    .cooking-mode-button:hover,
-    .cooking-mode-button.active:hover,
+    .overlay-cooking-mode:hover,
+    .overlay-cooking-mode.active:hover,
+    .overlay-back-button:hover,
     .favorite-button:hover,
-    .edit-button:hover {
+    .edit-button:hover,
+    .version-button:hover {
       transform: none;
       box-shadow: none;
-    }
-    
-    .cooking-mode-button:hover {
-      background: white;
-    }
-    
-    .cooking-mode-button.active:hover {
-      background: #4CAF50;
     }
     
     .favorite-button:hover {
@@ -571,6 +611,11 @@
     .edit-button:hover {
       background: white;
       color: #402C1C;
+    }
+
+    .version-button:hover {
+      background: white;
+      color: #2196F3;
     }
   }
 

@@ -244,6 +244,18 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     setCookingMode(prev => !prev);
   };
 
+  const handleToggleFavorite = async () => {
+    if (!onToggleFavorite) return;
+    
+    await onToggleFavorite(recipe.id);
+    // Update local state immediately for responsive UI
+    if (isFavorite) {
+      setFavoriteIds(favoriteIds.filter(id => id !== recipe.id));
+    } else {
+      setFavoriteIds([...favoriteIds, recipe.id]);
+    }
+  };
+
   return (
     <div className="recipe-detail-container">
       {cookingMode && (
@@ -262,59 +274,100 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
         </div>
       )}
       
-      <div className="recipe-detail-header">
-        <button className="back-button" onClick={onBack}>
-          ← Zurück
-        </button>
-        
-        <button 
-          className={`cooking-mode-button ${cookingMode ? 'active' : ''}`}
-          onClick={toggleCookingMode}
-          title={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren - Bildschirm bleibt an'}
-        >
-          {isMobile ? '🥄' : (cookingMode ? '👨‍🍳 Aktiv' : '👨‍🍳 Kochmodus')}
-        </button>
-        
-        <div className="action-buttons">
-          {onToggleFavorite && (
-            <button 
-              className={`favorite-button ${isFavorite ? 'is-favorite' : ''}`}
-              onClick={async () => {
-                await onToggleFavorite(recipe.id);
-                // Update local state immediately for responsive UI
-                if (isFavorite) {
-                  setFavoriteIds(favoriteIds.filter(id => id !== recipe.id));
-                } else {
-                  setFavoriteIds([...favoriteIds, recipe.id]);
-                }
-              }}
-              title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
-            >
-              {isFavorite ? '★' : '☆'}
-            </button>
-          )}
-          {userCanDirectlyEdit && (
-            <button className="edit-button" onClick={() => onEdit(recipe)}>
-              Bearbeiten
-            </button>
-          )}
-          {userCanCreateVersion && !userCanDirectlyEdit && (
-            <button className="version-button" onClick={() => onCreateVersion(recipe)}>
-              Neue Version erstellen
-            </button>
-          )}
-          {userCanDelete && (
-            <button className="delete-button" onClick={handleDelete}>
-              Löschen
-            </button>
-          )}
+      {!isMobile && (
+        <div className="recipe-detail-header">
+          <button className="back-button" onClick={onBack}>
+            ← Zurück
+          </button>
+          
+          <button 
+            className={`cooking-mode-button ${cookingMode ? 'active' : ''}`}
+            onClick={toggleCookingMode}
+            title={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren - Bildschirm bleibt an'}
+          >
+            {cookingMode ? '👨‍🍳 Aktiv' : '👨‍🍳 Kochmodus'}
+          </button>
+          
+          <div className="action-buttons">
+            {onToggleFavorite && (
+              <button 
+                className={`favorite-button ${isFavorite ? 'is-favorite' : ''}`}
+                onClick={handleToggleFavorite}
+                title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+              >
+                {isFavorite ? '★' : '☆'}
+              </button>
+            )}
+            {userCanDirectlyEdit && (
+              <button className="edit-button" onClick={() => onEdit(recipe)}>
+                Bearbeiten
+              </button>
+            )}
+            {userCanCreateVersion && !userCanDirectlyEdit && (
+              <button className="version-button" onClick={() => onCreateVersion(recipe)}>
+                Neue Version erstellen
+              </button>
+            )}
+            {userCanDelete && (
+              <button className="delete-button" onClick={handleDelete}>
+                Löschen
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="recipe-detail-content" ref={contentRef}>
         {recipe.image && (
           <div className="recipe-detail-image">
             <img src={recipe.image} alt={recipe.title} />
+            {isMobile && (
+              <div className="image-overlay-actions">
+                <button 
+                  className={`overlay-cooking-mode ${cookingMode ? 'active' : ''}`}
+                  onClick={toggleCookingMode}
+                  title={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren'}
+                >
+                  🥄
+                </button>
+                <button 
+                  className="overlay-back-button"
+                  onClick={onBack}
+                  title="Zurück"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isMobile && (
+          <div className="mobile-action-buttons">
+            {onToggleFavorite && (
+              <button 
+                className={`favorite-button ${isFavorite ? 'is-favorite' : ''}`}
+                onClick={handleToggleFavorite}
+                title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+              >
+                {isFavorite ? '★' : '☆'}
+              </button>
+            )}
+            {userCanDirectlyEdit && (
+              <button className="edit-button" onClick={() => onEdit(recipe)}>
+                Bearbeiten
+              </button>
+            )}
+            {userCanCreateVersion && !userCanDirectlyEdit && (
+              <button className="version-button" onClick={() => onCreateVersion(recipe)}>
+                Neue Version erstellen
+              </button>
+            )}
+            {userCanDelete && (
+              <button className="delete-button" onClick={handleDelete}>
+                Löschen
+              </button>
+            )}
           </div>
         )}
 
