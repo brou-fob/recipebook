@@ -23,8 +23,14 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   // Load custom lists (meal categories) on mount
   useEffect(() => {
     const loadCustomLists = async () => {
-      const lists = await getCustomLists();
-      setCustomLists(lists);
+      try {
+        const lists = await getCustomLists();
+        setCustomLists(lists);
+      } catch (error) {
+        console.error('Error loading custom lists:', error);
+        // Set to empty on error, component will still work
+        setCustomLists({ mealCategories: [] });
+      }
     };
     loadCustomLists();
   }, []);
