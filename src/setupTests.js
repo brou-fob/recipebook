@@ -3,3 +3,36 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+
+// Mock environment variables for Firebase
+process.env.REACT_APP_FIREBASE_API_KEY = 'test-api-key';
+process.env.REACT_APP_FIREBASE_AUTH_DOMAIN = 'test.firebaseapp.com';
+process.env.REACT_APP_FIREBASE_PROJECT_ID = 'test-project';
+process.env.REACT_APP_FIREBASE_STORAGE_BUCKET = 'test.appspot.com';
+process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID = 'test-sender-id';
+process.env.REACT_APP_FIREBASE_APP_ID = 'test-app-id';
+process.env.REACT_APP_FIREBASE_MEASUREMENT_ID = 'test-measurement-id';
+
+// Mock Firebase
+jest.mock('./firebase', () => ({
+  auth: {
+    onAuthStateChanged: jest.fn(),
+    signInWithPopup: jest.fn(),
+    signOut: jest.fn(),
+  },
+  db: {
+    collection: jest.fn(() => ({
+      doc: jest.fn(() => ({
+        get: jest.fn(),
+        set: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      })),
+      add: jest.fn(),
+      where: jest.fn(),
+      orderBy: jest.fn(),
+      onSnapshot: jest.fn(),
+    })),
+  },
+  googleProvider: {},
+}));
