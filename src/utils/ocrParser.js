@@ -147,9 +147,7 @@ function detectSection(line) {
   // Ingredient keywords (DE and EN)
   const ingredientKeywords = [
     'zutaten',
-    'ingredients',
-    'ingredienti',
-    'ingrédients'
+    'ingredients'
   ];
   
   // Step/Preparation keywords (DE and EN)
@@ -187,7 +185,8 @@ function detectSection(line) {
  */
 function isPropertyLine(line) {
   // Pattern: "Property: Value" or similar
-  return /^[A-Za-zäöüÄÖÜß\s]+:\s*.+$/.test(line);
+  // Requires at least one non-whitespace character before colon
+  return /^[A-Za-zäöüÄÖÜß]+[A-Za-zäöüÄÖÜß\s]*:\s*.+$/.test(line);
 }
 
 /**
@@ -205,7 +204,8 @@ function isListItem(line) {
  * @returns {Object|null} - {key, value} or null
  */
 function parsePropertyLine(line) {
-  const match = line.match(/^([A-Za-zäöüÄÖÜß\s]+):\s*(.+)$/);
+  // Pattern requires at least one non-whitespace character before colon
+  const match = line.match(/^([A-Za-zäöüÄÖÜß]+[A-Za-zäöüÄÖÜß\s]*):\s*(.+)$/);
   if (!match) return null;
   
   const key = match[1].trim().toLowerCase();
