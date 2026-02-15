@@ -14,6 +14,7 @@ import {
   onSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
+import { removeUndefinedFields } from './firestoreUtils';
 
 /**
  * Set up real-time listener for menus
@@ -88,11 +89,14 @@ export const addMenu = async (menu, authorId) => {
       updatedAt: serverTimestamp()
     };
     
-    const docRef = await addDoc(collection(db, 'menus'), menuData);
+    // Remove undefined fields before sending to Firestore
+    const cleanedData = removeUndefinedFields(menuData);
+    
+    const docRef = await addDoc(collection(db, 'menus'), cleanedData);
     
     return {
       id: docRef.id,
-      ...menuData
+      ...cleanedData
     };
   } catch (error) {
     console.error('Error adding menu:', error);
@@ -109,10 +113,15 @@ export const addMenu = async (menu, authorId) => {
 export const updateMenu = async (menuId, updates) => {
   try {
     const menuRef = doc(db, 'menus', menuId);
-    await updateDoc(menuRef, {
+    const updateData = {
       ...updates,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    // Remove undefined fields before sending to Firestore
+    const cleanedData = removeUndefinedFields(updateData);
+    
+    await updateDoc(menuRef, cleanedData);
   } catch (error) {
     console.error('Error updating menu:', error);
     throw error;

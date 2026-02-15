@@ -52,8 +52,6 @@ export const isRecipeVersion = (recipe) => {
 export const createRecipeVersion = (recipe, newAuthorId) => {
   const version = {
     ...recipe,
-    // Remove the ID - will be generated on save
-    id: undefined,
     // Set parent relationship
     parentRecipeId: recipe.id,
     // Set new author
@@ -64,6 +62,9 @@ export const createRecipeVersion = (recipe, newAuthorId) => {
     createdAt: new Date().toISOString(),
     versionCreatedFrom: recipe.title
   };
+  
+  // Remove the ID - will be generated on save
+  delete version.id;
   
   return version;
 };
