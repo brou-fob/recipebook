@@ -1,0 +1,27 @@
+This file contains a text representation of what would be in the test image.
+The actual image will be created using Canvas/ImageMagick.
+
+Recipe Text Content:
+====================
+
+Spaghetti Carbonara
+
+Portionen: 4
+Kochdauer: 30
+
+Zutaten
+
+400g Spaghetti
+200g Pancetta
+4 Eier
+100g Parmesan
+Salz, Pfeffer
+
+Zubereitung
+
+1. Nudeln in Salzwasser kochen
+2. Pancetta in einer Pfanne anbraten
+3. Eier mit Parmesan verquirlen
+4. Nudeln abgießen und mit Pancetta mischen
+5. Ei-Mischung unterrühren
+6. Mit Salz und Pfeffer abschmecken

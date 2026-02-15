@@ -219,6 +219,147 @@ serve -s build
 2. Click the "🗑️ Delete" button
 3. Confirm the deletion
 
+## 📸 OCR-Import
+
+RecipeBook features powerful OCR (Optical Character Recognition) to digitize recipes from photos or scanned images. Simply photograph a recipe from a cookbook, magazine, or handwritten card, and the app will automatically extract the text and parse it into a structured recipe.
+
+### Features
+
+- **📷 Camera Capture**: Use your device camera to photograph recipes directly
+- **📁 File Upload**: Upload existing recipe images (JPG, PNG)
+- **✂️ Smart Cropping**: Optional image cropping to focus on the recipe text
+- **🌍 Multi-language Support**: Recognizes both German and English recipes
+- **✏️ Text Editing**: Review and correct OCR results before importing
+- **🔄 Offline Support**: Works completely offline after initial setup (PWA mode)
+
+### How to Use OCR Import
+
+1. **Start OCR Scan**
+   - Navigate to the recipe form
+   - Click "📸 Rezept scannen" button
+   - Choose between camera capture or file upload
+
+2. **Capture or Upload Image**
+   - **Camera**: Grant camera permissions and photograph your recipe
+   - **File Upload**: Select a recipe image from your device
+
+3. **Select Language**
+   - Choose the language of your recipe (🇩🇪 Deutsch or 🇬🇧 English)
+   - This helps improve OCR accuracy
+
+4. **Crop Image (Optional)**
+   - Use the cropping tool to select only the recipe text area
+   - Skip this step to use the full image
+   - Cropping improves accuracy and processing speed
+
+5. **Review and Edit**
+   - Wait for OCR processing (typically 5-15 seconds)
+   - Review the recognized text in the editable text field
+   - Correct any OCR errors manually
+   - The parser will automatically detect sections:
+     - Recipe title (first line)
+     - Ingredients (Zutaten/Ingredients)
+     - Preparation steps (Zubereitung/Instructions/Directions)
+     - Metadata (Portionen/Servings, Kochdauer/Time)
+
+6. **Import Recipe**
+   - Click "Übernehmen" to import the parsed recipe
+   - The recipe form will be pre-filled with all extracted data
+   - Review and save your recipe
+
+### Best Practices for OCR
+
+For best results when scanning recipes:
+
+- **Good Lighting**: Ensure the recipe is well-lit without shadows or glare
+- **High Contrast**: Clear text against a light background works best
+- **Focus**: Keep the camera steady and ensure text is in focus
+- **Orientation**: Hold the device parallel to the recipe page
+- **Full Text**: Include section headers like "Zutaten" and "Zubereitung"
+- **Cropping**: Use the crop tool to exclude non-recipe content
+
+### Supported Recipe Formats
+
+The OCR parser recognizes these common recipe structures:
+
+**German Format:**
+```
+Rezeptname
+
+Portionen: 4
+Kochdauer: 30
+
+Zutaten
+
+400g Zutat 1
+200g Zutat 2
+2 EL Zutat 3
+
+Zubereitung
+
+1. Schritt eins
+2. Schritt zwei
+3. Schritt drei
+```
+
+**English Format:**
+```
+Recipe Name
+
+Servings: 4
+Time: 30 minutes
+
+Ingredients
+
+2 cups ingredient 1
+1 cup ingredient 2
+1 tbsp ingredient 3
+
+Instructions
+
+1. First step
+2. Second step
+3. Third step
+```
+
+### Example
+
+Try OCR scanning with our test image:
+- [Recipe Sample SVG](public/test-assets/recipe-sample.svg) - A simple German recipe card
+- [Recipe Sample Text](public/test-assets/recipe-sample.txt) - Text representation
+
+### Technical Details
+
+For developers interested in the OCR implementation:
+
+- **OCR Engine**: Tesseract.js v7 (client-side)
+- **Languages**: German (`deu`) and English (`eng`)
+- **Processing**: All OCR processing happens in the browser (no server required)
+- **Caching**: Language data cached for offline use (~2-4MB per language)
+- **Parser**: Smart recipe parser with section detection and metadata extraction
+
+Detailed documentation:
+- [OCR Service API Documentation](OCR_SERVICE.md)
+- [OCR Scan Modal Component Documentation](OCR_SCAN_MODAL.md)
+
+### Troubleshooting
+
+**OCR not accurate?**
+- Ensure good image quality and lighting
+- Use the crop feature to focus on recipe text
+- Try different language settings
+- Edit the recognized text manually before importing
+
+**Camera not working?**
+- Check browser camera permissions
+- HTTPS is required for camera access
+- Try file upload as an alternative
+
+**Processing too slow?**
+- Crop the image to reduce size
+- Ensure good internet connection for initial language data download
+- After first use, works offline in PWA mode
+
 ## PWA Features
 
 ### Installation
