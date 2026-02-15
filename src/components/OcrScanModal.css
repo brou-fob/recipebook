@@ -1,0 +1,395 @@
+/* OCR Modal Styles - Based on RecipeImportModal.css */
+
+.ocr-modal {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ocr-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.ocr-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.ocr-modal-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ocr-instructions {
+  margin-bottom: 15px;
+  color: #555;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Upload Section */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 300px;
+  justify-content: center;
+}
+
+.upload-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.camera-button,
+.upload-button {
+  padding: 15px 30px;
+  border: 2px solid #2196F3;
+  background-color: white;
+  color: #2196F3;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.camera-button:hover,
+.upload-button:hover {
+  background-color: #2196F3;
+  color: white;
+}
+
+/* Camera Section */
+.camera-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.camera-video {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.camera-controls {
+  display: flex;
+  gap: 15px;
+}
+
+.capture-button,
+.stop-camera-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.capture-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.capture-button:hover {
+  background-color: #45a049;
+}
+
+.stop-camera-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.stop-camera-button:hover {
+  background-color: #da190b;
+}
+
+/* Crop Section */
+.crop-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.language-selector {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.language-selector label {
+  font-weight: 500;
+  color: #333;
+}
+
+.language-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.language-tab {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.language-tab:hover {
+  background-color: #f0f0f0;
+}
+
+.language-tab.active {
+  background-color: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.crop-container {
+  margin-top: 10px;
+  max-height: 400px;
+  overflow: auto;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+/* Scan Section */
+.scan-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.progress-container {
+  width: 100%;
+  max-width: 400px;
+  margin-top: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 30px;
+  background-color: #e0e0e0;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.3s ease;
+  border-radius: 15px;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Edit Section */
+.edit-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.ocr-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 200px;
+  margin-bottom: 15px;
+}
+
+.ocr-textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.new-scan-button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  border: 1px solid #2196F3;
+  background-color: white;
+  color: #2196F3;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.new-scan-button:hover {
+  background-color: #2196F3;
+  color: white;
+}
+
+/* Error Display */
+.ocr-error {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #ffebee;
+  border: 1px solid #ef5350;
+  border-radius: 4px;
+  color: #c62828;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+}
+
+/* Actions */
+.ocr-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  background-color: white;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+.skip-button {
+  padding: 10px 20px;
+  border: 1px solid #FF9800;
+  background-color: white;
+  color: #FF9800;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.skip-button:hover {
+  background-color: #FF9800;
+  color: white;
+}
+
+.scan-button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #2196F3;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.scan-button:hover {
+  background-color: #1976D2;
+}
+
+.import-button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.import-button:hover {
+  background-color: #45a049;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .ocr-modal {
+    max-width: 100%;
+  }
+
+  .ocr-modal-header {
+    padding: 16px;
+  }
+
+  .ocr-modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .ocr-modal-content {
+    padding: 16px;
+  }
+
+  .upload-buttons {
+    max-width: 100%;
+  }
+
+  .camera-button,
+  .upload-button {
+    font-size: 1rem;
+    padding: 12px 24px;
+  }
+
+  .crop-container {
+    max-height: 300px;
+  }
+
+  .ocr-textarea {
+    font-size: 0.85rem;
+  }
+
+  .ocr-modal-actions {
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+
+  .language-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
