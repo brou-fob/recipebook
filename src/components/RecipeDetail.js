@@ -8,6 +8,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   const [servingMultiplier, setServingMultiplier] = useState(1);
   const [selectedRecipe, setSelectedRecipe] = useState(initialRecipe);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [showMetadata, setShowMetadata] = useState(true);
 
   // Get portion units from custom lists
   const [portionUnits, setPortionUnits] = useState([]);
@@ -168,7 +169,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
           )}
           {userCanCreateVersion && !userCanDirectlyEdit && (
             <button className="version-button" onClick={() => onCreateVersion(recipe)}>
-              Neue Version erstellen
+              Eigene Version erstellen
             </button>
           )}
           {userCanDelete && (
@@ -220,34 +221,53 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
         </div>
 
         <div className="recipe-metadata">
-          {cuisineDisplay && (
-            <div className="metadata-item">
-              <span className="metadata-label">Kulinarik:</span>
-              <span className="metadata-value cuisine-badge">{cuisineDisplay}</span>
-            </div>
-          )}
+          <button 
+            className="metadata-toggle-button"
+            onClick={() => setShowMetadata(!showMetadata)}
+            title={showMetadata ? 'Details ausblenden' : 'Details einblenden'}
+          >
+            {showMetadata ? '▼ Details ausblenden' : '▶ Details einblenden'}
+          </button>
           
-          {categoryDisplay && (
-            <div className="metadata-item">
-              <span className="metadata-label">Kategorie:</span>
-              <span className="metadata-value">{categoryDisplay}</span>
-            </div>
-          )}
-          
-          {recipe.schwierigkeit && (
-            <div className="metadata-item">
-              <span className="metadata-label">Schwierigkeit:</span>
-              <span className="metadata-value difficulty-stars">
-                {'⭐'.repeat(recipe.schwierigkeit)}
-              </span>
-            </div>
-          )}
-          
-          {recipe.kochdauer && (
-            <div className="metadata-item">
-              <span className="metadata-label">Zeit:</span>
-              <span className="metadata-value">{recipe.kochdauer} Min.</span>
-            </div>
+          {showMetadata && (
+            <>
+              {cuisineDisplay && (
+                <div className="metadata-item">
+                  <span className="metadata-label">Kulinarik:</span>
+                  <span className="metadata-value cuisine-badge">{cuisineDisplay}</span>
+                </div>
+              )}
+              
+              {categoryDisplay && (
+                <div className="metadata-item">
+                  <span className="metadata-label">Kategorie:</span>
+                  <span className="metadata-value">{categoryDisplay}</span>
+                </div>
+              )}
+              
+              {recipe.schwierigkeit && (
+                <div className="metadata-item difficulty-item">
+                  <span className="metadata-label">Schwierigkeitsgrad</span>
+                  <div className="difficulty-stars">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <span 
+                        key={star}
+                        className={star <= recipe.schwierigkeit ? 'star-filled' : 'star-empty'}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {recipe.kochdauer && (
+                <div className="metadata-item">
+                  <span className="metadata-label">Zeit:</span>
+                  <span className="metadata-value">{recipe.kochdauer} Min.</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 

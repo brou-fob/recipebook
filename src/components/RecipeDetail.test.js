@@ -6,6 +6,7 @@ import RecipeDetail from './RecipeDetail';
 jest.mock('../utils/userFavorites', () => ({
   isRecipeFavorite: () => false,
   toggleRecipeFavorite: jest.fn(),
+  getUserFavorites: jest.fn(() => Promise.resolve([])),
 }));
 
 jest.mock('../utils/userManagement', () => ({
@@ -230,15 +231,18 @@ describe('RecipeDetail - Rating Stars Color', () => {
       />
     );
 
-    // Check that "Schwierigkeit" label is present
-    expect(screen.getByText('Schwierigkeit:')).toBeInTheDocument();
+    // Check that "Schwierigkeitsgrad" label is present
+    expect(screen.getByText('Schwierigkeitsgrad')).toBeInTheDocument();
     
     // Check that the difficulty-stars class is present in the document
     const difficultyStars = document.querySelector('.difficulty-stars');
     expect(difficultyStars).toBeInTheDocument();
     
-    // Check that stars are displayed (3 stars for schwierigkeit: 3)
-    expect(difficultyStars.textContent).toBe('⭐⭐⭐');
+    // Check that stars are displayed (3 filled stars + 2 empty stars for schwierigkeit: 3)
+    const filledStars = document.querySelectorAll('.star-filled');
+    const emptyStars = document.querySelectorAll('.star-empty');
+    expect(filledStars.length).toBe(3);
+    expect(emptyStars.length).toBe(2);
   });
 
   test('difficulty stars have correct CSS class for orange color', () => {
@@ -254,5 +258,37 @@ describe('RecipeDetail - Rating Stars Color', () => {
 
     const difficultyStars = document.querySelector('.difficulty-stars');
     expect(difficultyStars).toHaveClass('difficulty-stars');
+  });
+
+  test('metadata toggle button shows and hides details', () => {
+    render(
+      <RecipeDetail
+        recipe={mockRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Metadata should be visible by default
+    expect(screen.getByText('Schwierigkeitsgrad')).toBeInTheDocument();
+
+    // Find and click the toggle button
+    const toggleButton = screen.getByRole('button', { name: /Details ausblenden/i });
+    fireEvent.click(toggleButton);
+
+    // Metadata should now be hidden
+    expect(screen.queryByText('Schwierigkeitsgrad')).not.toBeInTheDocument();
+
+    // Button text should change
+    expect(screen.getByRole('button', { name: /Details einblenden/i })).toBeInTheDocument();
+
+    // Click again to show
+    const showButton = screen.getByRole('button', { name: /Details einblenden/i });
+    fireEvent.click(showButton);
+
+    // Metadata should be visible again
+    expect(screen.getByText('Schwierigkeitsgrad')).toBeInTheDocument();
   });
 });
