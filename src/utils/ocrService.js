@@ -10,7 +10,6 @@ import { createWorker } from 'tesseract.js';
 // Global worker instance
 let worker = null;
 let currentLang = null;
-let currentProgressCallback = null;
 
 /**
  * Initialize OCR worker for specified language
@@ -25,13 +24,13 @@ export async function initOcrWorker(lang = 'eng', progressCallback = null) {
     throw new Error(`Invalid language: ${lang}. Supported languages: ${validLanguages.join(', ')}`);
   }
 
-  // If worker exists with same language and same callback, reuse it
-  if (worker && currentLang === lang && currentProgressCallback === progressCallback) {
+  // If worker exists with same language and no new callback, reuse it
+  if (worker && currentLang === lang && !progressCallback) {
     return;
   }
 
-  // Terminate existing worker if language changed or callback changed
-  if (worker && (currentLang !== lang || currentProgressCallback !== progressCallback)) {
+  // Terminate existing worker if language changed
+  if (worker && currentLang !== lang) {
     await terminateWorker();
   }
 
@@ -44,10 +43,14 @@ export async function initOcrWorker(lang = 'eng', progressCallback = null) {
     }
   } : undefined;
 
-  // Create new worker with logger
-  worker = await createWorker(lang, 1, logger ? { logger } : {});
-  currentLang = lang;
-  currentProgressCallback = progressCallback;
+  // Create new worker with logger (or reuse if no logger and same language)
+  if (!worker || logger) {
+    if (worker) {
+      await terminateWorker();
+    }
+    worker = await createWorker(lang, 1, logger ? { logger } : {});
+    currentLang = lang;
+  }
 }
 
 /**
@@ -211,7 +214,6 @@ export async function terminateWorker() {
     await worker.terminate();
     worker = null;
     currentLang = null;
-    currentProgressCallback = null;
   }
 }
 
