@@ -180,8 +180,10 @@ function OCRDemo() {
         setText(result.text);
         setLoading(false);
 
-        // Clean up worker
-        await terminateWorker();
+        // Optional: Clean up worker to free memory
+        // Note: If performing multiple OCR operations, consider keeping
+        // the worker alive and only terminating when component unmounts
+        // await terminateWorker();
       };
       reader.readAsDataURL(file);
     } catch (error) {
@@ -249,7 +251,10 @@ async function performOCR(file) {
 1. **Image Quality:** Higher quality images yield better results
 2. **Text Size:** Larger text is recognized more accurately
 3. **Contrast:** High contrast between text and background improves recognition
-4. **Cleanup:** Always call `terminateWorker()` when done to free memory
+4. **Worker Management:** 
+   - For single OCR operation: Call `terminateWorker()` after completion
+   - For multiple operations: Keep worker alive and terminate only when done with all operations
+   - Component unmount: Always terminate worker in cleanup function
 5. **Error Handling:** Wrap OCR calls in try-catch blocks
 6. **Progress Feedback:** Use progress callbacks for better UX
 

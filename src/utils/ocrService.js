@@ -240,13 +240,13 @@ export function getWorkerStatus() {
 export async function recognizeTextAuto(imageBase64, onProgress = null) {
   // Try English first
   const engResult = await recognizeText(imageBase64, 'eng', (progress) => {
-    if (onProgress) onProgress(progress * 0.5); // First half of progress
+    if (onProgress) onProgress(progress / 2); // First half of progress (0-50)
   });
 
   // If confidence is low, try German
   if (engResult.confidence < 70) {
     const deuResult = await recognizeText(imageBase64, 'deu', (progress) => {
-      if (onProgress) onProgress(50 + progress * 0.5); // Second half of progress
+      if (onProgress) onProgress(50 + progress / 2); // Second half of progress (50-100)
     });
 
     // Return result with higher confidence
