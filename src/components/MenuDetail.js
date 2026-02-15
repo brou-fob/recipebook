@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './MenuDetail.css';
 import { getUserFavorites } from '../utils/userFavorites';
-import { isMenuFavorite } from '../utils/menuFavorites';
+import { getUserMenuFavorites } from '../utils/menuFavorites';
 import { groupRecipesBySections } from '../utils/menuSections';
 
 function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, onToggleMenuFavorite, currentUser }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteMenuIds, setFavoriteMenuIds] = useState([]);
   const [favoriteRecipeIds, setFavoriteRecipeIds] = useState([]);
 
-  // Load favorite status when menu or user changes
+  // Load menu favorite IDs when user changes
   useEffect(() => {
-    const loadFavoriteStatus = async () => {
-      if (currentUser?.id && menu?.id) {
-        const favorite = await isMenuFavorite(currentUser.id, menu.id);
-        setIsFavorite(favorite);
+    const loadMenuFavorites = async () => {
+      if (currentUser?.id) {
+        const favorites = await getUserMenuFavorites(currentUser.id);
+        setFavoriteMenuIds(favorites);
       } else {
-        setIsFavorite(false);
+        setFavoriteMenuIds([]);
       }
     };
-    loadFavoriteStatus();
-  }, [currentUser?.id, menu?.id]);
+    loadMenuFavorites();
+  }, [currentUser?.id]);
 
   // Load recipe favorite IDs when user changes
   useEffect(() => {
@@ -39,10 +39,17 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
     }
   };
 
+  // Derive favorite status from favoriteMenuIds
+  const isFavorite = favoriteMenuIds.includes(menu?.id);
+
   const handleToggleFavorite = async () => {
     await onToggleMenuFavorite(menu.id);
     // Update local state immediately for responsive UI
-    setIsFavorite(!isFavorite);
+    if (isFavorite) {
+      setFavoriteMenuIds(favoriteMenuIds.filter(id => id !== menu.id));
+    } else {
+      setFavoriteMenuIds([...favoriteMenuIds, menu.id]);
+    }
   };
 
   // Get recipes grouped by sections

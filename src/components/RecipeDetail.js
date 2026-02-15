@@ -2,12 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './RecipeDetail.css';
 import { canDirectlyEditRecipe, canCreateNewVersion, canDeleteRecipe } from '../utils/userManagement';
 import { isRecipeVersion, getVersionNumber, getRecipeVersions, getParentRecipe, sortRecipeVersions } from '../utils/recipeVersioning';
-import { getUserFavorites, isRecipeFavorite } from '../utils/userFavorites';
+import { getUserFavorites } from '../utils/userFavorites';
 
 function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggleFavorite, onCreateVersion, currentUser, allRecipes = [], allUsers = [] }) {
   const [servingMultiplier, setServingMultiplier] = useState(1);
   const [selectedRecipe, setSelectedRecipe] = useState(initialRecipe);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState([]);
 
   // Get portion units from custom lists
@@ -49,19 +48,9 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   const hasMultipleVersions = allVersions.length > 1;
 
   const recipe = selectedRecipe;
-
-  // Load favorite status when recipe or user changes
-  useEffect(() => {
-    const loadFavoriteStatus = async () => {
-      if (currentUser?.id && recipe?.id) {
-        const favorite = await isRecipeFavorite(currentUser.id, recipe.id);
-        setIsFavorite(favorite);
-      } else {
-        setIsFavorite(false);
-      }
-    };
-    loadFavoriteStatus();
-  }, [currentUser?.id, recipe?.id]);
+  
+  // Derive favorite status from favoriteIds
+  const isFavorite = favoriteIds.includes(recipe?.id);
 
   const userCanDirectlyEdit = canDirectlyEditRecipe(currentUser, recipe);
   const userCanCreateVersion = canCreateNewVersion(currentUser);
@@ -161,7 +150,11 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
               onClick={async () => {
                 await onToggleFavorite(recipe.id);
                 // Update local state immediately for responsive UI
-                setIsFavorite(!isFavorite);
+                if (isFavorite) {
+                  setFavoriteIds(favoriteIds.filter(id => id !== recipe.id));
+                } else {
+                  setFavoriteIds([...favoriteIds, recipe.id]);
+                }
               }}
               title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
             >
