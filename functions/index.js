@@ -469,7 +469,7 @@ exports.captureWebsiteScreenshot = onCall(
 
       console.error('Puppeteer not configured in Cloud Functions');
       throw new HttpsError(
-          'unimplemented',
+          'failed-precondition',
           'Screenshot capture requires Puppeteer to be installed. ' +
           'Please add "puppeteer": "^21.0.0" to functions/package.json and redeploy. ' +
           'For now, please use the photo scan feature instead.'

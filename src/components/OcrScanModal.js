@@ -8,6 +8,8 @@ import { recognizeRecipeWithAI } from '../utils/aiOcrService';
 
 function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
   const [step, setStep] = useState(initialImage ? 'scan' : 'upload'); // 'upload', 'scan', 'edit', 'ai-result'
+  // imageBase64 tracks the current image but OCR functions receive it directly as parameter
+  // This state is maintained for potential future features (e.g., image preview, retry)
   // eslint-disable-next-line no-unused-vars
   const [imageBase64, setImageBase64] = useState(initialImage);
   const [language, setLanguage] = useState('de'); // 'de' or 'en'
