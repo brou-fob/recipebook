@@ -435,17 +435,7 @@ exports.captureWebsiteScreenshot = onCall(
 
       console.log(`Screenshot request from user ${userId} for URL: ${url}`);
 
-      // Rate limiting (same as AI scan)
-      const withinLimit = await checkRateLimit(userId, isAuthenticated);
-      if (!withinLimit) {
-        const limit = isAuthenticated ? RATE_LIMITS.authenticated : RATE_LIMITS.guest;
-        throw new HttpsError(
-            'resource-exhausted',
-            `Rate limit exceeded: maximum ${limit} captures per day`
-        );
-      }
-
-      // Validate URL
+      // Validate URL first (before rate limiting)
       if (!url || typeof url !== 'string') {
         throw new HttpsError('invalid-argument', 'URL must be a non-empty string');
       }
@@ -460,13 +450,15 @@ exports.captureWebsiteScreenshot = onCall(
         throw new HttpsError('invalid-argument', 'Invalid URL format');
       }
 
+      // Check if Puppeteer is available BEFORE rate limiting
+      // This prevents users from consuming their quota when the feature is unavailable
       // Note: Puppeteer is NOT installed in this implementation
-      // This is a placeholder that will return a helpful error message
-      // To actually implement this, you would need to:
-      // 1. Add puppeteer to package.json dependencies
-      // 2. Deploy to a Cloud Function with sufficient resources
-      // 3. Implement the actual screenshot logic
-
+      // To activate this feature:
+      // 1. Add puppeteer to package.json dependencies: npm install puppeteer@^21.0.0
+      // 2. Deploy to a Cloud Function with sufficient resources (2GB+ memory)
+      // 3. Uncomment the implementation code below
+      // 4. Remove this error check
+      
       console.error('Puppeteer not configured in Cloud Functions');
       throw new HttpsError(
           'failed-precondition',
@@ -475,8 +467,18 @@ exports.captureWebsiteScreenshot = onCall(
           'For now, please use the photo scan feature instead.'
       );
 
-      // Future implementation would look like:
-      /*
+      // Rate limiting (only checked after Puppeteer availability)
+      // This code will run once Puppeteer is installed and the error above is removed
+      const withinLimit = await checkRateLimit(userId, isAuthenticated);
+      if (!withinLimit) {
+        const limit = isAuthenticated ? RATE_LIMITS.authenticated : RATE_LIMITS.guest;
+        throw new HttpsError(
+            'resource-exhausted',
+            `Rate limit exceeded: maximum ${limit} captures per day`
+        );
+      }
+
+      // Puppeteer implementation:
       const puppeteer = require('puppeteer');
 
       try {
