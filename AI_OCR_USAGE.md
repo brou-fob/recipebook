@@ -165,9 +165,11 @@ Alle Styles sind konsistent mit den bestehenden Styles und vollständig responsi
 
 ### Kosten & Limits
 
-- **Free Tier**: Großzügig (ca. 10.000+ Anfragen/Monat)
-- **Privacy**: Bilder werden an Google Server gesendet
+- **Free Tier**: Gemini API bietet ein großzügiges kostenloses Kontingent (Stand: 2024, Details siehe [Google AI Pricing](https://ai.google.dev/pricing))
+- **Privacy**: Bilder werden zur Verarbeitung an Google Server gesendet
 - **Geschwindigkeit**: 2-5 Sekunden pro Bild
+
+**Hinweis**: API-Limits können sich ändern. Bitte prüfen Sie die aktuelle Dokumentation von Google.
 
 ## Backward Compatibility
 

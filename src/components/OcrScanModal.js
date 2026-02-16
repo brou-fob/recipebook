@@ -182,12 +182,19 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
     // AI result import
     if (step === 'ai-result' && aiResult) {
       try {
+        // Parse time values more robustly
+        const parseTime = (timeStr) => {
+          if (!timeStr) return 0;
+          const numMatch = String(timeStr).match(/\d+/);
+          return numMatch ? parseInt(numMatch[0], 10) : 0;
+        };
+
         const recipe = {
           title: aiResult.title || '',
           ingredients: aiResult.ingredients || [],
           steps: aiResult.steps || [],
           portionen: aiResult.servings || 4,
-          kochdauer: parseInt(aiResult.prepTime) || parseInt(aiResult.cookTime) || 30,
+          kochdauer: parseTime(aiResult.prepTime) || parseTime(aiResult.cookTime) || 30,
           kulinarik: aiResult.cuisine ? [aiResult.cuisine] : [],
           schwierigkeit: aiResult.difficulty || 3,
           speisekategorie: aiResult.category || '',
