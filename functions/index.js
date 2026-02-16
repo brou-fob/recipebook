@@ -106,6 +106,18 @@ Important:
 }
 
 /**
+ * Get the appropriate rate limit for a user based on their role
+ * @param {boolean} isAdmin - Whether user is an admin
+ * @param {boolean} isAuthenticated - Whether user is authenticated
+ * @returns {number} The rate limit for the user
+ */
+function getRateLimit(isAdmin, isAuthenticated) {
+  return isAdmin ? RATE_LIMITS.admin
+    : isAuthenticated ? RATE_LIMITS.authenticated
+    : RATE_LIMITS.guest;
+}
+
+/**
  * Check and update rate limit for a user
  * @param {string} userId - User ID (or IP for anonymous)
  * @param {boolean} isAuthenticated - Whether user is authenticated
@@ -117,9 +129,7 @@ async function checkRateLimit(userId, isAuthenticated, isAdmin = false) {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const docRef = db.collection('aiScanLimits').doc(`${userId}_${today}`);
 
-  const limit = isAdmin ? RATE_LIMITS.admin
-    : isAuthenticated ? RATE_LIMITS.authenticated
-    : RATE_LIMITS.guest;
+  const limit = getRateLimit(isAdmin, isAuthenticated);
 
   try {
     const result = await db.runTransaction(async (transaction) => {
@@ -372,9 +382,7 @@ exports.scanRecipeWithAI = onCall(
       // Rate limiting
       const withinLimit = await checkRateLimit(userId, isAuthenticated, isAdmin);
       if (!withinLimit) {
-        const limit = isAdmin ? RATE_LIMITS.admin
-          : isAuthenticated ? RATE_LIMITS.authenticated
-          : RATE_LIMITS.guest;
+        const limit = getRateLimit(isAdmin, isAuthenticated);
         throw new HttpsError(
             'resource-exhausted',
             `Rate limit exceeded: maximum ${limit} scans per day`
@@ -480,9 +488,7 @@ exports.captureWebsiteScreenshot = onCall(
       // This code will run once Puppeteer is installed and the error above is removed
       const withinLimit = await checkRateLimit(userId, isAuthenticated, isAdmin);
       if (!withinLimit) {
-        const limit = isAdmin ? RATE_LIMITS.admin
-          : isAuthenticated ? RATE_LIMITS.authenticated
-          : RATE_LIMITS.guest;
+        const limit = getRateLimit(isAdmin, isAuthenticated);
         throw new HttpsError(
             'resource-exhausted',
             `Rate limit exceeded: maximum ${limit} captures per day`

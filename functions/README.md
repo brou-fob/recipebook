@@ -89,18 +89,29 @@ const admin = require('firebase-admin');
 await admin.auth().setCustomUserClaims(uid, { admin: true });
 ```
 
-Or use the Firebase CLI:
+Or create a simple Node.js script:
 
-```bash
-# Using Firebase Admin SDK in a Node.js script
-node -e "
+```javascript
+// set-admin.js
 const admin = require('firebase-admin');
-admin.initializeApp();
-admin.auth().setCustomUserClaims('USER_UID_HERE', { admin: true })
-  .then(() => console.log('Admin claim set successfully'))
+
+// Initialize with your service account
+admin.initializeApp({
+  credential: admin.credential.applicationDefault()
+});
+
+const userId = process.argv[2];
+if (!userId) {
+  console.error('Usage: node set-admin.js USER_ID');
+  process.exit(1);
+}
+
+admin.auth().setCustomUserClaims(userId, { admin: true })
+  .then(() => console.log(`Admin claim set for user: ${userId}`))
   .catch(err => console.error('Error:', err));
-"
 ```
+
+Run with: `node set-admin.js USER_UID_HERE`
 
 **Note:** Users need to sign out and sign back in for custom claims to take effect.
 
