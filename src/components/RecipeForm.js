@@ -6,6 +6,7 @@ import { getCustomLists } from '../utils/customLists';
 import { getUsers } from '../utils/userManagement';
 import { getImageForCategories } from '../utils/categoryImages';
 import RecipeImportModal from './RecipeImportModal';
+import OcrScanModal from './OcrScanModal';
 
 function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion = false }) {
   const [title, setTitle] = useState('');
@@ -23,6 +24,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const [authorId, setAuthorId] = useState('');
   const [parentRecipeId, setParentRecipeId] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showOcrModal, setShowOcrModal] = useState(false);
   const [customLists, setCustomLists] = useState({
     cuisineTypes: [],
     mealCategories: [],
@@ -235,6 +237,13 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     setShowImportModal(false);
   };
 
+  const handleOcrScan = (ocrRecipe) => {
+    // Populate form with OCR scanned data
+    handleImport(ocrRecipe);
+    // Close the OCR modal
+    setShowOcrModal(false);
+  };
+
   return (
     <div className="recipe-form-container">
       <div className="recipe-form-header">
@@ -242,14 +251,25 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
           {isCreatingVersion ? 'Eigene Version erstellen' : (recipe ? 'Rezept bearbeiten' : 'Neues Rezept hinzufügen')}
         </h2>
         {!recipe && !isCreatingVersion && (
-          <button
-            type="button"
-            className="import-button-header"
-            onClick={() => setShowImportModal(true)}
-            title="Rezept aus externer Quelle importieren"
-          >
-            📥 Importieren
-          </button>
+          <div className="header-buttons">
+            <button
+              type="button"
+              className="ocr-scan-button-header"
+              onClick={() => setShowOcrModal(true)}
+              title="Rezept mit Kamera scannen"
+              aria-label="Rezept mit Kamera scannen"
+            >
+              📷 Bild scannen
+            </button>
+            <button
+              type="button"
+              className="import-button-header"
+              onClick={() => setShowImportModal(true)}
+              title="Rezept aus externer Quelle importieren"
+            >
+              📥 Importieren
+            </button>
+          </div>
         )}
       </div>
 
@@ -538,6 +558,13 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
         <RecipeImportModal
           onImport={handleImport}
           onCancel={() => setShowImportModal(false)}
+        />
+      )}
+
+      {showOcrModal && (
+        <OcrScanModal
+          onImport={handleOcrScan}
+          onCancel={() => setShowOcrModal(false)}
         />
       )}
     </div>
