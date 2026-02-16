@@ -5,7 +5,70 @@
 Die `OcrScanModal` Komponente wurde erfolgreich um KI-gestützte OCR-Funktionalität erweitert. Benutzer können nun zwischen zwei OCR-Modi wählen:
 
 1. **Standard-OCR (Tesseract.js)** - Offline-fähig, datenschutzfreundlich
-2. **KI-Scan (Google Gemini Vision)** - Strukturierte Erkennung mit AI
+2. **KI-Scan (Google Gemini Vision)** - Strukturierte Erkennung mit AI über Firebase Cloud Functions
+
+## 🔒 Sicherheitsverbesserung: Cloud Functions
+
+**WICHTIG**: Der Gemini API-Key wird jetzt sicher serverseitig in Firebase Cloud Functions gespeichert, nicht mehr im Frontend!
+
+### Vorteile der Cloud Function-Implementierung
+
+✅ **Sicherheit**: API-Key ist nicht im Browser sichtbar  
+✅ **Kostenkontrolle**: Rate Limiting verhindert Missbrauch  
+✅ **Authentifizierung**: Nur eingeloggte Nutzer können AI OCR nutzen  
+✅ **Validierung**: Bildgröße und -typ werden serverseitig geprüft  
+
+### Rate Limits
+
+- **Authentifizierte Nutzer**: 20 Scans pro Tag
+- **Gast-Nutzer (Anonymous Auth)**: 5 Scans pro Tag
+
+## Setup und Konfiguration
+
+### 1. Firebase Cloud Functions einrichten
+
+```bash
+# API-Key als Secret setzen
+firebase functions:secrets:set GEMINI_API_KEY
+
+# Oder über Firebase Console:
+# Firebase Console → Functions → Secrets → Add secret
+# Name: GEMINI_API_KEY
+# Wert: [Dein Gemini API-Key]
+```
+
+### 2. Cloud Functions deployen
+
+```bash
+# Alle Functions deployen
+firebase deploy --only functions
+
+# Oder nur die scanRecipeWithAI Function
+firebase deploy --only functions:scanRecipeWithAI
+```
+
+### 3. Gemini API-Key erhalten
+
+1. Gehe zu [Google AI Studio](https://aistudio.google.com/)
+2. Erstelle einen API-Key
+3. Setze den Key als Firebase Secret (siehe Schritt 1)
+
+### 4. Firestore-Regeln aktualisieren (falls nötig)
+
+Die Cloud Function benötigt Schreibzugriff auf die `aiScanLimits` Collection für Rate Limiting:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Andere Regeln...
+    
+    match /aiScanLimits/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
 
 ## Neue Features
 
@@ -152,31 +215,51 @@ Alle Styles sind konsistent mit den bestehenden Styles und vollständig responsi
 
 **Test-Ergebnisse**: Alle 25 Tests bestehen ✅
 
-## Konfiguration
+## Migration & Entwicklung
 
-### Gemini API-Key einrichten
+### Lokale Entwicklung mit Emulator
 
-1. API-Key erhalten von: https://aistudio.google.com/
-2. In `.env.local` hinzufügen:
-   ```
-   REACT_APP_GEMINI_API_KEY=your-api-key-here
-   ```
-3. App neu starten
+Für lokale Tests mit Firebase Functions Emulator:
+
+```bash
+# Functions Emulator starten
+cd functions
+npm install
+firebase emulators:start --only functions
+
+# In einem anderen Terminal die App starten
+npm start
+```
+
+Der Emulator läuft standardmäßig auf `http://localhost:5001`. Die Frontend-App wird automatisch die lokalen Functions verwenden.
 
 ### Kosten & Limits
 
-- **Free Tier**: Gemini API bietet ein großzügiges kostenloses Kontingent (Stand: 2024, Details siehe [Google AI Pricing](https://ai.google.dev/pricing))
-- **Privacy**: Bilder werden zur Verarbeitung an Google Server gesendet
+- **Firebase Cloud Functions**: Großzügiger Free Tier (2M Invocations/Monat)
+- **Gemini API**: Großzügiges kostenloses Kontingent ([Google AI Pricing](https://ai.google.dev/pricing))
+- **Rate Limiting**: Schutz vor übermäßiger Nutzung (20/Tag für User, 5/Tag für Gäste)
+- **Privacy**: Bilder werden sicher über Firebase an Google gesendet
 - **Geschwindigkeit**: 2-5 Sekunden pro Bild
 
-**Hinweis**: API-Limits können sich ändern. Bitte prüfen Sie die aktuelle Dokumentation von Google.
+**Hinweis**: API-Limits können sich ändern. Bitte prüfen Sie die aktuelle Dokumentation.
+
+## Fehlerbehandlung
+
+Die Cloud Function gibt strukturierte Fehler zurück:
+
+- `unauthenticated`: Benutzer muss eingeloggt sein
+- `resource-exhausted`: Rate Limit überschritten
+- `invalid-argument`: Ungültige Bilddaten (zu groß, falscher Typ)
+- `failed-precondition`: API-Key nicht konfiguriert
+- `internal`: Gemini API-Fehler
 
 ## Backward Compatibility
 
-- ✅ Alle bestehenden Tests bestehen weiterhin
+- ✅ Alle bestehenden Tests bestehen weiterhin (23/23)
 - ✅ Standard-OCR funktioniert unverändert
-- ✅ Keine Breaking Changes
-- ✅ KI-Feature ist opt-in (nur aktiv mit API-Key)
+- ✅ Keine Breaking Changes in der UI
+- ✅ KI-Feature ist immer verfügbar (wenn Cloud Function deployed ist)
+- ✅ Alte REACT_APP_GEMINI_API_KEY wird ignoriert (deprecated)
 
 ## Nächste Schritte
 
@@ -184,4 +267,5 @@ Mögliche Erweiterungen:
 - [ ] Support für OpenAI Vision API (Vorbereitung bereits in `aiOcrService.js`)
 - [ ] Batch-Processing mehrerer Rezepte
 - [ ] Verbesserung der AI-Prompts für bessere Erkennung
+- [ ] Admin-Dashboard für Rate Limit Monitoring
 - [ ] Lokale KI-Modelle für Offline-Nutzung

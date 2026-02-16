@@ -1,46 +1,112 @@
 # AI OCR Integration Guide
 
-## Übersicht
+## 🔒 Wichtig: Cloud Functions Setup erforderlich!
 
-Dieser Leitfaden zeigt, wie die AI-Enhanced OCR in die RecipeBook-Anwendung integriert werden kann.
+**Die AI OCR Funktionalität läuft jetzt sicher über Firebase Cloud Functions!**
+
+Dieser Leitfaden zeigt, wie die sichere AI-Enhanced OCR mit Firebase Cloud Functions in die RecipeBook-Anwendung integriert wird.
+
+## Warum Cloud Functions?
+
+✅ **Sicherheit**: API-Keys bleiben serverseitig  
+✅ **Kostenkontrolle**: Rate Limiting verhindert Missbrauch  
+✅ **Authentifizierung**: Nur berechtigte Nutzer  
+✅ **Validierung**: Serverseitige Prüfung der Eingaben  
 
 ## Voraussetzungen
 
-1. **Google Gemini API Key** (empfohlen)
+1. **Firebase Projekt** mit Cloud Functions aktiviert
+2. **Google Gemini API Key**
    - Kostenlos unter https://aistudio.google.com/ erstellen
    - Großzügiges kostenloses Tier: ~10.000+ Anfragen/Monat
    - Keine Kreditkarte erforderlich
+3. **Firebase CLI** installiert
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   ```
 
-2. **Oder: OpenAI API Key** (alternative)
-   - Unter https://platform.openai.com/ erstellen
-   - Begrenztes kostenloses Tier: $5 Guthaben
-   - Kreditkarte erforderlich nach Ablauf
+## Setup (Schnellstart)
 
-## Setup
+### 1. Firebase Cloud Functions deployen
 
-### 1. API Key konfigurieren
+```bash
+# Im Projektverzeichnis
+cd functions
+npm install
 
-Kopiere `.env.example` zu `.env.local` und füge deinen API-Key hinzu:
+# Gemini API-Key als Secret setzen
+firebase functions:secrets:set GEMINI_API_KEY
+# Gib deinen Gemini API-Key ein wenn gefragt
+
+# Functions deployen
+firebase deploy --only functions
+```
+
+### 2. Firestore Security Rules aktualisieren
+
+Füge die Regel für Rate Limiting hinzu:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Bestehende Regeln...
+    
+    // Rate Limiting für AI Scans
+    match /aiScanLimits/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+Deploy die Rules:
+```bash
+firebase deploy --only firestore:rules
+```
+
+### 3. App starten
+
+```bash
+npm start
+```
+
+Die App verbindet sich automatisch mit den deployed Cloud Functions!
+
+## Lokale Entwicklung
+
+Für lokale Tests ohne Deployment:
+
+```bash
+# Terminal 1: Functions Emulator
+cd functions
+firebase emulators:start --only functions
+
+# Terminal 2: React App
+npm start
+```
+
+Die App erkennt automatisch den lokalen Emulator.
+
+## Legacy Setup (Frontend API-Key)
+
+⚠️ **Nicht empfohlen für Produktion!** Der API-Key ist im Browser sichtbar.
+
+Falls du trotzdem den direkten Frontend-Zugriff nutzen möchtest:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Bearbeite `.env.local` und füge hinzu:
-
+Bearbeite `.env.local`:
 ```env
-# Für Gemini (empfohlen)
 REACT_APP_GEMINI_API_KEY=dein_gemini_api_key_hier
-
-# ODER für OpenAI (alternative)
-REACT_APP_OPENAI_API_KEY=dein_openai_api_key_hier
 ```
 
-### 2. Dependencies sind bereits installiert
+**Hinweis**: Dies wird in Zukunft nicht mehr unterstützt.
 
-Keine zusätzlichen npm-Pakete erforderlich! Die Integration nutzt die native Fetch API.
-
-### 3. Service importieren
+## Übersicht
 
 ```javascript
 import { 
