@@ -111,6 +111,7 @@ export const registerUser = async (userData) => {
       email: email.toLowerCase().trim(),
       isAdmin: firstUser,
       role: firstUser ? ROLES.ADMIN : ROLES.READ,
+      fotoscan: false,
       createdAt: new Date().toISOString()
     };
     
@@ -771,6 +772,46 @@ export const changePassword = async (userId, newPassword) => {
     return {
       success: false,
       message: 'Fehler beim Ändern des Passworts.'
+    };
+  }
+};
+
+/**
+ * Update user's fotoscan setting
+ * @param {string} userId - ID of user to update
+ * @param {boolean} fotoscan - New fotoscan value
+ * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string }
+ */
+export const updateUserFotoscan = async (userId, fotoscan) => {
+  try {
+    const users = await getUsers();
+    
+    // Find the user
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return {
+        success: false,
+        message: 'Benutzer nicht gefunden.'
+      };
+    }
+    
+    // Update user in Firestore
+    await updateDoc(doc(db, 'users', userId), { fotoscan });
+    
+    // Update cache if it's the current user
+    if (currentUserCache && currentUserCache.id === userId) {
+      currentUserCache = { ...currentUserCache, fotoscan };
+    }
+    
+    return {
+      success: true,
+      message: 'Fotoscan-Einstellung erfolgreich aktualisiert.'
+    };
+  } catch (error) {
+    console.error('Error updating fotoscan:', error);
+    return {
+      success: false,
+      message: 'Fehler beim Aktualisieren der Fotoscan-Einstellung.'
     };
   }
 };

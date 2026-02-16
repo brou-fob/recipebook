@@ -229,6 +229,45 @@
   border-color: #f44336;
 }
 
+/* Fotoscan Toggle */
+.fotoscan-toggle {
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s;
+  min-width: 40px;
+}
+
+.fotoscan-toggle:hover {
+  transform: scale(1.1);
+}
+
+.fotoscan-toggle.active {
+  background: #c8e6c9;
+  border-color: #4caf50;
+  color: #2e7d32;
+}
+
+.fotoscan-toggle.active:hover {
+  background: #a5d6a7;
+  border-color: #388e3c;
+}
+
+.fotoscan-toggle:not(.active) {
+  background: #ffcdd2;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.fotoscan-toggle:not(.active):hover {
+  background: #ef9a9a;
+  border-color: #d32f2f;
+}
+
 /* Role Badges */
 .role-badge {
   display: inline-block;
