@@ -827,7 +827,7 @@ Zubereitung
         expect(result.steps).toContain('Mix with 0.75 tsp salt');
       });
 
-      test('rounds 0.999+ to 1 (handles 2/3 + 1/3 type scenarios)', () => {
+      test('rounds fractions very close to 1 (e.g., 999/1000)', () => {
         const text = `Recipe
 
 Zutaten
@@ -840,6 +840,21 @@ Zubereitung
         const result = parseOcrText(text, 'de');
         // 999/1000 = 0.999, should round to 1
         expect(result.ingredients).toContain('1 TL Salt');
+      });
+
+      test('rounds mixed numbers close to whole numbers (e.g., 1 999/1000)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1 999/1000 TL Salt
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        // 1 999/1000 = 1.999, should round to 2
+        expect(result.ingredients).toContain('2 TL Salt');
       });
 
       test('displays maximum 2 decimal places', () => {

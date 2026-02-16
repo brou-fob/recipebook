@@ -422,8 +422,9 @@ function convertFractionsToDecimals(text) {
     // Round to 4 decimal places for calculation
     const rounded = Math.round(decimal * 10000) / 10000;
     
-    // If result is very close to a whole number (0.999 or higher), round to whole
-    const finalValue = rounded >= 0.999 && rounded < 1 ? 1 : rounded;
+    // Round to nearest whole number if very close (within 0.001)
+    const fractionalPart = rounded - Math.floor(rounded);
+    const finalValue = fractionalPart >= 0.999 ? Math.ceil(rounded) : rounded;
     
     // Format to max 2 decimal places, but remove trailing zeros
     const formatted = Number(finalValue.toFixed(2));
@@ -445,8 +446,9 @@ function convertFractionsToDecimals(text) {
     // Round to 4 decimal places for calculation
     const rounded = Math.round(decimal * 10000) / 10000;
     
-    // If result is very close to a whole number (0.999 or higher), round to whole
-    const finalValue = rounded >= 0.999 ? Math.round(rounded) : rounded;
+    // Round to nearest whole number if very close (within 0.001)
+    const fractionalPart = rounded - Math.floor(rounded);
+    const finalValue = fractionalPart >= 0.999 ? Math.ceil(rounded) : rounded;
     
     // Format to max 2 decimal places, but remove trailing zeros
     const formatted = Number(finalValue.toFixed(2));
