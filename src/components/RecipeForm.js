@@ -5,6 +5,7 @@ import { fileToBase64, isBase64Image } from '../utils/imageUtils';
 import { getCustomLists } from '../utils/customLists';
 import { getUsers } from '../utils/userManagement';
 import { getImageForCategories } from '../utils/categoryImages';
+import { formatIngredients } from '../utils/ingredientUtils';
 import RecipeImportModal from './RecipeImportModal';
 import OcrScanModal from './OcrScanModal';
 
@@ -190,6 +191,10 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       }
     }
 
+    // Format ingredients to ensure proper spacing between numbers and units
+    const filteredIngredients = ingredients.filter(i => i.trim() !== '');
+    const formattedIngredients = formatIngredients(filteredIngredients);
+
     const recipeData = {
       title: title.trim(),
       image: finalImage,
@@ -199,7 +204,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       schwierigkeit: parseInt(schwierigkeit) || 3,
       kochdauer: parseInt(kochdauer) || 30,
       speisekategorie: speisekategorie,
-      ingredients: ingredients.filter(i => i.trim() !== ''),
+      ingredients: formattedIngredients,
       steps: steps.filter(s => s.trim() !== ''),
       authorId: authorId,
       parentRecipeId: parentRecipeId || null,

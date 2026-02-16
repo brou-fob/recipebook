@@ -809,3 +809,187 @@ describe('RecipeForm - OCR Scan Integration', () => {
     expect(screen.getByTitle('Rezept aus externer Quelle importieren')).toBeInTheDocument();
   });
 });
+
+describe('RecipeForm - Ingredient Formatting', () => {
+  const mockOnSave = jest.fn();
+  const mockOnCancel = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('formats ingredients with spaces between numbers and units on save', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Fill in required title
+    fireEvent.change(screen.getByLabelText('Rezepttitel *'), {
+      target: { value: 'Test Recipe' },
+    });
+
+    // Add ingredients without spaces (e.g., "100ml", "250g")
+    const ingredientInputs = screen.getAllByPlaceholderText(/Zutat/);
+    fireEvent.change(ingredientInputs[0], { target: { value: '100ml Milch' } });
+    
+    // Add more ingredients
+    fireEvent.click(screen.getByText('+ Zutat hinzufügen'));
+    const updatedIngredientInputs = screen.getAllByPlaceholderText(/Zutat/);
+    fireEvent.change(updatedIngredientInputs[1], { target: { value: '250g Mehl' } });
+
+    fireEvent.click(screen.getByText('+ Zutat hinzufügen'));
+    const finalIngredientInputs = screen.getAllByPlaceholderText(/Zutat/);
+    fireEvent.change(finalIngredientInputs[2], { target: { value: '2EL Öl' } });
+
+    // Submit form
+    fireEvent.click(screen.getByText('Rezept speichern'));
+
+    // Verify onSave was called with formatted ingredients
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Test Recipe',
+        ingredients: ['100 ml Milch', '250 g Mehl', '2 EL Öl'],
+      })
+    );
+  });
+
+  test('formats ingredients when editing existing recipe', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    const existingRecipe = {
+      id: 'recipe-1',
+      title: 'Existing Recipe',
+      authorId: 'user-1',
+      portionen: 4,
+      kulinarik: [],
+      schwierigkeit: 3,
+      kochdauer: 30,
+      speisekategorie: [],
+      ingredients: ['100ml Wasser', '500g Zucker'],
+      steps: ['Step 1'],
+      image: '',
+    };
+
+    render(
+      <RecipeForm
+        recipe={existingRecipe}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Submit form without changing ingredients
+    fireEvent.click(screen.getByText('Rezept aktualisieren'));
+
+    // Verify onSave was called with formatted ingredients
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'recipe-1',
+        ingredients: ['100 ml Wasser', '500 g Zucker'],
+      })
+    );
+  });
+
+  test('preserves already formatted ingredients', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Fill in required title
+    fireEvent.change(screen.getByLabelText('Rezepttitel *'), {
+      target: { value: 'Test Recipe' },
+    });
+
+    // Add ingredient with proper spacing
+    const ingredientInputs = screen.getAllByPlaceholderText(/Zutat/);
+    fireEvent.change(ingredientInputs[0], { target: { value: '100 ml Milch' } });
+
+    // Submit form
+    fireEvent.click(screen.getByText('Rezept speichern'));
+
+    // Verify the already-formatted ingredient is preserved
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ingredients: ['100 ml Milch'],
+      })
+    );
+  });
+
+  test('filters out empty ingredients before formatting', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Fill in required title
+    fireEvent.change(screen.getByLabelText('Rezepttitel *'), {
+      target: { value: 'Test Recipe' },
+    });
+
+    // Add one ingredient and leave others empty
+    const ingredientInputs = screen.getAllByPlaceholderText(/Zutat/);
+    fireEvent.change(ingredientInputs[0], { target: { value: '100ml Milch' } });
+
+    // Add empty ingredient
+    fireEvent.click(screen.getByText('+ Zutat hinzufügen'));
+
+    // Submit form
+    fireEvent.click(screen.getByText('Rezept speichern'));
+
+    // Verify only non-empty ingredients were formatted
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ingredients: ['100 ml Milch'],
+      })
+    );
+  });
+});
