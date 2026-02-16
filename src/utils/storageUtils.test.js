@@ -48,6 +48,16 @@ describe('Storage Utilities', () => {
       expect(isStorageUrl({})).toBe(false);
       expect(isStorageUrl([])).toBe(false);
     });
+
+    it('should return false for malicious URLs with firebasestorage in path', () => {
+      const maliciousUrl = 'https://evil.com/firebasestorage.googleapis.com/fake';
+      expect(isStorageUrl(maliciousUrl)).toBe(false);
+    });
+
+    it('should return false for invalid URL strings', () => {
+      expect(isStorageUrl('not a url')).toBe(false);
+      expect(isStorageUrl('firebasestorage.googleapis.com')).toBe(false);
+    });
   });
 
   describe('uploadRecipeImage', () => {

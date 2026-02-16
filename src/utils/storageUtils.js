@@ -104,6 +104,12 @@ export function isStorageUrl(imageUrl) {
     return false;
   }
   
-  // Check if it's a Firebase Storage URL
-  return imageUrl.includes('firebasestorage.googleapis.com');
+  try {
+    // Parse the URL and check if hostname matches Firebase Storage
+    const url = new URL(imageUrl);
+    return url.hostname === 'firebasestorage.googleapis.com';
+  } catch {
+    // Invalid URL
+    return false;
+  }
 }
