@@ -425,8 +425,18 @@ steps: [
   "Preheat the oven and prepare the baking sheet Mix all ingredients"
 ]
 
-Note: Without sentence endings or numbering, lines are merged.
-Add periods to separate steps naturally.
+Note: Without sentence endings or numbering, all lines are merged together.
+Add periods to separate steps naturally:
+
+Input with periods:
+Preheat the oven and prepare the baking sheet.
+Mix all ingredients.
+
+Output:
+steps: [
+  "Preheat the oven and prepare the baking sheet.",
+  "Mix all ingredients."
+]
 ```
 
 ### Best Practices for OCR Quality
