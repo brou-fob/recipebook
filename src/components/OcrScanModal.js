@@ -3,7 +3,8 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import './OcrScanModal.css';
 import { recognizeText, processCroppedImage } from '../utils/ocrService';
-import { parseOcrText } from '../utils/ocrParser';
+import { parseOcrText, parseOcrTextSmart } from '../utils/ocrParser';
+import { getValidationSummary } from '../utils/ocrValidation';
 import { fileToBase64 } from '../utils/imageUtils';
 import { recognizeRecipeWithAI, isAiOcrAvailable } from '../utils/aiOcrService';
 
@@ -20,6 +21,7 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
   const [cameraActive, setCameraActive] = useState(false);
   const [ocrMode, setOcrMode] = useState('standard'); // 'standard' or 'ai'
   const [aiResult, setAiResult] = useState(null);
+  const [validationResult, setValidationResult] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -206,15 +208,39 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
       return;
     }
 
-    // Standard text import
+    // Standard text import with validation
     if (!ocrText.trim()) {
       setError('Kein Text erkannt. Bitte versuchen Sie es erneut.');
       return;
     }
 
     try {
-      const recipe = parseOcrText(ocrText, language);
-      onImport(recipe);
+      // Use smart parsing with classification and validation
+      const result = parseOcrTextSmart(ocrText, language);
+      
+      // Store validation result for display
+      setValidationResult(result.validation);
+      
+      // Show warnings if quality is low
+      if (result.validation.score < 50) {
+        const summary = getValidationSummary(result.validation, language);
+        setError(`Erkennungsqualität ist niedrig (${result.validation.score}%):\n${summary}\n\nMöchten Sie trotzdem fortfahren?`);
+        // Don't import automatically - wait for user confirmation
+        return;
+      }
+      
+      onImport(result.recipe);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
+  // Force import despite low quality
+  const forceImport = () => {
+    setError('');
+    try {
+      const result = parseOcrTextSmart(ocrText, language);
+      onImport(result.recipe);
     } catch (err) {
       setError(err.message);
     }
@@ -231,6 +257,7 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
     setError('');
     setAiResult(null);
     setOcrMode('standard');
+    setValidationResult(null);
   };
 
   // Handle cancel
@@ -517,6 +544,33 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
                 Überprüfen und bearbeiten Sie den erkannten Text
               </p>
 
+              {/* Validation Results */}
+              {validationResult && (
+                <div className={`validation-info ${validationResult.score >= 70 ? 'validation-good' : validationResult.score >= 50 ? 'validation-moderate' : 'validation-poor'}`}>
+                  <h4>Erkennungsqualität: {validationResult.score}%</h4>
+                  {validationResult.warnings.length > 0 && (
+                    <div className="validation-warnings">
+                      <strong>⚠️ Hinweise:</strong>
+                      <ul>
+                        {validationResult.warnings.map((warning, idx) => (
+                          <li key={idx}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {validationResult.suggestions.length > 0 && (
+                    <div className="validation-suggestions">
+                      <strong>💡 Verbesserungsvorschläge:</strong>
+                      <ul>
+                        {validationResult.suggestions.slice(0, 3).map((suggestion, idx) => (
+                          <li key={idx}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <textarea
                 className="ocr-textarea"
                 value={ocrText}
@@ -534,6 +588,11 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
           {error && (
             <div className="ocr-error">
               {error}
+              {validationResult && validationResult.score < 50 && (
+                <button className="force-import-button" onClick={forceImport}>
+                  Trotzdem übernehmen
+                </button>
+              )}
             </div>
           )}
         </div>
