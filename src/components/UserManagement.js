@@ -8,6 +8,7 @@ import {
   setTemporaryPassword,
   validatePassword,
   deleteUser,
+  updateUserFotoscan,
   ROLES,
   getRoleDisplayName
 } from '../utils/userManagement';
@@ -144,6 +145,19 @@ function UserManagement({ onBack, currentUser }) {
     setPasswordError('');
   };
 
+  const handleToggleFotoscan = async (userId, currentValue) => {
+    const result = await updateUserFotoscan(userId, !currentValue);
+    
+    if (result.success) {
+      await loadUsers();
+      setMessage({ text: result.message, type: 'success' });
+    } else {
+      setMessage({ text: result.message, type: 'error' });
+    }
+    
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+  };
+
   return (
     <div className="user-management-container">
       <div className="user-management-header">
@@ -188,6 +202,7 @@ function UserManagement({ onBack, currentUser }) {
                   <th>E-Mail</th>
                   <th>Registriert am</th>
                   <th>Berechtigung</th>
+                  <th>Fotoscan</th>
                   <th>Aktionen</th>
                 </tr>
               </thead>
@@ -202,6 +217,15 @@ function UserManagement({ onBack, currentUser }) {
                       <span className={`role-badge role-${user.role}`}>
                         {getRoleDisplayName(user.role)}
                       </span>
+                    </td>
+                    <td>
+                      <button 
+                        className={`fotoscan-toggle ${user.fotoscan ? 'active' : ''}`}
+                        onClick={() => handleToggleFotoscan(user.id, user.fotoscan)}
+                        title={user.fotoscan ? 'Fotoscan deaktivieren' : 'Fotoscan aktivieren'}
+                      >
+                        {user.fotoscan ? '✓' : '✗'}
+                      </button>
                     </td>
                     <td>
                       <div className="action-buttons">

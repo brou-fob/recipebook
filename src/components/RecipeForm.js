@@ -290,33 +290,37 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
         </h2>
         {!recipe && !isCreatingVersion && (
           <div className="header-buttons">
-            <label
-              htmlFor="ocrImageUpload"
-              className="ocr-scan-button-header"
-              title="Rezept mit Kamera scannen"
-              aria-label="Rezept mit Kamera scannen"
-              style={{ cursor: 'pointer' }}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  document.getElementById('ocrImageUpload').click();
-                }
-              }}
-            >
-              {isBase64Image(buttonIcons.scanImage) ? (
-                <img src={buttonIcons.scanImage} alt="Scan" className="button-icon-img" />
-              ) : (
-                buttonIcons.scanImage
-              )}
-            </label>
-            <input
-              type="file"
-              id="ocrImageUpload"
-              accept="image/jpeg,image/jpg,image/png"
-              onChange={handleOcrImageUpload}
-              style={{ display: 'none' }}
-            />
+            {currentUser?.fotoscan && (
+              <>
+                <label
+                  htmlFor="ocrImageUpload"
+                  className="ocr-scan-button-header"
+                  title="Rezept mit Kamera scannen"
+                  aria-label="Rezept mit Kamera scannen"
+                  style={{ cursor: 'pointer' }}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      document.getElementById('ocrImageUpload').click();
+                    }
+                  }}
+                >
+                  {isBase64Image(buttonIcons.scanImage) ? (
+                    <img src={buttonIcons.scanImage} alt="Scan" className="button-icon-img" />
+                  ) : (
+                    buttonIcons.scanImage
+                  )}
+                </label>
+                <input
+                  type="file"
+                  id="ocrImageUpload"
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handleOcrImageUpload}
+                  style={{ display: 'none' }}
+                />
+              </>
+            )}
             <button
               type="button"
               className="import-button-header"

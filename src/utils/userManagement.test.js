@@ -25,6 +25,7 @@ import {
   updateUserName,
   setTemporaryPassword,
   changePassword,
+  updateUserFotoscan,
   ROLES
 } from './userManagement';
 
@@ -1176,6 +1177,81 @@ describe('User Management Utilities', () => {
       test('should return false if user is null', () => {
         expect(canCreateNewVersion(null)).toBe(false);
       });
+    });
+  });
+
+  describe('updateUserFotoscan', () => {
+    test('should update fotoscan setting for existing user', async () => {
+      // Register a user first
+      const userData = {
+        vorname: 'Max',
+        nachname: 'Mustermann',
+        email: 'max@example.com',
+        password: 'password123'
+      };
+      
+      const registerResult = await registerUser(userData);
+      expect(registerResult.success).toBe(true);
+      const userId = registerResult.user.id;
+      
+      // Initially fotoscan should be false
+      expect(registerResult.user.fotoscan).toBe(false);
+      
+      // Update fotoscan to true
+      const result = await updateUserFotoscan(userId, true);
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Fotoscan-Einstellung erfolgreich aktualisiert.');
+      
+      // Verify it was updated
+      const users = await getUsers();
+      const updatedUser = users.find(u => u.id === userId);
+      expect(updatedUser.fotoscan).toBe(true);
+    });
+
+    test('should update fotoscan to false', async () => {
+      // Register a user
+      const userData = {
+        vorname: 'Anna',
+        nachname: 'Schmidt',
+        email: 'anna@example.com',
+        password: 'password123'
+      };
+      
+      const registerResult = await registerUser(userData);
+      const userId = registerResult.user.id;
+      
+      // Set fotoscan to true first
+      await updateUserFotoscan(userId, true);
+      
+      // Then set it back to false
+      const result = await updateUserFotoscan(userId, false);
+      expect(result.success).toBe(true);
+      
+      // Verify it was updated to false
+      const users = await getUsers();
+      const updatedUser = users.find(u => u.id === userId);
+      expect(updatedUser.fotoscan).toBe(false);
+    });
+
+    test('should return error for non-existent user', async () => {
+      const result = await updateUserFotoscan('non-existent-id', true);
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Benutzer nicht gefunden.');
+    });
+  });
+
+  describe('registerUser fotoscan field', () => {
+    test('should set fotoscan to false by default', async () => {
+      const userData = {
+        vorname: 'Test',
+        nachname: 'User',
+        email: 'test@example.com',
+        password: 'password123'
+      };
+      
+      const result = await registerUser(userData);
+      expect(result.success).toBe(true);
+      expect(result.user.fotoscan).toBe(false);
     });
   });
 });
