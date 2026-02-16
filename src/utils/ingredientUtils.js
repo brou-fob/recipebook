@@ -54,20 +54,17 @@ export function formatIngredientSpacing(ingredient) {
     unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   ).join('|');
 
-  // Match: number (integer or decimal) immediately followed by unit
-  // Examples: 100ml, 1.5kg, 2EL
+  // Match: number (integer or decimal) followed by optional whitespace and then unit
+  // Capture groups: 1=number, 2=whitespace (if any), 3=unit
+  // Examples: 100ml, 1.5kg, 2EL, "100 ml" (with space)
   const regex = new RegExp(
-    `(\\d+(?:[.,]\\d+)?)\\s*(${unitsPattern})(?=\\s|$|[^a-zA-ZäöüÄÖÜß])`,
+    `(\\d+(?:[.,]\\d+)?)(\\s*)(${unitsPattern})(?=\\s|$|[^a-zA-ZäöüÄÖÜß])`,
     'gi'
   );
 
-  // Replace matches with number + space + unit
-  formatted = formatted.replace(regex, (match, number, unit) => {
-    // If there's already a space, preserve the original
-    if (match.includes(' ')) {
-      return match;
-    }
-    // Otherwise, add a space between number and unit
+  // Replace matches with number + single space + unit
+  formatted = formatted.replace(regex, (match, number, whitespace, unit) => {
+    // Always normalize to single space between number and unit
     return `${number} ${unit}`;
   });
 
