@@ -6,7 +6,7 @@ import { recognizeText, processCroppedImage } from '../utils/ocrService';
 import { parseOcrTextSmart } from '../utils/ocrParser';
 import { getValidationSummary } from '../utils/ocrValidation';
 import { fileToBase64 } from '../utils/imageUtils';
-import { recognizeRecipeWithAI } from '../utils/aiOcrService';
+import { recognizeRecipeWithAI, isAiOcrAvailable } from '../utils/aiOcrService';
 
 function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
   const [step, setStep] = useState(initialImage ? 'crop' : 'upload'); // 'upload', 'crop', 'scan', 'edit', 'ai-result'
@@ -101,6 +101,12 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
 
   // Apply crop and proceed to OCR
   const applyCrop = async () => {
+    // Check if AI OCR is available before proceeding
+    if (ocrMode === 'ai' && !isAiOcrAvailable('gemini')) {
+      setError('KI-Scan benötigt einen Gemini API-Key. Bitte konfigurieren Sie den API-Key in den Einstellungen.');
+      return;
+    }
+
     // Validate crop selection
     if (!completedCrop || !completedCrop.width || !completedCrop.height) {
       // No crop area selected or invalid crop, use the full image

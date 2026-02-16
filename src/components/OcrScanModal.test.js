@@ -32,7 +32,7 @@ jest.mock('../utils/imageUtils', () => ({
 // Mock the AI OCR service
 jest.mock('../utils/aiOcrService', () => ({
   recognizeRecipeWithAI: jest.fn(),
-  isAiOcrAvailable: jest.fn()
+  isAiOcrAvailable: jest.fn().mockReturnValue(true) // Default to true
 }));
 
 describe('OcrScanModal', () => {
@@ -41,6 +41,9 @@ describe('OcrScanModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set default return value for isAiOcrAvailable
+    const { isAiOcrAvailable } = require('../utils/aiOcrService');
+    isAiOcrAvailable.mockReturnValue(true);
   });
 
   test('renders modal with initial upload step', () => {
@@ -185,7 +188,7 @@ describe('OcrScanModal', () => {
     });
   });
 
-  test('displays error when OCR text is empty', async () => {
+  test('displays error when AI OCR returns empty results', async () => {
     const { fileToBase64 } = require('../utils/imageUtils');
     const { recognizeRecipeWithAI } = require('../utils/aiOcrService');
     
@@ -214,7 +217,17 @@ describe('OcrScanModal', () => {
     const importButton = screen.getByText('Übernehmen');
     fireEvent.click(importButton);
 
-    expect(mockOnImport).toHaveBeenCalled();
+    // AI results are imported as-is, even if empty (with defaults)
+    expect(mockOnImport).toHaveBeenCalledWith({
+      title: '',
+      ingredients: [],
+      steps: [],
+      portionen: 4,
+      kochdauer: 30, // Default fallback
+      kulinarik: [],
+      schwierigkeit: 3,
+      speisekategorie: ''
+    });
   });
 
   test('editable textarea allows text modification', async () => {
@@ -296,7 +309,7 @@ describe('OcrScanModal', () => {
     }, { timeout: OCR_TIMEOUT });
   });
 
-  test('handles parse error during import', async () => {
+  test('handles AI result with valid data', async () => {
     const { fileToBase64 } = require('../utils/imageUtils');
     const { recognizeRecipeWithAI } = require('../utils/aiOcrService');
     
@@ -325,7 +338,16 @@ describe('OcrScanModal', () => {
     const importButton = screen.getByText('Übernehmen');
     fireEvent.click(importButton);
 
-    expect(mockOnImport).toHaveBeenCalled();
+    expect(mockOnImport).toHaveBeenCalledWith({
+      title: 'Test',
+      ingredients: ['Ingredient'],
+      steps: ['Step'],
+      portionen: 4,
+      kochdauer: 30, // Default fallback
+      kulinarik: [],
+      schwierigkeit: 3,
+      speisekategorie: ''
+    });
   });
 
   test('apply crop button processes cropped image', async () => {
@@ -538,7 +560,30 @@ describe('OcrScanModal', () => {
     expect(screen.getByText('Scannen')).toBeInTheDocument();
   });
 
-  // AI OCR Tests
+  test('displays error when AI OCR is not available', async () => {
+    const { fileToBase64 } = require('../utils/imageUtils');
+    const { isAiOcrAvailable } = require('../utils/aiOcrService');
+    
+    fileToBase64.mockResolvedValue('data:image/png;base64,test');
+    isAiOcrAvailable.mockReturnValue(false);
+
+    render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
+
+    const fileInput = screen.getByLabelText('📁 Bild hochladen');
+    const file = new File(['test'], 'test.png', { type: 'image/png' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      const scanButton = screen.getByText('Scannen');
+      fireEvent.click(scanButton);
+    });
+
+    // Should show error about missing API key
+    await waitFor(() => {
+      expect(screen.getByText(/KI-Scan benötigt einen Gemini API-Key/i)).toBeInTheDocument();
+    });
+  });
+
   test('AI mode is default - no mode selector shown', async () => {
     const { fileToBase64 } = require('../utils/imageUtils');
     const { isAiOcrAvailable } = require('../utils/aiOcrService');
