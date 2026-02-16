@@ -380,6 +380,84 @@ function mergeStepLines(rawLines) {
 }
 
 /**
+ * Convert fractions to decimal numbers in a text string
+ * @param {string} text - Text containing fractions
+ * @returns {string} - Text with fractions converted to decimals
+ */
+function convertFractionsToDecimals(text) {
+  if (!text) return text;
+  
+  // Pattern for mixed numbers: "1 1/2" or standalone fractions: "1/2"
+  // First, handle mixed numbers (whole number followed by fraction)
+  // Then handle standalone fractions
+  // Use word boundaries to avoid matching partial numbers
+  
+  // Pattern breakdown:
+  // (?:^|(?<=\s)) - Match start of string or after whitespace (lookbehind)
+  // (\d+) - Capture whole number (for mixed numbers)
+  // \s+ - One or more spaces
+  // (\d+) - Numerator
+  // \s*\/\s* - Division sign with optional spaces
+  // (\d+) - Denominator
+  // |
+  // (?:^|(?<=\s)) - Or match start of string or after whitespace
+  // (\d+) - Numerator (for standalone fractions)
+  // \s*\/\s* - Division sign with optional spaces
+  // (\d+) - Denominator
+  
+  let result = text;
+  
+  // First pass: Handle mixed numbers like "1 1/2"
+  result = result.replace(/(\d+)\s+(\d+)\s*\/\s*(\d+)/g, (match, whole, numerator, denominator) => {
+    const wholeNum = parseInt(whole);
+    const num = parseInt(numerator);
+    const denom = parseInt(denominator);
+    
+    // Avoid division by zero
+    if (denom === 0) return match;
+    
+    // Calculate decimal with 4 decimal places precision
+    const decimal = wholeNum + (num / denom);
+    
+    // Round to 4 decimal places for calculation
+    const rounded = Math.round(decimal * 10000) / 10000;
+    
+    // If result is very close to a whole number (0.999 or higher), round to whole
+    const finalValue = rounded >= 0.999 && rounded < 1 ? 1 : rounded;
+    
+    // Format to max 2 decimal places, but remove trailing zeros
+    const formatted = Number(finalValue.toFixed(2));
+    
+    return formatted.toString();
+  });
+  
+  // Second pass: Handle standalone fractions like "1/2"
+  result = result.replace(/(\d+)\s*\/\s*(\d+)/g, (match, numerator, denominator) => {
+    const num = parseInt(numerator);
+    const denom = parseInt(denominator);
+    
+    // Avoid division by zero
+    if (denom === 0) return match;
+    
+    // Calculate decimal with 4 decimal places precision
+    const decimal = num / denom;
+    
+    // Round to 4 decimal places for calculation
+    const rounded = Math.round(decimal * 10000) / 10000;
+    
+    // If result is very close to a whole number (0.999 or higher), round to whole
+    const finalValue = rounded >= 0.999 ? Math.round(rounded) : rounded;
+    
+    // Format to max 2 decimal places, but remove trailing zeros
+    const formatted = Number(finalValue.toFixed(2));
+    
+    return formatted.toString();
+  });
+  
+  return result;
+}
+
+/**
  * Parse ingredient line
  * @param {string} line - Line text
  * @returns {string|null} - Parsed ingredient or null
@@ -394,6 +472,9 @@ function parseIngredientLine(line) {
   let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
   
   if (!cleaned) return null;
+  
+  // Convert fractions to decimals
+  cleaned = convertFractionsToDecimals(cleaned);
   
   // Return the cleaned ingredient line
   // Quantity recognition is already handled by keeping the full line
@@ -411,6 +492,9 @@ function parseStepLine(line) {
   let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
   
   if (!cleaned) return null;
+  
+  // Convert fractions to decimals
+  cleaned = convertFractionsToDecimals(cleaned);
   
   return cleaned;
 }
