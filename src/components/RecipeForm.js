@@ -278,6 +278,13 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
               title="Rezept mit Kamera scannen"
               aria-label="Rezept mit Kamera scannen"
               style={{ cursor: 'pointer' }}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  document.getElementById('ocrImageUpload').click();
+                }
+              }}
             >
               📷 Bild scannen
             </label>
