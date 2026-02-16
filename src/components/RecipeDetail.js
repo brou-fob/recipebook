@@ -339,7 +339,14 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                     )}
                   </button>
                 ) : (
-                  <div className="overlay-cooking-mode-static" onClick={toggleCookingMode} role="button" tabIndex="0" onKeyDown={(e) => e.key === 'Enter' && toggleCookingMode()}>
+                  <div 
+                    className="overlay-cooking-mode-static" 
+                    onClick={toggleCookingMode} 
+                    role="button" 
+                    tabIndex="0" 
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleCookingMode()}
+                    aria-label="Kochmodus aktivieren"
+                  >
                     {isBase64Image(cookingModeIcon) ? (
                       <img src={cookingModeIcon} alt="Kochmodus" className="overlay-cooking-mode-icon-img" />
                     ) : (
