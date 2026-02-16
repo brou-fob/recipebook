@@ -759,5 +759,253 @@ Second sentence (no period)
         ]);
       });
     });
+
+    describe('Fraction to decimal conversion', () => {
+      test('converts simple fractions in ingredients (1/2)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1/2 TL Salz
+1/4 cup Zucker
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.ingredients).toContain('0.5 TL Salz');
+        expect(result.ingredients).toContain('0.25 cup Zucker');
+      });
+
+      test('converts common fractions (1/3, 2/3, 3/4)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1/3 cup Mehl
+2/3 cup Zucker
+3/4 TL Salz
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.ingredients).toContain('0.33 cup Mehl');
+        expect(result.ingredients).toContain('0.67 cup Zucker');
+        expect(result.ingredients).toContain('0.75 TL Salz');
+      });
+
+      test('converts mixed numbers (1 1/2, 2 3/4)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1 1/2 cups Mehl
+2 3/4 TL Backpulver
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.ingredients).toContain('1.5 cups Mehl');
+        expect(result.ingredients).toContain('2.75 TL Backpulver');
+      });
+
+      test('converts fractions in preparation steps', () => {
+        const text = `Recipe
+
+Zutaten
+- Mehl
+
+Zubereitung
+
+1. Add 1/2 cup water
+2. Mix with 3/4 tsp salt`;
+
+        const result = parseOcrText(text, 'en');
+        expect(result.steps).toContain('Add 0.5 cup water');
+        expect(result.steps).toContain('Mix with 0.75 tsp salt');
+      });
+
+      test('rounds fractions very close to 1 (e.g., 999/1000)', () => {
+        const text = `Recipe
+
+Zutaten
+
+999/1000 TL Salt
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        // 999/1000 = 0.999, should round to 1
+        expect(result.ingredients).toContain('1 TL Salt');
+      });
+
+      test('rounds mixed numbers close to whole numbers (e.g., 1 999/1000)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1 999/1000 TL Salt
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        // 1 999/1000 = 1.999, should round to 2
+        expect(result.ingredients).toContain('2 TL Salt');
+      });
+
+      test('displays maximum 2 decimal places', () => {
+        const text = `Recipe
+
+Zutaten
+
+1/6 cup Mehl
+5/6 cup Zucker
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        // 1/6 = 0.1666... -> 0.17
+        // 5/6 = 0.8333... -> 0.83
+        expect(result.ingredients).toContain('0.17 cup Mehl');
+        expect(result.ingredients).toContain('0.83 cup Zucker');
+      });
+
+      test('handles fractions with spaces (1 / 2)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1 / 2 TL Salz
+3 / 4 cup Mehl
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.ingredients).toContain('0.5 TL Salz');
+        expect(result.ingredients).toContain('0.75 cup Mehl');
+      });
+
+      test('does not convert invalid fractions (division by zero)', () => {
+        const text = `Recipe
+
+Zutaten
+
+1/0 TL Salz
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        // Should preserve the original text when division by zero
+        expect(result.ingredients).toContain('1/0 TL Salz');
+      });
+
+      test('converts multiple fractions in same line', () => {
+        const text = `Recipe
+
+Zutaten
+
+1/2 cup Mehl und 1/4 TL Salz
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.ingredients).toContain('0.5 cup Mehl und 0.25 TL Salz');
+      });
+
+      test('preserves whole numbers without fractions', () => {
+        const text = `Recipe
+
+Zutaten
+
+200g Mehl
+2 Eier
+1 TL Salz
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.ingredients).toContain('200g Mehl');
+        expect(result.ingredients).toContain('2 Eier');
+        expect(result.ingredients).toContain('1 TL Salz');
+      });
+
+      test('removes trailing zeros in decimal display', () => {
+        const text = `Recipe
+
+Zutaten
+
+1/2 cup Mehl
+1/4 TL Salz
+
+Zubereitung
+1. Mix`;
+
+        const result = parseOcrText(text, 'de');
+        // Should be 0.5 not 0.50, and 0.25 not 0.250
+        expect(result.ingredients).toContain('0.5 cup Mehl');
+        expect(result.ingredients).toContain('0.25 TL Salz');
+      });
+
+      test('handles German recipe with fractions', () => {
+        const text = `Schokoladenkuchen
+
+Portionen: 8
+
+Zutaten
+
+1/2 cup Butter
+3/4 cup Zucker
+2 1/2 cups Mehl
+1/3 TL Salz
+
+Zubereitung
+
+1. Butter und Zucker mischen
+2. 1/2 der Mehl hinzufügen`;
+
+        const result = parseOcrText(text, 'de');
+        expect(result.title).toBe('Schokoladenkuchen');
+        expect(result.ingredients).toContain('0.5 cup Butter');
+        expect(result.ingredients).toContain('0.75 cup Zucker');
+        expect(result.ingredients).toContain('2.5 cups Mehl');
+        expect(result.ingredients).toContain('0.33 TL Salz');
+        expect(result.steps[1]).toContain('0.5 der Mehl hinzufügen');
+      });
+
+      test('handles English recipe with fractions', () => {
+        const text = `Chocolate Cake
+
+Servings: 8
+
+Ingredients
+
+1/2 cup butter
+3/4 cup sugar
+2 1/2 cups flour
+1/3 tsp salt
+
+Instructions
+
+1. Mix butter and sugar
+2. Add 1/2 of the flour`;
+
+        const result = parseOcrText(text, 'en');
+        expect(result.title).toBe('Chocolate Cake');
+        expect(result.ingredients).toContain('0.5 cup butter');
+        expect(result.ingredients).toContain('0.75 cup sugar');
+        expect(result.ingredients).toContain('2.5 cups flour');
+        expect(result.ingredients).toContain('0.33 tsp salt');
+        expect(result.steps[1]).toContain('0.5 of the flour');
+      });
+    });
   });
 });

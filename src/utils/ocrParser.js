@@ -380,6 +380,63 @@ function mergeStepLines(rawLines) {
 }
 
 /**
+ * Convert fractions to decimal numbers in a text string
+ * @param {string} text - Text containing fractions
+ * @returns {string} - Text with fractions converted to decimals
+ */
+function convertFractionsToDecimals(text) {
+  if (!text) return text;
+  
+  /**
+   * Helper function to format decimal with rounding
+   * @param {number} decimal - Raw decimal value
+   * @returns {string} - Formatted decimal string
+   */
+  function formatDecimal(decimal) {
+    // Round to 4 decimal places for calculation
+    const rounded = Math.round(decimal * 10000) / 10000;
+    
+    // Round to nearest whole number if fractional part is very close (>= 0.999)
+    const fractionalPart = rounded - Math.floor(rounded);
+    const finalValue = fractionalPart >= 0.999 ? Math.ceil(rounded) : rounded;
+    
+    // Format to max 2 decimal places, but remove trailing zeros
+    return Number(finalValue.toFixed(2)).toString();
+  }
+  
+  let result = text;
+  
+  // First pass: Handle mixed numbers like "1 1/2"
+  result = result.replace(/(\d+)\s+(\d+)\s*\/\s*(\d+)/g, (match, whole, numerator, denominator) => {
+    const wholeNum = parseInt(whole);
+    const num = parseInt(numerator);
+    const denom = parseInt(denominator);
+    
+    // Avoid division by zero
+    if (denom === 0) return match;
+    
+    // Calculate decimal with 4 decimal places precision
+    const decimal = wholeNum + (num / denom);
+    return formatDecimal(decimal);
+  });
+  
+  // Second pass: Handle standalone fractions like "1/2"
+  result = result.replace(/(\d+)\s*\/\s*(\d+)/g, (match, numerator, denominator) => {
+    const num = parseInt(numerator);
+    const denom = parseInt(denominator);
+    
+    // Avoid division by zero
+    if (denom === 0) return match;
+    
+    // Calculate decimal with 4 decimal places precision
+    const decimal = num / denom;
+    return formatDecimal(decimal);
+  });
+  
+  return result;
+}
+
+/**
  * Parse ingredient line
  * @param {string} line - Line text
  * @returns {string|null} - Parsed ingredient or null
@@ -394,6 +451,9 @@ function parseIngredientLine(line) {
   let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
   
   if (!cleaned) return null;
+  
+  // Convert fractions to decimals
+  cleaned = convertFractionsToDecimals(cleaned);
   
   // Return the cleaned ingredient line
   // Quantity recognition is already handled by keeping the full line
@@ -411,6 +471,9 @@ function parseStepLine(line) {
   let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
   
   if (!cleaned) return null;
+  
+  // Convert fractions to decimals
+  cleaned = convertFractionsToDecimals(cleaned);
   
   return cleaned;
 }
