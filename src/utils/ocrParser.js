@@ -11,6 +11,7 @@
  * - English keywords (Ingredients, Instructions, Directions, Servings, for X people)
  * - Quantity recognition in ingredients (200g, 2 EL, etc.)
  * - Compatible with parseRecipeData() from recipeImport.js
+ * - Automatic classification and validation of recipe components
  * 
  * Smart Text Processing Features:
  * - **Bullet Point Filtering**: Standalone bullet points (-, *, •) without text are ignored
@@ -19,6 +20,8 @@
  *   - Lines within a numbered step are merged even if they contain periods
  *   - Non-numbered lines ending with sentence punctuation (. ! ?) start new steps
  *   - Continuation lines without sentence endings are merged with the current step
+ * - **Automatic Classification**: Uses smart algorithms to classify text into ingredients or steps
+ * - **Validation**: Checks if key recipe components (title, servings, time, etc.) are detected
  * 
  * Examples of Smart Step Merging:
  * 
@@ -42,7 +45,7 @@
  * 
  * Usage:
  * ```javascript
- * import { parseOcrText } from './ocrParser';
+ * import { parseOcrText, parseOcrTextSmart } from './ocrParser';
  * 
  * const ocrText = `Spaghetti Carbonara
  * Portionen: 4
@@ -57,24 +60,40 @@
  * 
  * const recipe = parseOcrText(ocrText, 'de');
  * // Returns: { title, ingredients, steps, portionen, ... }
+ * 
+ * // Or with smart parsing (recommended - includes validation and auto-classification):
+ * const result = parseOcrTextSmart(ocrText, 'de');
+ * // Returns: { 
+ * //   recipe: { title, ingredients, steps, ... },
+ * //   validation: { detected, warnings, suggestions, score } 
+ * // }
  * ```
  * 
  * Integration with OCR Service:
  * ```javascript
  * import { recognizeText } from './ocrService';
- * import { parseOcrText } from './ocrParser';
+ * import { parseOcrTextSmart } from './ocrParser';
  * import { parseRecipeData } from './recipeImport';
  * 
  * // 1. Extract text from image
  * const ocrResult = await recognizeText(imageBase64, 'deu');
  * 
- * // 2. Parse into structured recipe
- * const recipe = parseOcrText(ocrResult.text, 'de');
+ * // 2. Parse into structured recipe with validation
+ * const result = parseOcrTextSmart(ocrResult.text, 'de');
  * 
- * // 3. Validate and normalize
- * const validated = parseRecipeData(recipe);
+ * // 3. Check validation and provide feedback
+ * if (result.validation.score < 70) {
+ *   console.log('Warnings:', result.validation.warnings);
+ *   console.log('Suggestions:', result.validation.suggestions);
+ * }
+ * 
+ * // 4. Validate and normalize
+ * const validated = parseRecipeData(result.recipe);
  * ```
  */
+
+import { validateOcrResult } from './ocrValidation';
+import { autoClassifyText } from './ocrClassifier';
 
 /**
  * Parse OCR text into structured recipe data
@@ -98,7 +117,12 @@ export function parseOcrText(text, lang = 'de') {
     kochdauer: 30,
     speisekategorie: '',
     ingredients: [],
-    steps: []
+    steps: [],
+    // Metadata to track which fields were explicitly detected
+    _detected: {
+      portionen: false,
+      kochdauer: false
+    }
   };
 
   let currentSection = null;
@@ -146,6 +170,7 @@ export function parseOcrText(text, lang = 'de') {
       const num = parseInt(servingsMatch[2]);
       if (!isNaN(num)) {
         recipe.portionen = num;
+        recipe._detected.portionen = true;
       }
       continue;
     }
@@ -277,14 +302,20 @@ function applyProperty(recipe, key, value) {
   // Portionen / Servings
   if (key.includes('portion') || key.includes('serving')) {
     const num = extractNumber(value);
-    if (num) recipe.portionen = num;
+    if (num) {
+      recipe.portionen = num;
+      recipe._detected.portionen = true;
+    }
     return;
   }
   
   // Special pattern: "für X Personen" / "for X people"
   if (key.includes('für') || key.includes('for')) {
     const num = extractNumber(value);
-    if (num) recipe.portionen = num;
+    if (num) {
+      recipe.portionen = num;
+      recipe._detected.portionen = true;
+    }
     return;
   }
   
@@ -308,7 +339,10 @@ function applyProperty(recipe, key, value) {
   if (key.includes('kochdauer') || key.includes('dauer') || 
       key.includes('zeit') || key.includes('time') || key.includes('cook')) {
     const num = extractNumber(value);
-    if (num) recipe.kochdauer = num;
+    if (num) {
+      recipe.kochdauer = num;
+      recipe._detected.kochdauer = true;
+    }
     return;
   }
   
@@ -548,3 +582,63 @@ Instructions
 6. Fold in chocolate chips
 7. Drop spoonfuls onto baking sheet
 8. Bake for 10-12 minutes`;
+
+/**
+ * Parse OCR text with automatic validation
+ * @param {string} text - OCR-recognized text
+ * @param {string} lang - Language code ('de' or 'en')
+ * @returns {Object} - {recipe: Object, validation: Object}
+ */
+export function parseOcrTextWithValidation(text, lang = 'de') {
+  const recipe = parseOcrText(text, lang);
+  const validation = validateOcrResult(recipe);
+  
+  return {
+    recipe,
+    validation
+  };
+}
+
+/**
+ * Parse OCR text with automatic classification fallback
+ * If section headers are not detected, uses automatic classification
+ * @param {string} text - OCR-recognized text
+ * @param {string} lang - Language code ('de' or 'en')
+ * @returns {Object} - Parsed recipe object
+ */
+export function parseOcrTextWithClassification(text, lang = 'de') {
+  // First try normal parsing
+  const recipe = parseOcrText(text, lang);
+  
+  // If ingredients or steps are missing, try automatic classification
+  if (recipe.ingredients.length === 0 || recipe.steps.length === 0) {
+    const classified = autoClassifyText(text, lang);
+    
+    // Use classified ingredients/steps if they were found
+    if (recipe.ingredients.length === 0 && classified.ingredients.length > 0) {
+      recipe.ingredients = classified.ingredients;
+    }
+    if (recipe.steps.length === 0 && classified.steps.length > 0) {
+      recipe.steps = classified.steps;
+    }
+  }
+  
+  return recipe;
+}
+
+/**
+ * Parse OCR text with classification and validation
+ * Combines automatic classification fallback with validation
+ * @param {string} text - OCR-recognized text
+ * @param {string} lang - Language code ('de' or 'en')
+ * @returns {Object} - {recipe: Object, validation: Object}
+ */
+export function parseOcrTextSmart(text, lang = 'de') {
+  const recipe = parseOcrTextWithClassification(text, lang);
+  const validation = validateOcrResult(recipe);
+  
+  return {
+    recipe,
+    validation
+  };
+}

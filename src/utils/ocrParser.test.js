@@ -1,5 +1,8 @@
 import {
   parseOcrText,
+  parseOcrTextWithValidation,
+  parseOcrTextWithClassification,
+  parseOcrTextSmart,
   EXAMPLE_OCR_TEXT_DE,
   EXAMPLE_OCR_TEXT_EN
 } from './ocrParser';
@@ -1006,6 +1009,168 @@ Instructions
         expect(result.ingredients).toContain('0.33 tsp salt');
         expect(result.steps[1]).toContain('0.5 of the flour');
       });
+    });
+  });
+
+  describe('parseOcrTextWithValidation', () => {
+    test('returns both recipe and validation results', () => {
+      const text = EXAMPLE_OCR_TEXT_DE;
+      const result = parseOcrTextWithValidation(text, 'de');
+
+      expect(result).toHaveProperty('recipe');
+      expect(result).toHaveProperty('validation');
+      expect(result.recipe.title).toBe('Spaghetti Carbonara');
+      expect(result.validation.isValid).toBe(true);
+    });
+
+    test('detects all components in complete recipe', () => {
+      const text = EXAMPLE_OCR_TEXT_DE;
+      const result = parseOcrTextWithValidation(text, 'de');
+
+      expect(result.validation.detected.title).toBe(true);
+      expect(result.validation.detected.servings).toBe(true);
+      expect(result.validation.detected.cookingTime).toBe(true);
+      expect(result.validation.detected.ingredients).toBe(true);
+      expect(result.validation.detected.steps).toBe(true);
+    });
+
+    test('provides warnings for incomplete recipe', () => {
+      const text = `Test Recipe
+
+Zutaten
+- Mehl
+
+Zubereitung
+1. Mix`;
+
+      const result = parseOcrTextWithValidation(text, 'de');
+
+      expect(result.validation.warnings.length).toBeGreaterThan(0);
+      expect(result.validation.suggestions.length).toBeGreaterThan(0);
+    });
+
+    test('calculates quality score', () => {
+      const text = EXAMPLE_OCR_TEXT_EN;
+      const result = parseOcrTextWithValidation(text, 'en');
+
+      expect(result.validation.score).toBeGreaterThan(0);
+      expect(result.validation.score).toBeLessThanOrEqual(100);
+    });
+  });
+
+  describe('parseOcrTextWithClassification', () => {
+    test('uses normal parsing when sections are detected', () => {
+      const text = `Test Recipe
+
+Zutaten
+200g Mehl
+2 Eier
+
+Zubereitung
+1. Mix ingredients`;
+
+      const result = parseOcrTextWithClassification(text, 'de');
+
+      expect(result.ingredients).toContain('200g Mehl');
+      expect(result.ingredients).toContain('2 Eier');
+      expect(result.steps).toContain('Mix ingredients');
+    });
+
+    test('uses automatic classification when no section headers', () => {
+      const text = `Test Recipe
+
+200g flour
+2 eggs
+
+Mix the ingredients well
+Bake for 20 minutes`;
+
+      const result = parseOcrTextWithClassification(text, 'en');
+
+      // Should classify based on content patterns
+      expect(result.ingredients.length).toBeGreaterThan(0);
+      expect(result.steps.length).toBeGreaterThan(0);
+    });
+
+    test('falls back to classification for ingredients only', () => {
+      const text = `Test Recipe
+
+200g Mehl
+2 Eier
+
+Zubereitung
+1. Mix`;
+
+      const result = parseOcrTextWithClassification(text, 'de');
+
+      // Ingredients should be classified, steps parsed normally
+      expect(result.ingredients.length).toBeGreaterThan(0);
+      expect(result.steps).toContain('Mix');
+    });
+
+    test('falls back to classification for steps only', () => {
+      const text = `Test Recipe
+
+Zutaten
+200g Mehl
+
+Mix ingredients
+Bake for 20 minutes`;
+
+      const result = parseOcrTextWithClassification(text, 'en');
+
+      // Ingredients parsed normally, steps should be classified
+      expect(result.ingredients).toContain('200g Mehl');
+      expect(result.steps.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('parseOcrTextSmart', () => {
+    test('combines classification and validation', () => {
+      const text = `Spaghetti Carbonara
+
+400g Spaghetti
+200g Pancetta
+4 Eier
+
+Nudeln kochen
+Pancetta braten
+Eier unterrühren`;
+
+      const result = parseOcrTextSmart(text, 'de');
+
+      expect(result).toHaveProperty('recipe');
+      expect(result).toHaveProperty('validation');
+      expect(result.recipe.title).toBe('Spaghetti Carbonara');
+      expect(result.recipe.ingredients.length).toBeGreaterThan(0);
+      expect(result.recipe.steps.length).toBeGreaterThan(0);
+      expect(result.validation.detected.title).toBe(true);
+    });
+
+    test('works with complete structured text', () => {
+      const text = EXAMPLE_OCR_TEXT_DE;
+      const result = parseOcrTextSmart(text, 'de');
+
+      expect(result.validation.score).toBeGreaterThan(70);
+      expect(result.validation.isValid).toBe(true);
+    });
+
+    test('works with unstructured text using classification', () => {
+      const text = `Chocolate Cookies
+
+2 cups flour
+1 cup sugar
+2 eggs
+
+Mix dry ingredients
+Add wet ingredients
+Bake for 20 minutes`;
+
+      const result = parseOcrTextSmart(text, 'en');
+
+      expect(result.recipe.ingredients.length).toBeGreaterThan(0);
+      expect(result.recipe.steps.length).toBeGreaterThan(0);
+      expect(result.validation).toBeDefined();
     });
   });
 });

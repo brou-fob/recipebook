@@ -14,7 +14,14 @@ jest.mock('../utils/ocrService', () => ({
 
 // Mock the OCR parser
 jest.mock('../utils/ocrParser', () => ({
-  parseOcrText: jest.fn()
+  parseOcrText: jest.fn(),
+  parseOcrTextSmart: jest.fn()
+}));
+
+// Mock the OCR validation
+jest.mock('../utils/ocrValidation', () => ({
+  validateOcrResult: jest.fn(),
+  getValidationSummary: jest.fn()
 }));
 
 // Mock the image utils
@@ -132,7 +139,7 @@ describe('OcrScanModal', () => {
   test('import button parses OCR text and calls onImport', async () => {
     const { fileToBase64 } = require('../utils/imageUtils');
     const { recognizeText } = require('../utils/ocrService');
-    const { parseOcrText } = require('../utils/ocrParser');
+    const { parseOcrTextSmart } = require('../utils/ocrParser');
     
     fileToBase64.mockResolvedValue('data:image/png;base64,test');
     recognizeText.mockResolvedValue({
@@ -143,9 +150,22 @@ describe('OcrScanModal', () => {
     const mockRecipe = {
       title: 'Test Recipe',
       ingredients: ['200g Zutat'],
-      steps: []
+      steps: ['Mix'],
+      _detected: { portionen: false, kochdauer: false }
     };
-    parseOcrText.mockReturnValue(mockRecipe);
+    
+    const mockValidation = {
+      isValid: true,
+      score: 75,
+      detected: { title: true, ingredients: true, steps: true },
+      warnings: [],
+      suggestions: []
+    };
+    
+    parseOcrTextSmart.mockReturnValue({
+      recipe: mockRecipe,
+      validation: mockValidation
+    });
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
@@ -165,7 +185,8 @@ describe('OcrScanModal', () => {
     const importButton = screen.getByText('Übernehmen');
     fireEvent.click(importButton);
 
-    expect(parseOcrText).toHaveBeenCalledWith('Test Recipe\nZutaten\n200g Zutat', 'de');
+    // Verify the smart parser was called
+    expect(parseOcrTextSmart).toHaveBeenCalledWith('Test Recipe\nZutaten\n200g Zutat', 'de');
     expect(mockOnImport).toHaveBeenCalledWith(mockRecipe);
   });
 
@@ -273,14 +294,14 @@ describe('OcrScanModal', () => {
   test('handles parse error during import', async () => {
     const { fileToBase64 } = require('../utils/imageUtils');
     const { recognizeText } = require('../utils/ocrService');
-    const { parseOcrText } = require('../utils/ocrParser');
+    const { parseOcrTextSmart } = require('../utils/ocrParser');
     
     fileToBase64.mockResolvedValue('data:image/png;base64,test');
     recognizeText.mockResolvedValue({
       text: 'Valid text',
       confidence: 90
     });
-    parseOcrText.mockImplementation(() => {
+    parseOcrTextSmart.mockImplementation(() => {
       throw new Error('Parsing failed');
     });
 
