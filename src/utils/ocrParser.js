@@ -114,7 +114,12 @@ export function parseOcrText(text, lang = 'de') {
     kochdauer: 30,
     speisekategorie: '',
     ingredients: [],
-    steps: []
+    steps: [],
+    // Metadata to track which fields were explicitly detected
+    _detected: {
+      portionen: false,
+      kochdauer: false
+    }
   };
 
   let currentSection = null;
@@ -162,6 +167,7 @@ export function parseOcrText(text, lang = 'de') {
       const num = parseInt(servingsMatch[2]);
       if (!isNaN(num)) {
         recipe.portionen = num;
+        recipe._detected.portionen = true;
       }
       continue;
     }
@@ -293,14 +299,20 @@ function applyProperty(recipe, key, value) {
   // Portionen / Servings
   if (key.includes('portion') || key.includes('serving')) {
     const num = extractNumber(value);
-    if (num) recipe.portionen = num;
+    if (num) {
+      recipe.portionen = num;
+      recipe._detected.portionen = true;
+    }
     return;
   }
   
   // Special pattern: "für X Personen" / "for X people"
   if (key.includes('für') || key.includes('for')) {
     const num = extractNumber(value);
-    if (num) recipe.portionen = num;
+    if (num) {
+      recipe.portionen = num;
+      recipe._detected.portionen = true;
+    }
     return;
   }
   
@@ -324,7 +336,10 @@ function applyProperty(recipe, key, value) {
   if (key.includes('kochdauer') || key.includes('dauer') || 
       key.includes('zeit') || key.includes('time') || key.includes('cook')) {
     const num = extractNumber(value);
-    if (num) recipe.kochdauer = num;
+    if (num) {
+      recipe.kochdauer = num;
+      recipe._detected.kochdauer = true;
+    }
     return;
   }
   

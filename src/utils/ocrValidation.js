@@ -78,9 +78,19 @@ export function validateOcrResult(parsedRecipe) {
   }
 
   // Validate servings (Portionen)
-  if (parsedRecipe.portionen && parsedRecipe.portionen !== 4) { // 4 is the default fallback
+  if (parsedRecipe._detected && parsedRecipe._detected.portionen) {
+    // Explicitly detected via parsing
     validation.detected.servings = true;
     // Check if servings value is reasonable (1-50)
+    if (parsedRecipe.portionen >= 1 && parsedRecipe.portionen <= 50) {
+      validation.confidence.servings = 95;
+    } else {
+      validation.confidence.servings = 60;
+      validation.warnings.push(`Ungewöhnliche Portionenanzahl: ${parsedRecipe.portionen}`);
+    }
+  } else if (parsedRecipe.portionen && parsedRecipe.portionen !== 4) {
+    // Non-default value, probably detected
+    validation.detected.servings = true;
     if (parsedRecipe.portionen >= 1 && parsedRecipe.portionen <= 50) {
       validation.confidence.servings = 95;
     } else {
@@ -93,9 +103,19 @@ export function validateOcrResult(parsedRecipe) {
   }
 
   // Validate cooking time (Kochdauer)
-  if (parsedRecipe.kochdauer && parsedRecipe.kochdauer !== 30) { // 30 is the default fallback
+  if (parsedRecipe._detected && parsedRecipe._detected.kochdauer) {
+    // Explicitly detected via parsing
     validation.detected.cookingTime = true;
     // Check if cooking time is reasonable (1-600 minutes = 10 hours)
+    if (parsedRecipe.kochdauer >= 1 && parsedRecipe.kochdauer <= 600) {
+      validation.confidence.cookingTime = 95;
+    } else {
+      validation.confidence.cookingTime = 60;
+      validation.warnings.push(`Ungewöhnliche Kochdauer: ${parsedRecipe.kochdauer} Minuten`);
+    }
+  } else if (parsedRecipe.kochdauer && parsedRecipe.kochdauer !== 30) {
+    // Non-default value, probably detected
+    validation.detected.cookingTime = true;
     if (parsedRecipe.kochdauer >= 1 && parsedRecipe.kochdauer <= 600) {
       validation.confidence.cookingTime = 95;
     } else {

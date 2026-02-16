@@ -34,42 +34,42 @@ export function classifyLine(line, lang = 'de') {
 
   // Check for ingredient patterns
   if (hasQuantityPattern(trimmed)) {
-    ingredientScore += 40;
+    ingredientScore += 50;
   }
 
   if (hasUnitPattern(trimmed, lang)) {
-    ingredientScore += 30;
+    ingredientScore += 35;
   }
 
   if (hasIngredientKeywords(trimmed, lang)) {
-    ingredientScore += 20;
+    ingredientScore += 25;
   }
 
   // Check for step patterns
   if (hasActionVerb(trimmed, lang)) {
-    stepScore += 35;
+    stepScore += 45;
   }
 
   if (hasImperativeForm(trimmed, lang)) {
-    stepScore += 30;
+    stepScore += 35;
   }
 
   if (hasStepKeywords(trimmed, lang)) {
-    stepScore += 25;
+    stepScore += 30;
   }
 
   // Check length (ingredients are typically shorter)
   const wordCount = trimmed.split(/\s+/).length;
   if (wordCount <= 5) {
-    ingredientScore += 10;
+    ingredientScore += 15;
   } else if (wordCount > 8) {
-    stepScore += 15;
+    stepScore += 20;
   }
 
   // Determine classification
   const maxScore = Math.max(ingredientScore, stepScore);
   
-  if (maxScore < 30) {
+  if (maxScore < 25) {
     return { type: 'unknown', confidence: 0 };
   }
 
@@ -102,9 +102,9 @@ export function classifyText(lines, lang = 'de') {
   for (const line of lines) {
     const classification = classifyLine(line, lang);
     
-    if (classification.type === 'ingredient' && classification.confidence >= 50) {
+    if (classification.type === 'ingredient' && classification.confidence >= 40) {
       result.ingredients.push(line);
-    } else if (classification.type === 'step' && classification.confidence >= 50) {
+    } else if (classification.type === 'step' && classification.confidence >= 40) {
       result.steps.push(line);
     } else {
       result.unclassified.push(line);
