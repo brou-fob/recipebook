@@ -290,6 +290,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
         </h2>
         {!recipe && !isCreatingVersion && (
           <div className="header-buttons">
+            {/* OCR Scan Button - Only visible for users with fotoscan permission */}
             {currentUser?.fotoscan && (
               <>
                 <label
@@ -321,6 +322,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
                 />
               </>
             )}
+            {/* Import Button - Visible for all users with EDIT role or higher (not just admins) */}
             <button
               type="button"
               className="import-button-header"
