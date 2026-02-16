@@ -96,6 +96,8 @@ Or create a simple Node.js script:
 const admin = require('firebase-admin');
 
 // Initialize with your service account
+// Requires GOOGLE_APPLICATION_CREDENTIALS environment variable
+// or running in a GCP environment with default credentials
 admin.initializeApp({
   credential: admin.credential.applicationDefault()
 });
