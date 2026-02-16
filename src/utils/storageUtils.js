@@ -8,12 +8,23 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 
 /**
  * Generate a unique filename for recipe images
- * @returns {string} Unique filename with UUID
+ * @param {File} file - The file to generate a name for
+ * @returns {string} Unique filename with timestamp and random string
  */
 function generateUniqueFilename(file) {
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 15);
-  const extension = file.name.split('.').pop() || 'jpg';
+  
+  // Map MIME type to extension to avoid trusting user-provided filename
+  const extensionMap = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp'
+  };
+  
+  const extension = extensionMap[file.type] || 'jpg';
   return `${timestamp}-${randomStr}.${extension}`;
 }
 

@@ -12,6 +12,9 @@ jest.mock('firebase/storage', () => ({
   deleteObject: jest.fn()
 }));
 
+// Test constants
+const MOCK_STORAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/project/o/recipes%2Ftest.jpg?alt=media';
+
 describe('Storage Utilities', () => {
   describe('isStorageUrl', () => {
     it('should return true for Firebase Storage URLs', () => {
@@ -106,16 +109,14 @@ describe('Storage Utilities', () => {
         type: 'image/jpeg',
         name: 'test.jpg'
       };
-
-      const mockDownloadURL = 'https://firebasestorage.googleapis.com/v0/b/project/o/recipes%2Ftest.jpg?alt=media';
       
       ref.mockReturnValue({ path: 'recipes/test.jpg' });
       uploadBytes.mockResolvedValue({ ref: { path: 'recipes/test.jpg' } });
-      getDownloadURL.mockResolvedValue(mockDownloadURL);
+      getDownloadURL.mockResolvedValue(MOCK_STORAGE_URL);
 
       const result = await uploadRecipeImage(validFile);
 
-      expect(result).toBe(mockDownloadURL);
+      expect(result).toBe(MOCK_STORAGE_URL);
       expect(ref).toHaveBeenCalled();
       expect(uploadBytes).toHaveBeenCalled();
       expect(getDownloadURL).toHaveBeenCalled();
@@ -172,12 +173,10 @@ describe('Storage Utilities', () => {
     });
 
     it('should delete image from Firebase Storage', async () => {
-      const storageUrl = 'https://firebasestorage.googleapis.com/v0/b/project/o/recipes%2Ftest.jpg?alt=media';
-      
       ref.mockReturnValue({ path: 'recipes/test.jpg' });
       deleteObject.mockResolvedValue(undefined);
 
-      await deleteRecipeImage(storageUrl);
+      await deleteRecipeImage(MOCK_STORAGE_URL);
 
       expect(ref).toHaveBeenCalled();
       expect(deleteObject).toHaveBeenCalled();
@@ -210,13 +209,11 @@ describe('Storage Utilities', () => {
     });
 
     it('should handle deletion errors gracefully without throwing', async () => {
-      const storageUrl = 'https://firebasestorage.googleapis.com/v0/b/project/o/recipes%2Ftest.jpg?alt=media';
-      
       ref.mockReturnValue({ path: 'recipes/test.jpg' });
       deleteObject.mockRejectedValue(new Error('Permission denied'));
 
       // Should not throw
-      await expect(deleteRecipeImage(storageUrl)).resolves.toBeUndefined();
+      await expect(deleteRecipeImage(MOCK_STORAGE_URL)).resolves.toBeUndefined();
     });
 
     it('should handle malformed Storage URLs gracefully', async () => {

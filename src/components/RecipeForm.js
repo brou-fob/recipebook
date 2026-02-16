@@ -210,7 +210,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
         // Log the error and restore the image in UI
         console.error('Failed to delete image:', error);
         setImage(imageToRemove);
-        alert('Das Bild konnte nicht aus dem Speicher gelöscht werden. Sie können das Rezept weiterhin bearbeiten, aber das alte Bild bleibt möglicherweise im Speicher.');
+        alert('Das Bild konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.');
       }
     }
   };
