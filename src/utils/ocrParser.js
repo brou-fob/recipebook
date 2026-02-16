@@ -45,7 +45,7 @@
  * 
  * Usage:
  * ```javascript
- * import { parseOcrText, parseOcrTextWithValidation } from './ocrParser';
+ * import { parseOcrText, parseOcrTextSmart } from './ocrParser';
  * 
  * const ocrText = `Spaghetti Carbonara
  * Portionen: 4
@@ -61,22 +61,25 @@
  * const recipe = parseOcrText(ocrText, 'de');
  * // Returns: { title, ingredients, steps, portionen, ... }
  * 
- * // Or with validation:
- * const result = parseOcrTextWithValidation(ocrText, 'de');
- * // Returns: { recipe, validation: { detected, warnings, suggestions, score } }
+ * // Or with smart parsing (recommended - includes validation and auto-classification):
+ * const result = parseOcrTextSmart(ocrText, 'de');
+ * // Returns: { 
+ * //   recipe: { title, ingredients, steps, ... },
+ * //   validation: { detected, warnings, suggestions, score } 
+ * // }
  * ```
  * 
  * Integration with OCR Service:
  * ```javascript
  * import { recognizeText } from './ocrService';
- * import { parseOcrTextWithValidation } from './ocrParser';
+ * import { parseOcrTextSmart } from './ocrParser';
  * import { parseRecipeData } from './recipeImport';
  * 
  * // 1. Extract text from image
  * const ocrResult = await recognizeText(imageBase64, 'deu');
  * 
  * // 2. Parse into structured recipe with validation
- * const result = parseOcrTextWithValidation(ocrResult.text, 'de');
+ * const result = parseOcrTextSmart(ocrResult.text, 'de');
  * 
  * // 3. Check validation and provide feedback
  * if (result.validation.score < 70) {

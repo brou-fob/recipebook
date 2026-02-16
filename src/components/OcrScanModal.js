@@ -224,7 +224,7 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
       // Show warnings if quality is low
       if (result.validation.score < 50) {
         const summary = getValidationSummary(result.validation, language);
-        setError(`Erkennungsqualität ist niedrig (${result.validation.score}%):\n${summary}\n\nMöchten Sie trotzdem fortfahren?`);
+        setError(`Erkennungsqualität ist niedrig (${result.validation.score}%):\n${summary}\n\nKlicken Sie auf "Trotzdem übernehmen" um das Rezept dennoch zu importieren.`);
         // Don't import automatically - wait for user confirmation
         return;
       }

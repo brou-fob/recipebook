@@ -140,7 +140,6 @@ describe('OcrScanModal', () => {
     const { fileToBase64 } = require('../utils/imageUtils');
     const { recognizeText } = require('../utils/ocrService');
     const { parseOcrTextSmart } = require('../utils/ocrParser');
-    const { validateOcrResult } = require('../utils/ocrValidation');
     
     fileToBase64.mockResolvedValue('data:image/png;base64,test');
     recognizeText.mockResolvedValue({
@@ -186,6 +185,7 @@ describe('OcrScanModal', () => {
     const importButton = screen.getByText('Übernehmen');
     fireEvent.click(importButton);
 
+    // Verify the smart parser was called
     expect(parseOcrTextSmart).toHaveBeenCalledWith('Test Recipe\nZutaten\n200g Zutat', 'de');
     expect(mockOnImport).toHaveBeenCalledWith(mockRecipe);
   });
