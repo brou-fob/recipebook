@@ -387,23 +387,22 @@ function mergeStepLines(rawLines) {
 function convertFractionsToDecimals(text) {
   if (!text) return text;
   
-  // Pattern for mixed numbers: "1 1/2" or standalone fractions: "1/2"
-  // First, handle mixed numbers (whole number followed by fraction)
-  // Then handle standalone fractions
-  // Use word boundaries to avoid matching partial numbers
-  
-  // Pattern breakdown:
-  // (?:^|(?<=\s)) - Match start of string or after whitespace (lookbehind)
-  // (\d+) - Capture whole number (for mixed numbers)
-  // \s+ - One or more spaces
-  // (\d+) - Numerator
-  // \s*\/\s* - Division sign with optional spaces
-  // (\d+) - Denominator
-  // |
-  // (?:^|(?<=\s)) - Or match start of string or after whitespace
-  // (\d+) - Numerator (for standalone fractions)
-  // \s*\/\s* - Division sign with optional spaces
-  // (\d+) - Denominator
+  /**
+   * Helper function to format decimal with rounding
+   * @param {number} decimal - Raw decimal value
+   * @returns {string} - Formatted decimal string
+   */
+  function formatDecimal(decimal) {
+    // Round to 4 decimal places for calculation
+    const rounded = Math.round(decimal * 10000) / 10000;
+    
+    // Round to nearest whole number if fractional part is very close (>= 0.999)
+    const fractionalPart = rounded - Math.floor(rounded);
+    const finalValue = fractionalPart >= 0.999 ? Math.ceil(rounded) : rounded;
+    
+    // Format to max 2 decimal places, but remove trailing zeros
+    return Number(finalValue.toFixed(2)).toString();
+  }
   
   let result = text;
   
@@ -418,18 +417,7 @@ function convertFractionsToDecimals(text) {
     
     // Calculate decimal with 4 decimal places precision
     const decimal = wholeNum + (num / denom);
-    
-    // Round to 4 decimal places for calculation
-    const rounded = Math.round(decimal * 10000) / 10000;
-    
-    // Round to nearest whole number if very close (within 0.001)
-    const fractionalPart = rounded - Math.floor(rounded);
-    const finalValue = fractionalPart >= 0.999 ? Math.ceil(rounded) : rounded;
-    
-    // Format to max 2 decimal places, but remove trailing zeros
-    const formatted = Number(finalValue.toFixed(2));
-    
-    return formatted.toString();
+    return formatDecimal(decimal);
   });
   
   // Second pass: Handle standalone fractions like "1/2"
@@ -442,18 +430,7 @@ function convertFractionsToDecimals(text) {
     
     // Calculate decimal with 4 decimal places precision
     const decimal = num / denom;
-    
-    // Round to 4 decimal places for calculation
-    const rounded = Math.round(decimal * 10000) / 10000;
-    
-    // Round to nearest whole number if very close (within 0.001)
-    const fractionalPart = rounded - Math.floor(rounded);
-    const finalValue = fractionalPart >= 0.999 ? Math.ceil(rounded) : rounded;
-    
-    // Format to max 2 decimal places, but remove trailing zeros
-    const formatted = Number(finalValue.toFixed(2));
-    
-    return formatted.toString();
+    return formatDecimal(decimal);
   });
   
   return result;
