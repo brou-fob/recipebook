@@ -3,10 +3,10 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import './OcrScanModal.css';
 import { recognizeText, processCroppedImage } from '../utils/ocrService';
-import { parseOcrText, parseOcrTextSmart } from '../utils/ocrParser';
+import { parseOcrTextSmart } from '../utils/ocrParser';
 import { getValidationSummary } from '../utils/ocrValidation';
 import { fileToBase64 } from '../utils/imageUtils';
-import { recognizeRecipeWithAI, isAiOcrAvailable } from '../utils/aiOcrService';
+import { recognizeRecipeWithAI } from '../utils/aiOcrService';
 
 function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
   const [step, setStep] = useState(initialImage ? 'crop' : 'upload'); // 'upload', 'crop', 'scan', 'edit', 'ai-result'
