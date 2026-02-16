@@ -14,17 +14,18 @@ let currentLang = null;
 /**
  * Initialize OCR worker for specified language
  * @param {string} lang - Language code ('deu' for German, 'eng' for English)
+ * @param {Function} progressCallback - Optional progress callback
  * @returns {Promise<void>}
  */
-export async function initOcrWorker(lang = 'eng') {
+export async function initOcrWorker(lang = 'eng', progressCallback = null) {
   // Validate language parameter
   const validLanguages = ['deu', 'eng'];
   if (!validLanguages.includes(lang)) {
     throw new Error(`Invalid language: ${lang}. Supported languages: ${validLanguages.join(', ')}`);
   }
 
-  // If worker exists with same language, reuse it
-  if (worker && currentLang === lang) {
+  // If worker exists with same language and no new callback, reuse it
+  if (worker && currentLang === lang && !progressCallback) {
     return;
   }
 
@@ -33,9 +34,23 @@ export async function initOcrWorker(lang = 'eng') {
     await terminateWorker();
   }
 
-  // Create new worker
-  worker = await createWorker(lang);
-  currentLang = lang;
+  // Create logger function if progress callback provided
+  const logger = progressCallback ? (m) => {
+    // Tesseract.js logger messages have status and progress properties
+    if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+      const percentage = Math.round(m.progress * 100);
+      progressCallback(percentage);
+    }
+  } : undefined;
+
+  // Create new worker with logger (or reuse if no logger and same language)
+  if (!worker || logger) {
+    if (worker) {
+      await terminateWorker();
+    }
+    worker = await createWorker(lang, 1, logger ? { logger } : {});
+    currentLang = lang;
+  }
 }
 
 /**
@@ -56,28 +71,11 @@ export async function recognizeText(imageBase64, lang = 'eng', onProgress = null
     throw new Error('Image must be a base64 string');
   }
 
-  // Initialize worker if not already initialized
-  if (!worker || currentLang !== lang) {
-    await initOcrWorker(lang);
-  }
+  // Initialize worker with the progress callback
+  await initOcrWorker(lang, onProgress);
 
   // Preprocess image before OCR
   const preprocessedImage = await preprocessImage(imageBase64);
-
-  // Setup progress tracking
-  if (onProgress && typeof onProgress === 'function') {
-    // Tesseract progress status updates
-    const progressHandler = (progress) => {
-      if (progress.status === 'recognizing text') {
-        // Progress is reported as a decimal (0-1), convert to percentage
-        const percentage = Math.round(progress.progress * 100);
-        onProgress(percentage);
-      }
-    };
-
-    // Note: In tesseract.js v7, we need to set up logger
-    worker.setLogger(progressHandler);
-  }
 
   try {
     // Perform OCR

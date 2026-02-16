@@ -195,7 +195,7 @@ function isPropertyLine(line) {
  * @returns {boolean}
  */
 function isListItem(line) {
-  return /^[-*•]\s/.test(line) || /^\d+[\.)]\s/.test(line);
+  return /^[-*•]\s/.test(line) || /^\d+[.)]\s/.test(line);
 }
 
 /**
@@ -274,7 +274,7 @@ function applyProperty(recipe, key, value) {
  */
 function parseIngredientLine(line) {
   // Remove list markers (-, *, •, numbers followed by dot or parenthesis)
-  let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[\.)]\s*/, '').trim();
+  let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
   
   if (!cleaned) return null;
   
@@ -291,7 +291,7 @@ function parseIngredientLine(line) {
  */
 function parseStepLine(line) {
   // Remove list markers and step numbers
-  let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[\.)]\s*/, '').trim();
+  let cleaned = line.replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
   
   if (!cleaned) return null;
   

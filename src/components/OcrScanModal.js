@@ -121,7 +121,7 @@ function OcrScanModal({ onImport, onCancel }) {
 
       const croppedImage = await processCroppedImage(imageBase64, pixelCrop);
       setStep('scan');
-      performOcr(croppedImage);
+      await performOcr(croppedImage);
     } catch (err) {
       setError(err.message);
     }

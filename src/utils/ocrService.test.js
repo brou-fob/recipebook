@@ -45,7 +45,7 @@ describe('ocrService', () => {
     test('initializes worker with English language', async () => {
       await initOcrWorker('eng');
       
-      expect(createWorker).toHaveBeenCalledWith('eng');
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, {});
       expect(getWorkerStatus().isInitialized).toBe(true);
       expect(getWorkerStatus().currentLanguage).toBe('eng');
     });
@@ -53,7 +53,7 @@ describe('ocrService', () => {
     test('initializes worker with German language', async () => {
       await initOcrWorker('deu');
       
-      expect(createWorker).toHaveBeenCalledWith('deu');
+      expect(createWorker).toHaveBeenCalledWith('deu', 1, {});
       expect(getWorkerStatus().currentLanguage).toBe('deu');
     });
 
@@ -80,7 +80,7 @@ describe('ocrService', () => {
     test('defaults to English when no language specified', async () => {
       await initOcrWorker();
       
-      expect(createWorker).toHaveBeenCalledWith('eng');
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, {});
     });
   });
 
@@ -164,7 +164,7 @@ describe('ocrService', () => {
     test('initializes worker if not initialized', async () => {
       const result = await recognizeText(mockBase64, 'eng');
       
-      expect(createWorker).toHaveBeenCalledWith('eng');
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, {});
       expect(result.text).toBe('Sample text');
     });
 
@@ -179,23 +179,18 @@ describe('ocrService', () => {
     test('calls progress callback during recognition', async () => {
       const onProgress = jest.fn();
       
-      // Simulate progress updates
-      mockWorker.setLogger.mockImplementation((handler) => {
-        setTimeout(() => {
-          handler({ status: 'recognizing text', progress: 0.5 });
-          handler({ status: 'recognizing text', progress: 1.0 });
-        }, 0);
-      });
-
       await recognizeText(mockBase64, 'eng', onProgress);
       
-      expect(mockWorker.setLogger).toHaveBeenCalled();
+      // Verify that createWorker was called with logger configuration
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, expect.objectContaining({
+        logger: expect.any(Function)
+      }));
     });
 
     test('defaults to English when no language specified', async () => {
       await recognizeText(mockBase64);
       
-      expect(createWorker).toHaveBeenCalledWith('eng');
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, {});
     });
 
     test('returns all OCR result data', async () => {
@@ -463,18 +458,13 @@ describe('ocrService', () => {
       
       expect(result.text).toBe('Deutscher Text');
       expect(result.detectedLanguage).toBe('deu');
-      expect(createWorker).toHaveBeenCalledWith('eng');
-      expect(createWorker).toHaveBeenCalledWith('deu');
+      // Check that createWorker was called with both languages
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, expect.objectContaining({ logger: expect.any(Function) }));
+      expect(createWorker).toHaveBeenCalledWith('deu', 1, expect.objectContaining({ logger: expect.any(Function) }));
     });
 
     test('calls progress callback during auto detection', async () => {
       const onProgress = jest.fn();
-      
-      // Mock worker to trigger progress updates
-      mockWorker.setLogger.mockImplementation((handler) => {
-        // Simulate progress update
-        handler({ status: 'recognizing text', progress: 0.5 });
-      });
       
       mockWorker.recognize.mockResolvedValue({
         data: {
@@ -489,8 +479,10 @@ describe('ocrService', () => {
       await recognizeTextAuto(mockBase64, onProgress);
       
       // Since recognizeTextAuto wraps the progress callback with a multiplier,
-      // verify that setLogger was called (which means progress tracking is set up)
-      expect(mockWorker.setLogger).toHaveBeenCalled();
+      // verify that createWorker was called with logger configuration
+      expect(createWorker).toHaveBeenCalledWith('eng', 1, expect.objectContaining({
+        logger: expect.any(Function)
+      }));
     });
   });
 });
