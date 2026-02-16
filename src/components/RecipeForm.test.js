@@ -664,3 +664,126 @@ describe('RecipeForm - Category Image Integration', () => {
     );
   });
 });
+
+describe('RecipeForm - OCR Scan Integration', () => {
+  const mockOnSave = jest.fn();
+  const mockOnCancel = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('shows OCR scan button for new recipe', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // OCR scan button should be present for new recipes
+    const ocrButton = screen.getByRole('button', { name: /Rezept mit Kamera scannen/i });
+    expect(ocrButton).toBeInTheDocument();
+    expect(ocrButton).toHaveClass('ocr-scan-button-header');
+  });
+
+  test('does not show OCR scan button when editing existing recipe', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    const existingRecipe = {
+      id: 'recipe-1',
+      title: 'Existing Recipe',
+      authorId: 'user-1',
+      portionen: 4,
+      kulinarik: [],
+      schwierigkeit: 3,
+      kochdauer: 30,
+      speisekategorie: [],
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+      image: '',
+    };
+
+    render(
+      <RecipeForm
+        recipe={existingRecipe}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // OCR scan button should NOT be present for existing recipes
+    const ocrButton = screen.queryByRole('button', { name: /Rezept mit Kamera scannen/i });
+    expect(ocrButton).not.toBeInTheDocument();
+  });
+
+  test('OCR scan button opens OCR modal when clicked', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Click the OCR scan button
+    const ocrButton = screen.getByRole('button', { name: /Rezept mit Kamera scannen/i });
+    fireEvent.click(ocrButton);
+
+    // Verify OCR modal is open
+    expect(screen.getByText('Rezept scannen')).toBeInTheDocument();
+  });
+
+  test('shows both OCR scan and import buttons for new recipe', () => {
+    const regularUser = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    // Both buttons should be present
+    expect(screen.getByRole('button', { name: /Rezept mit Kamera scannen/i })).toBeInTheDocument();
+    expect(screen.getByText('📥 Importieren')).toBeInTheDocument();
+  });
+});
