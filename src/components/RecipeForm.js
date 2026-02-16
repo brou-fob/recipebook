@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './RecipeForm.css';
 import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
 import { fileToBase64, isBase64Image } from '../utils/imageUtils';
+import { uploadRecipeImage, deleteRecipeImage } from '../utils/storageUtils';
 import { getCustomLists } from '../utils/customLists';
 import { getUsers } from '../utils/userManagement';
 import { getImageForCategories } from '../utils/categoryImages';
@@ -166,14 +167,51 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     setUploadingImage(true);
     setImageError(false);
 
+    const oldImage = image;
+
     try {
-      const base64 = await fileToBase64(file);
-      setImage(base64);
+      // Upload to Firebase Storage and get download URL
+      const downloadURL = await uploadRecipeImage(file);
+      
+      // Update state with new image
+      setImage(downloadURL);
+      
+      // Delete old image if it exists and is a Storage URL
+      // Do this after successful upload to avoid orphaning the old image
+      // Note: If deletion fails, the old image remains in storage but won't affect functionality
+      if (oldImage) {
+        try {
+          await deleteRecipeImage(oldImage);
+        } catch (deleteError) {
+          // Log but don't fail the upload if deletion fails
+          // The orphaned image will be cleaned up by Firebase Storage lifecycle rules or manual cleanup
+          console.warn('Failed to delete old image from storage:', deleteError);
+        }
+      }
     } catch (error) {
       alert(error.message);
       setImageError(true);
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    const imageToRemove = image;
+    
+    // Optimistically clear the UI
+    setImage('');
+    
+    // Try to delete from Storage if it's a Storage URL
+    if (imageToRemove) {
+      try {
+        await deleteRecipeImage(imageToRemove);
+      } catch (error) {
+        // Log the error and restore the image in UI
+        console.error('Failed to delete image:', error);
+        setImage(imageToRemove);
+        alert('Das Bild konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 
@@ -422,7 +460,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
               <button
                 type="button"
                 className="remove-image-btn"
-                onClick={() => setImage('')}
+                onClick={handleRemoveImage}
                 title="Bild entfernen"
               >
                 ✕ Entfernen
