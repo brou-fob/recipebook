@@ -3,7 +3,7 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import './OcrScanModal.css';
 import { recognizeText, processCroppedImage } from '../utils/ocrService';
-import { parseOcrText, parseOcrTextSmart } from '../utils/ocrParser';
+import { parseOcrTextSmart } from '../utils/ocrParser';
 import { getValidationSummary } from '../utils/ocrValidation';
 import { fileToBase64 } from '../utils/imageUtils';
 import { recognizeRecipeWithAI, isAiOcrAvailable } from '../utils/aiOcrService';
@@ -19,7 +19,7 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
   const [ocrText, setOcrText] = useState('');
   const [error, setError] = useState('');
   const [cameraActive, setCameraActive] = useState(false);
-  const [ocrMode, setOcrMode] = useState('standard'); // 'standard' or 'ai'
+  const [ocrMode, setOcrMode] = useState('ai'); // 'standard' or 'ai'
   const [aiResult, setAiResult] = useState(null);
   const [validationResult, setValidationResult] = useState(null);
   
@@ -88,7 +88,8 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
     setCameraActive(false);
   };
 
-  // Skip crop (use full image)
+  // Skip crop - processes the full image without cropping
+  // Called internally when no crop area is selected
   const skipCrop = () => {
     if (!imageBase64) {
       setError('Kein Bild geladen. Bitte laden Sie zuerst ein Bild hoch.');
@@ -101,6 +102,12 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
 
   // Apply crop and proceed to OCR
   const applyCrop = async () => {
+    // Check if AI OCR is available before proceeding
+    if (!isAiOcrAvailable('gemini')) {
+      setError('KI-Scan benötigt einen Gemini API-Key. Bitte konfigurieren Sie den API-Key in den Einstellungen.');
+      return;
+    }
+
     // Validate crop selection
     if (!completedCrop || !completedCrop.width || !completedCrop.height) {
       // No crop area selected or invalid crop, use the full image
@@ -256,7 +263,7 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
     setOcrText('');
     setError('');
     setAiResult(null);
-    setOcrMode('standard');
+    setOcrMode('ai');
     setValidationResult(null);
   };
 
@@ -403,35 +410,6 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
                     🇬🇧 English
                   </button>
                 </div>
-              </div>
-
-              <div className="ocr-mode-selector">
-                <label>OCR-Modus:</label>
-                <div className="ocr-mode-tabs">
-                  <button
-                    className={`ocr-mode-tab ${ocrMode === 'standard' ? 'active' : ''}`}
-                    onClick={() => setOcrMode('standard')}
-                  >
-                    📝 Standard-OCR
-                  </button>
-                  <button
-                    className={`ocr-mode-tab ${ocrMode === 'ai' ? 'active' : ''} ${!isAiOcrAvailable('gemini') ? 'disabled' : ''}`}
-                    onClick={() => isAiOcrAvailable('gemini') && setOcrMode('ai')}
-                    disabled={!isAiOcrAvailable('gemini')}
-                  >
-                    🤖 KI-Scan (Gemini)
-                  </button>
-                </div>
-                {!isAiOcrAvailable('gemini') && (
-                  <p className="ai-hint">
-                    KI-Scan benötigt einen Gemini API-Key in den Einstellungen
-                  </p>
-                )}
-                {ocrMode === 'ai' && isAiOcrAvailable('gemini') && (
-                  <p className="ai-hint">
-                    ⚡ Das Bild wird zur Analyse an Google gesendet. Rezeptdaten werden direkt strukturiert erkannt.
-                  </p>
-                )}
               </div>
 
               <div className="crop-container">
@@ -603,14 +581,9 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
           </button>
           
           {step === 'crop' && (
-            <>
-              <button className="skip-button" onClick={skipCrop}>
-                Zuschneiden überspringen
-              </button>
-              <button className="scan-button" onClick={applyCrop}>
-                Scannen
-              </button>
-            </>
+            <button className="scan-button" onClick={applyCrop}>
+              Scannen
+            </button>
           )}
           
           {(step === 'edit' || step === 'ai-result') && (
