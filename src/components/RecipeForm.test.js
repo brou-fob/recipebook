@@ -687,6 +687,7 @@ describe('RecipeForm - OCR Scan Integration', () => {
       email: 'user@example.com',
       isAdmin: false,
       role: 'edit',
+      fotoscan: true,
     };
 
     render(
@@ -763,6 +764,7 @@ describe('RecipeForm - OCR Scan Integration', () => {
       email: 'user@example.com',
       isAdmin: false,
       role: 'edit',
+      fotoscan: true,
     };
 
     render(
@@ -793,6 +795,7 @@ describe('RecipeForm - OCR Scan Integration', () => {
       email: 'user@example.com',
       isAdmin: false,
       role: 'edit',
+      fotoscan: true,
     };
 
     render(
@@ -807,6 +810,125 @@ describe('RecipeForm - OCR Scan Integration', () => {
     // Both OCR scan label and import button should be present
     expect(screen.getByTitle('Rezept mit Kamera scannen')).toBeInTheDocument();
     expect(screen.getByTitle('Rezept aus externer Quelle importieren')).toBeInTheDocument();
+  });
+});
+
+describe('RecipeForm - Fotoscan Feature', () => {
+  const mockOnSave = jest.fn();
+  const mockOnCancel = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('shows OCR scan button when user has fotoscan enabled', () => {
+    const userWithFotoscan = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+      fotoscan: true,
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={userWithFotoscan}
+      />
+    );
+
+    // OCR scan button should be visible
+    const ocrLabel = screen.getByTitle('Rezept mit Kamera scannen');
+    expect(ocrLabel).toBeInTheDocument();
+    expect(ocrLabel).toHaveClass('ocr-scan-button-header');
+    
+    // Verify the hidden file input exists
+    const ocrInput = document.getElementById('ocrImageUpload');
+    expect(ocrInput).toBeInTheDocument();
+    expect(ocrInput).toHaveAttribute('type', 'file');
+  });
+
+  test('hides OCR scan button when user has fotoscan disabled', () => {
+    const userWithoutFotoscan = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+      fotoscan: false,
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={userWithoutFotoscan}
+      />
+    );
+
+    // OCR scan button should NOT be visible
+    const ocrLabel = screen.queryByTitle('Rezept mit Kamera scannen');
+    expect(ocrLabel).not.toBeInTheDocument();
+    
+    // Verify the file input also doesn't exist
+    const ocrInput = document.getElementById('ocrImageUpload');
+    expect(ocrInput).not.toBeInTheDocument();
+  });
+
+  test('hides OCR scan button when fotoscan is undefined', () => {
+    const userWithoutFotoscanField = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+      // fotoscan field is not set (undefined)
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={userWithoutFotoscanField}
+      />
+    );
+
+    // OCR scan button should NOT be visible when fotoscan is undefined
+    const ocrLabel = screen.queryByTitle('Rezept mit Kamera scannen');
+    expect(ocrLabel).not.toBeInTheDocument();
+  });
+
+  test('import button is always visible regardless of fotoscan setting', () => {
+    const userWithoutFotoscan = {
+      id: 'user-1',
+      vorname: 'Regular',
+      nachname: 'User',
+      email: 'user@example.com',
+      isAdmin: false,
+      role: 'edit',
+      fotoscan: false,
+    };
+
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={userWithoutFotoscan}
+      />
+    );
+
+    // Import button should be visible even when fotoscan is disabled
+    const importButton = screen.getByTitle('Rezept aus externer Quelle importieren');
+    expect(importButton).toBeInTheDocument();
   });
 });
 
