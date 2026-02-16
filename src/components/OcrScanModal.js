@@ -4,10 +4,11 @@ import { recognizeText } from '../utils/ocrService';
 import { parseOcrTextSmart } from '../utils/ocrParser';
 import { getValidationSummary } from '../utils/ocrValidation';
 import { fileToBase64 } from '../utils/imageUtils';
-import { recognizeRecipeWithAI, isAiOcrAvailable } from '../utils/aiOcrService';
+import { recognizeRecipeWithAI } from '../utils/aiOcrService';
 
 function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
   const [step, setStep] = useState(initialImage ? 'scan' : 'upload'); // 'upload', 'scan', 'edit', 'ai-result'
+  // eslint-disable-next-line no-unused-vars
   const [imageBase64, setImageBase64] = useState(initialImage);
   const [language, setLanguage] = useState('de'); // 'de' or 'en'
   const [scanning, setScanning] = useState(false);
@@ -215,8 +216,6 @@ function OcrScanModal({ onImport, onCancel, initialImage = '' }) {
     stopCamera();
     setStep('upload');
     setImageBase64('');
-    setCrop(null);
-    setCompletedCrop(null);
     setOcrText('');
     setError('');
     setAiResult(null);
