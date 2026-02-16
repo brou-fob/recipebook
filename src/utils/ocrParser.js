@@ -247,7 +247,8 @@ function isListItem(line) {
  */
 function isStandaloneBulletPoint(line) {
   // Match lines that are only bullet points or bullet points with minimal content
-  return /^[-*•]+\s*$/.test(line);
+  // Hyphen is escaped to avoid being interpreted as a range operator
+  return /^[\-*•]+\s*$/.test(line);
 }
 
 /**

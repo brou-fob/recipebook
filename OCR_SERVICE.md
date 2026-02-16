@@ -413,7 +413,7 @@ steps: [
 ]
 ```
 
-**Example 3: Multi-Line Steps Without Numbering**
+**Example 3: Multi-Line Steps Without Numbering or Punctuation**
 ```
 Input OCR text:
 Preheat the oven and
@@ -425,10 +425,12 @@ steps: [
   "Preheat the oven and prepare the baking sheet Mix all ingredients"
 ]
 
-Note: Without sentence endings or numbering, all lines are merged together.
-Add periods to separate steps naturally:
+Note: Without sentence endings or numbering, ALL lines are merged into a single step.
+This is a limitation of pure text-based parsing without semantic understanding.
 
-Input with periods:
+BEST PRACTICE: Always use proper punctuation to separate steps:
+
+Input with periods (recommended):
 Preheat the oven and prepare the baking sheet.
 Mix all ingredients.
 
@@ -436,6 +438,18 @@ Output:
 steps: [
   "Preheat the oven and prepare the baking sheet.",
   "Mix all ingredients."
+]
+
+Or use numbering:
+
+Input with numbering (recommended):
+1. Preheat the oven and prepare the baking sheet
+2. Mix all ingredients
+
+Output:
+steps: [
+  "Preheat the oven and prepare the baking sheet",
+  "Mix all ingredients"
 ]
 ```
 

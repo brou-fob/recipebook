@@ -736,6 +736,28 @@ Zubereitung
           'Another with period.'
         ]);
       });
+
+      test('handles periods at end of continuation lines', () => {
+        const text = `Recipe
+
+Zutaten
+- Flour
+
+Zubereitung
+
+1. First sentence.
+Second sentence (no period)
+2. Another step`;
+
+        const result = parseOcrText(text, 'en');
+        // Continuation lines without periods are merged
+        // Lines ending with period start new step when next line is numbered
+        expect(result.steps).toEqual([
+          'First sentence.',
+          'Second sentence (no period)',
+          'Another step'
+        ]);
+      });
     });
   });
 });
