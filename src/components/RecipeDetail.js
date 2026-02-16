@@ -325,18 +325,29 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
             <img src={recipe.image} alt={recipe.title} />
             {isMobile && (
               <div className="image-overlay-actions">
-                <button 
-                  className={`overlay-cooking-mode ${cookingMode ? 'active' : ''}`}
-                  onClick={toggleCookingMode}
-                  title={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren'}
-                  aria-label={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren'}
-                >
-                  {isBase64Image(cookingModeIcon) ? (
-                    <img src={cookingModeIcon} alt="Kochmodus" className="overlay-cooking-mode-icon-img" />
-                  ) : (
-                    cookingModeIcon
-                  )}
-                </button>
+                {cookingMode && (
+                  <button 
+                    className={`overlay-cooking-mode ${cookingMode ? 'active' : ''}`}
+                    onClick={toggleCookingMode}
+                    title={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren'}
+                    aria-label={cookingMode ? 'Kochmodus beenden' : 'Kochmodus aktivieren'}
+                  >
+                    {isBase64Image(cookingModeIcon) ? (
+                      <img src={cookingModeIcon} alt="Kochmodus" className="overlay-cooking-mode-icon-img" />
+                    ) : (
+                      cookingModeIcon
+                    )}
+                  </button>
+                )}
+                {!cookingMode && (
+                  <div className="overlay-cooking-mode-static">
+                    {isBase64Image(cookingModeIcon) ? (
+                      <img src={cookingModeIcon} alt="Kochmodus" className="overlay-cooking-mode-icon-img" />
+                    ) : (
+                      <span>{cookingModeIcon}</span>
+                    )}
+                  </div>
+                )}
                 <button 
                   className="overlay-back-button"
                   onClick={onBack}
