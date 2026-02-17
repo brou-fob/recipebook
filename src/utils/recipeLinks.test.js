@@ -20,11 +20,39 @@ describe('recipeLinks utilities', () => {
   });
 
   describe('decodeRecipeLink', () => {
-    test('decodes valid recipe link', () => {
+    test('decodes valid recipe link without quantity', () => {
       const result = decodeRecipeLink('#recipe:abc123:Tomatensoße');
       expect(result).toEqual({
         recipeId: 'abc123',
-        recipeName: 'Tomatensoße'
+        recipeName: 'Tomatensoße',
+        quantityPrefix: null
+      });
+    });
+
+    test('decodes recipe link with quantity prefix', () => {
+      const result = decodeRecipeLink('1 Teil #recipe:abc123:Pizzateig');
+      expect(result).toEqual({
+        recipeId: 'abc123',
+        recipeName: 'Pizzateig',
+        quantityPrefix: '1 Teil'
+      });
+    });
+
+    test('decodes recipe link with weight quantity prefix', () => {
+      const result = decodeRecipeLink('50g #recipe:xyz789:Tomatensoße');
+      expect(result).toEqual({
+        recipeId: 'xyz789',
+        recipeName: 'Tomatensoße',
+        quantityPrefix: '50g'
+      });
+    });
+
+    test('decodes recipe link with complex quantity prefix', () => {
+      const result = decodeRecipeLink('200 ml #recipe:abc:Milch');
+      expect(result).toEqual({
+        recipeId: 'abc',
+        recipeName: 'Milch',
+        quantityPrefix: '200 ml'
       });
     });
 
@@ -32,7 +60,17 @@ describe('recipeLinks utilities', () => {
       const result = decodeRecipeLink('#recipe:xyz789:Sauce: Tomaten-Basilikum');
       expect(result).toEqual({
         recipeId: 'xyz789',
-        recipeName: 'Sauce: Tomaten-Basilikum'
+        recipeName: 'Sauce: Tomaten-Basilikum',
+        quantityPrefix: null
+      });
+    });
+
+    test('handles recipe link with quantity and colons in name', () => {
+      const result = decodeRecipeLink('100g #recipe:xyz789:Sauce: Tomaten-Basilikum');
+      expect(result).toEqual({
+        recipeId: 'xyz789',
+        recipeName: 'Sauce: Tomaten-Basilikum',
+        quantityPrefix: '100g'
       });
     });
 
@@ -48,6 +86,11 @@ describe('recipeLinks utilities', () => {
     test('returns true for valid recipe links', () => {
       expect(isRecipeLink('#recipe:abc123:Tomatensoße')).toBe(true);
       expect(isRecipeLink('#recipe:xyz:Name')).toBe(true);
+    });
+
+    test('returns true for recipe links with quantity prefix', () => {
+      expect(isRecipeLink('1 Teil #recipe:abc123:Pizzateig')).toBe(true);
+      expect(isRecipeLink('50g #recipe:xyz:Tomatensoße')).toBe(true);
     });
 
     test('returns false for non-recipe-link strings', () => {
@@ -69,8 +112,22 @@ describe('recipeLinks utilities', () => {
 
       const result = extractRecipeLinks(ingredients);
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({ recipeId: 'abc123', recipeName: 'Tomatensoße' });
-      expect(result[1]).toEqual({ recipeId: 'xyz789', recipeName: 'Pizzateig' });
+      expect(result[0]).toEqual({ recipeId: 'abc123', recipeName: 'Tomatensoße', quantityPrefix: null });
+      expect(result[1]).toEqual({ recipeId: 'xyz789', recipeName: 'Pizzateig', quantityPrefix: null });
+    });
+
+    test('extracts recipe links with quantity prefixes', () => {
+      const ingredients = [
+        '200g Mehl',
+        '1 Teil #recipe:abc123:Pizzateig',
+        '3 Eier',
+        '50g #recipe:xyz789:Tomatensoße'
+      ];
+
+      const result = extractRecipeLinks(ingredients);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({ recipeId: 'abc123', recipeName: 'Pizzateig', quantityPrefix: '1 Teil' });
+      expect(result[1]).toEqual({ recipeId: 'xyz789', recipeName: 'Tomatensoße', quantityPrefix: '50g' });
     });
 
     test('returns empty array when no recipe links present', () => {
