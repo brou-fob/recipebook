@@ -370,11 +370,6 @@
 
 .menu-section {
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.menu-section:last-child {
-  border-bottom: none;
 }
 
 .menu-section-title {
