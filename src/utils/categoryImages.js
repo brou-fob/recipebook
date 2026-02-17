@@ -34,9 +34,17 @@ export function getCategoryImages() {
 /**
  * Save category images to localStorage
  * @param {Array} images - Array of image objects
+ * @throws {Error} If localStorage quota is exceeded or other storage error occurs
  */
 export function saveCategoryImages(images) {
-  localStorage.setItem(CATEGORY_IMAGES_KEY, JSON.stringify(images));
+  try {
+    localStorage.setItem(CATEGORY_IMAGES_KEY, JSON.stringify(images));
+  } catch (error) {
+    if (error.name === 'QuotaExceededError') {
+      throw new Error('Speicherplatz voll. Bitte entfernen Sie einige Kategoriebilder oder verwenden Sie kleinere Bilder.');
+    }
+    throw error;
+  }
 }
 
 /**

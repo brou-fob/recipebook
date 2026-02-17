@@ -4,7 +4,7 @@ import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, sav
 import { isCurrentUserAdmin } from '../utils/userManagement';
 import UserManagement from './UserManagement';
 import { getCategoryImages, addCategoryImage, updateCategoryImage, removeCategoryImage, getAlreadyAssignedCategories } from '../utils/categoryImages';
-import { fileToBase64, isBase64Image } from '../utils/imageUtils';
+import { fileToBase64, isBase64Image, compressImage } from '../utils/imageUtils';
 import { updateFavicon, updatePageTitle } from '../utils/faviconUtils';
 
 const CATEGORY_ALREADY_ASSIGNED_ERROR = 'Die folgenden Kategorien sind bereits einem anderen Bild zugeordnet: {categories}\n\nBitte wählen Sie andere Kategorien.';
@@ -173,10 +173,11 @@ function Settings({ onBack, currentUser }) {
 
     try {
       const base64 = await fileToBase64(file);
+      const compressedBase64 = await compressImage(base64);
       
       if (editingImageId) {
         // Update existing image
-        updateCategoryImage(editingImageId, { image: base64 });
+        updateCategoryImage(editingImageId, { image: compressedBase64 });
         setCategoryImages(getCategoryImages());
         setEditingImageId(null);
       } else {
@@ -188,7 +189,7 @@ function Settings({ onBack, currentUser }) {
           return;
         }
         
-        addCategoryImage(base64, selectedCategories);
+        addCategoryImage(compressedBase64, selectedCategories);
         setCategoryImages(getCategoryImages());
         setSelectedCategories([]);
       }
@@ -253,7 +254,8 @@ function Settings({ onBack, currentUser }) {
 
     try {
       const base64 = await fileToBase64(file);
-      setFaviconImage(base64);
+      const compressedBase64 = await compressImage(base64);
+      setFaviconImage(compressedBase64);
     } catch (error) {
       alert(error.message);
     } finally {
@@ -274,7 +276,8 @@ function Settings({ onBack, currentUser }) {
 
     try {
       const base64 = await fileToBase64(file);
-      setButtonIcons({ ...buttonIcons, [iconKey]: base64 });
+      const compressedBase64 = await compressImage(base64);
+      setButtonIcons({ ...buttonIcons, [iconKey]: compressedBase64 });
     } catch (error) {
       alert(error.message);
     } finally {

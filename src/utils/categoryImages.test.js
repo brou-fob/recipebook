@@ -42,6 +42,45 @@ describe('categoryImages', () => {
       saveCategoryImages(images);
       expect(JSON.parse(localStorage.getItem('categoryImages'))).toEqual(images);
     });
+
+    test('throws German error message on QuotaExceededError', () => {
+      // Mock localStorage.setItem to throw QuotaExceededError
+      const originalSetItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = jest.fn(() => {
+        const error = new Error('QuotaExceededError');
+        error.name = 'QuotaExceededError';
+        throw error;
+      });
+
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
+
+      expect(() => saveCategoryImages(images)).toThrow(
+        'Speicherplatz voll. Bitte entfernen Sie einige Kategoriebilder oder verwenden Sie kleinere Bilder.'
+      );
+
+      // Restore original setItem
+      Storage.prototype.setItem = originalSetItem;
+    });
+
+    test('re-throws other storage errors', () => {
+      // Mock localStorage.setItem to throw a different error
+      const originalSetItem = Storage.prototype.setItem;
+      const testError = new Error('Some other error');
+      Storage.prototype.setItem = jest.fn(() => {
+        throw testError;
+      });
+
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
+
+      expect(() => saveCategoryImages(images)).toThrow('Some other error');
+
+      // Restore original setItem
+      Storage.prototype.setItem = originalSetItem;
+    });
   });
 
   describe('addCategoryImage', () => {
