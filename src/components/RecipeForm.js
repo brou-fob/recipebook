@@ -96,7 +96,7 @@ function SortableIngredient({ id, item, index, onChange, onRemove, canRemove, on
 }
 
 // Sortable Step Item Component
-function SortableStep({ id, item, index, onChange, onRemove, canRemove, onToggleType }) {
+function SortableStep({ id, item, index, stepNumber, onChange, onRemove, canRemove, onToggleType }) {
   const {
     attributes,
     listeners,
@@ -131,11 +131,11 @@ function SortableStep({ id, item, index, onChange, onRemove, canRemove, onToggle
       >
         ⋮⋮
       </button>
-      {!isHeading && <span className="step-number">{index + 1}.</span>}
+      {!isHeading && <span className="step-number">{stepNumber}.</span>}
       <textarea
         value={text}
         onChange={(e) => onChange(index, e.target.value)}
-        placeholder={isHeading ? 'Zwischenüberschrift' : `Schritt ${index + 1}`}
+        placeholder={isHeading ? 'Zwischenüberschrift' : `Schritt ${stepNumber}`}
         rows={isHeading ? '1' : '2'}
         className={isHeading ? 'heading-input' : ''}
       />
@@ -205,7 +205,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   );
 
   // Helper function to normalize items (convert strings to objects if needed)
-  const normalizeItems = (items) => {
+  const normalizeIngredients = (items) => {
     if (!items || items.length === 0) return [{ type: 'ingredient', text: '' }];
     return items.map(item => {
       if (typeof item === 'string') {
@@ -250,7 +250,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       } else {
         setSpeisekategorie([]);
       }
-      setIngredients(recipe.ingredients?.length > 0 ? normalizeItems(recipe.ingredients) : [{ type: 'ingredient', text: '' }]);
+      setIngredients(recipe.ingredients?.length > 0 ? normalizeIngredients(recipe.ingredients) : [{ type: 'ingredient', text: '' }]);
       setSteps(recipe.steps?.length > 0 ? normalizeSteps(recipe.steps) : [{ type: 'step', text: '' }]);
       
       // If creating a version, set current user as author and track parent
@@ -577,7 +577,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     
     // Import always provides non-empty arrays (validated by parseRecipeData)
     // Normalize to object format
-    setIngredients(normalizeItems(importedRecipe.ingredients || []));
+    setIngredients(normalizeIngredients(importedRecipe.ingredients || []));
     setSteps(normalizeSteps(importedRecipe.steps || []));
     
     // Close the import modal
@@ -978,18 +978,23 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
               items={steps.map((_, index) => `step-${index}`)}
               strategy={verticalListSortingStrategy}
             >
-              {steps.map((item, index) => (
-                <SortableStep
-                  key={`step-${index}`}
-                  id={`step-${index}`}
-                  item={item}
-                  index={index}
-                  onChange={handleStepChange}
-                  onRemove={handleRemoveStep}
-                  onToggleType={handleToggleStepType}
-                  canRemove={steps.length > 1}
-                />
-              ))}
+              {steps.map((item, index) => {
+                // Calculate step number (only count non-heading items up to this point)
+                const stepNumber = steps.slice(0, index + 1).filter(s => s.type !== 'heading').length;
+                return (
+                  <SortableStep
+                    key={`step-${index}`}
+                    id={`step-${index}`}
+                    item={item}
+                    index={index}
+                    stepNumber={stepNumber}
+                    onChange={handleStepChange}
+                    onRemove={handleRemoveStep}
+                    onToggleType={handleToggleStepType}
+                    canRemove={steps.length > 1}
+                  />
+                );
+              })}
             </SortableContext>
           </DndContext>
           <button type="button" className="add-item-button" onClick={handleAddStep}>
