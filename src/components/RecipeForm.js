@@ -170,8 +170,8 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const [schwierigkeit, setSchwierigkeit] = useState(3);
   const [kochdauer, setKochdauer] = useState(30);
   const [speisekategorie, setSpeisekategorie] = useState([]);
-  const [ingredients, setIngredients] = useState(['']);
-  const [steps, setSteps] = useState(['']);
+  const [ingredients, setIngredients] = useState([{ type: 'ingredient', text: '' }]);
+  const [steps, setSteps] = useState([{ type: 'step', text: '' }]);
   const [imageError, setImageError] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [authorId, setAuthorId] = useState('');
@@ -492,8 +492,8 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
     }
 
     // Filter out empty items and convert to storage format
-    // For ingredients/steps, store as objects to preserve heading information
     const filteredIngredients = ingredients.filter(i => i.text.trim() !== '');
+    
     // Format ingredients but preserve type information
     const formattedIngredients = filteredIngredients.map(item => {
       if (item.type === 'heading') {
@@ -507,6 +507,21 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       };
     });
 
+    // Check if any headings exist in ingredients
+    const hasIngredientHeadings = formattedIngredients.some(item => item.type === 'heading');
+    
+    // Convert to string format if no headings (backward compatibility)
+    const ingredientsToSave = hasIngredientHeadings 
+      ? formattedIngredients 
+      : formattedIngredients.map(item => item.text);
+
+    // Same for steps
+    const filteredSteps = steps.filter(s => s.text.trim() !== '');
+    const hasStepHeadings = filteredSteps.some(item => item.type === 'heading');
+    const stepsToSave = hasStepHeadings 
+      ? filteredSteps 
+      : filteredSteps.map(item => item.text);
+
     const recipeData = {
       title: title.trim(),
       image: finalImage,
@@ -516,8 +531,8 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
       schwierigkeit: parseInt(schwierigkeit) || 3,
       kochdauer: parseInt(kochdauer) || 30,
       speisekategorie: speisekategorie,
-      ingredients: formattedIngredients,
-      steps: steps.filter(s => s.text.trim() !== ''),
+      ingredients: ingredientsToSave,
+      steps: stepsToSave,
       authorId: authorId,
       parentRecipeId: parentRecipeId || null,
       createdAt: isCreatingVersion ? new Date().toISOString() : recipe?.createdAt,
