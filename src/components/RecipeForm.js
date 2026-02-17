@@ -293,7 +293,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const handleDragEndIngredients = (event) => {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       setIngredients((items) => {
         const oldIndex = items.findIndex((_, idx) => `ingredient-${idx}` === active.id);
         const newIndex = items.findIndex((_, idx) => `ingredient-${idx}` === over.id);
@@ -305,7 +305,7 @@ function RecipeForm({ recipe, onSave, onCancel, currentUser, isCreatingVersion =
   const handleDragEndSteps = (event) => {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       setSteps((items) => {
         const oldIndex = items.findIndex((_, idx) => `step-${idx}` === active.id);
         const newIndex = items.findIndex((_, idx) => `step-${idx}` === over.id);
