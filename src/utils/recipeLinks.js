@@ -15,17 +15,23 @@ export const encodeRecipeLink = (recipeId, recipeName) => {
 /**
  * Decode a recipe reference from ingredient text
  * Returns null if text is not a recipe link
+ * Now supports quantity prefix: "1 Teil #recipe:id:name" or just "#recipe:id:name"
  */
 export const decodeRecipeLink = (ingredient) => {
   if (!ingredient || typeof ingredient !== 'string') {
     return null;
   }
 
-  const match = ingredient.match(/^#recipe:([^:]+):(.+)$/);
+  // Match pattern with optional quantity prefix
+  // Examples: "#recipe:id:name" or "1 Teil #recipe:id:name" or "50g #recipe:id:name"
+  // Pattern ensures no # symbols in the quantity prefix
+  const match = ingredient.match(/^([^#]*?)\s*#recipe:([^:]+):(.+)$/);
   if (match) {
+    const quantityPrefix = match[1].trim();
     return {
-      recipeId: match[1],
-      recipeName: match[2]
+      recipeId: match[2],
+      recipeName: match[3],
+      quantityPrefix: quantityPrefix || null
     };
   }
 

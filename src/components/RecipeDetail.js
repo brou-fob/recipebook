@@ -304,12 +304,15 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
       
       return (
         <li key={index} className="ingredient-with-link">
+          {recipeLink.quantityPrefix && (
+            <span>{recipeLink.quantityPrefix} </span>
+          )}
           <button
             className="recipe-link-button"
             onClick={() => handleRecipeLinkClick(recipeLink.recipeId)}
             title={`Öffne Rezept: ${displayName}`}
           >
-            🔗 {displayName}
+            {displayName}
           </button>
         </li>
       );
