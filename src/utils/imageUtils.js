@@ -68,3 +68,62 @@ export function isValidImageSource(imageStr) {
     return false;
   }
 }
+
+/**
+ * Compress an image using canvas
+ * @param {string} base64 - Base64 encoded image string
+ * @param {number} maxWidth - Maximum width (default: 800)
+ * @param {number} maxHeight - Maximum height (default: 600)
+ * @param {number} quality - JPEG quality 0-1 (default: 0.7)
+ * @returns {Promise<string>} - Compressed base64 image
+ */
+export function compressImage(base64, maxWidth = 800, maxHeight = 600, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    if (!base64 || !isBase64Image(base64)) {
+      reject(new Error('Invalid base64 image'));
+      return;
+    }
+
+    const img = new Image();
+    
+    img.onload = () => {
+      try {
+        // Calculate new dimensions while maintaining aspect ratio
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const aspectRatio = width / height;
+          
+          if (width > height) {
+            width = maxWidth;
+            height = Math.round(width / aspectRatio);
+          } else {
+            height = maxHeight;
+            width = Math.round(height * aspectRatio);
+          }
+        }
+        
+        // Create canvas and draw resized image
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to JPEG with specified quality
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = base64;
+  });
+}
