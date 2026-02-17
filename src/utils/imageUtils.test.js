@@ -12,7 +12,7 @@ describe('imageUtils', () => {
       expect(isBase64Image('not an image')).toBe(false);
     });
     
-    test('returns falsy for empty or null values', () => {
+    test('returns false for empty or null values', () => {
       expect(isBase64Image('')).toBeFalsy();
       expect(isBase64Image(null)).toBeFalsy();
     });

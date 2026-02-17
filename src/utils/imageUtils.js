@@ -95,10 +95,13 @@ export function compressImage(base64, maxWidth = 800, maxHeight = 600, quality =
         if (width > maxWidth || height > maxHeight) {
           const aspectRatio = width / height;
           
-          if (width > height) {
+          // Determine which dimension is the constraint
+          if (width / maxWidth > height / maxHeight) {
+            // Width is the limiting factor
             width = maxWidth;
             height = Math.round(width / aspectRatio);
           } else {
+            // Height is the limiting factor
             height = maxHeight;
             width = Math.round(height * aspectRatio);
           }
