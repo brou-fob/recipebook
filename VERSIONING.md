@@ -104,8 +104,6 @@ Falls du die Version manuell setzen möchtest (z.B. für Hotfixes):
 
 ### Lokale Versionierung (Entwicklung)
 
-### Lokale Versionierung (Entwicklung)
-
 Für lokale Entwicklung und Tests kannst du npm-Scripts verwenden:
 
 #### npm version Commands
@@ -225,7 +223,7 @@ Bei Fehlern wird eine detaillierte Zusammenfassung im Workflow-Log angezeigt.
 **Problem**: Der Version-Bump Workflow ist fehlgeschlagen.
 
 **Lösung**:
-1. Prüfe die Fehlermelung im Workflow-Log
+1. Prüfe die Fehlermeldung im Workflow-Log
 2. Stelle sicher, dass die `package.json` korrekt formatiert ist
 3. Bei Git-Konflikten: Pull die neuesten Änderungen und pushe erneut
 
