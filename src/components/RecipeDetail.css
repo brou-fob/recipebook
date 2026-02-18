@@ -421,6 +421,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: none;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.6);
   transition: all 0.3s ease;
 }
 
