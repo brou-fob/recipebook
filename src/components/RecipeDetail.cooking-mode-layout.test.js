@@ -245,4 +245,55 @@ describe('RecipeDetail - Cooking Mode Layout', () => {
     expect(stepCards[0]).toHaveClass('active');
     expect(stepCards[1]).not.toHaveClass('active');
   });
+
+  test('auto-activates card on scroll/swipe', async () => {
+    setMockWindowWidth(400);
+
+    const { findByText } = render(
+      <RecipeDetail
+        recipe={mockRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Activate cooking mode
+    const staticIcon = document.querySelector('.overlay-cooking-mode-static');
+    fireEvent.click(staticIcon);
+
+    // Get the step carousel container
+    const carousel = document.querySelector('.step-carousel');
+    expect(carousel).toBeInTheDocument();
+
+    // Get step cards
+    const stepCards = document.querySelectorAll('.step-card');
+    expect(stepCards.length).toBe(3);
+
+    // Initially, first card should be active
+    expect(stepCards[0]).toHaveClass('active');
+
+    // Mock getBoundingClientRect for the container and cards
+    // Simulate scrolling to the second card by mocking positions
+    const containerRect = { left: 0, width: 400, getBoundingClientRect: jest.fn() };
+    carousel.getBoundingClientRect = jest.fn(() => ({ left: 0, width: 400 }));
+    
+    // Card 0: far left (not centered)
+    stepCards[0].getBoundingClientRect = jest.fn(() => ({ left: -200, width: 398 }));
+    // Card 1: centered
+    stepCards[1].getBoundingClientRect = jest.fn(() => ({ left: 1, width: 398 }));
+    // Card 2: far right (not centered)
+    stepCards[2].getBoundingClientRect = jest.fn(() => ({ left: 414, width: 398 }));
+
+    // Trigger scroll event
+    fireEvent.scroll(carousel);
+
+    // Wait for debounce timeout (100ms)
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    // Second card should now be active
+    expect(stepCards[1]).toHaveClass('active');
+    expect(stepCards[0]).not.toHaveClass('active');
+  });
 });
