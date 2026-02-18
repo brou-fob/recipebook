@@ -792,7 +792,7 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 0 1rem;
+  padding: 0 1rem 1.5rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
@@ -856,7 +856,6 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  margin-top: 0.5rem;
   background: transparent;
 }
 
