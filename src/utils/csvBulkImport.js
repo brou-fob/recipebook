@@ -190,10 +190,10 @@ function processListItem(value, itemType = 'ingredient') {
  * @param {Array<string>} headers - CSV headers
  * @param {Array<string>} values - CSV values for this row
  * @param {string} currentUserName - Name of the current user (for authorId mapping)
- * @param {Function} getCategoryImage - Optional function to get image for categories
- * @returns {Object} - Recipe object
+ * @param {Function} getCategoryImage - Optional async function to get image for categories
+ * @returns {Promise<Object>} - Recipe object
  */
-function parseRecipeRow(headers, values, currentUserName = '', getCategoryImage = null) {
+async function parseRecipeRow(headers, values, currentUserName = '', getCategoryImage = null) {
   const recipe = {
     title: '',
     image: '',
@@ -256,7 +256,7 @@ function parseRecipeRow(headers, values, currentUserName = '', getCategoryImage 
   // Apply category image if a getCategoryImage function was provided
   // and the recipe has meal categories but no image yet
   if (getCategoryImage && !recipe.image && recipe.speisekategorie.length > 0) {
-    const categoryImage = getCategoryImage(recipe.speisekategorie);
+    const categoryImage = await getCategoryImage(recipe.speisekategorie);
     if (categoryImage) {
       recipe.image = categoryImage;
     }
@@ -289,11 +289,11 @@ function validateRecipe(recipe, rowNumber) {
  * Parse CSV content and extract multiple recipes
  * @param {string} csvContent - CSV file content
  * @param {string} currentUserName - Name of current user
- * @param {Function} getCategoryImage - Optional function to get image for categories
- * @returns {Array<Object>} - Array of recipe objects
+ * @param {Function} getCategoryImage - Optional async function to get image for categories
+ * @returns {Promise<Array<Object>>} - Promise resolving to array of recipe objects
  * @throws {Error} - If CSV is invalid or parsing fails
  */
-export function parseBulkCSV(csvContent, currentUserName = '', getCategoryImage = null) {
+export async function parseBulkCSV(csvContent, currentUserName = '', getCategoryImage = null) {
   if (!csvContent || typeof csvContent !== 'string') {
     throw new Error('Ungültiger CSV-Inhalt');
   }
@@ -323,7 +323,7 @@ export function parseBulkCSV(csvContent, currentUserName = '', getCategoryImage 
   for (let i = 1; i < lines.length; i++) {
     try {
       const values = parseCSVLine(lines[i], delimiter);
-      const recipe = parseRecipeRow(headers, values, currentUserName, getCategoryImage);
+      const recipe = await parseRecipeRow(headers, values, currentUserName, getCategoryImage);
       
       // Validate recipe
       validateRecipe(recipe, i + 1);
