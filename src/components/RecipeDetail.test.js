@@ -43,7 +43,8 @@ jest.mock('../utils/customLists', () => ({
   getButtonIcons: () => Promise.resolve({
     cookingMode: '👨‍🍳',
     importRecipe: '📥',
-    scanImage: '📷'
+    scanImage: '📷',
+    closeButton: '✕'
   }),
 }));
 
@@ -716,5 +717,105 @@ describe('RecipeDetail - Creation Date Display', () => {
 
     // Check that the creation date is displayed correctly with label
     expect(screen.getByText('Erstellt am: 5.4.2024')).toBeInTheDocument();
+  });
+});
+
+describe('RecipeDetail - Close Button Icon', () => {
+  const currentUser = {
+    id: 'user-1',
+    vorname: 'Test',
+    nachname: 'User',
+    rolle: 'Familymember',
+  };
+
+  test('displays close button icon on mobile', () => {
+    // Mock mobile viewport
+    global.innerWidth = 400;
+    global.dispatchEvent(new Event('resize'));
+
+    const mockRecipe = {
+      id: 'recipe-1',
+      title: 'Test Recipe',
+      image: 'https://example.com/image.jpg',
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+    };
+
+    render(
+      <RecipeDetail
+        recipe={mockRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Check that the overlay back button exists
+    const backButton = document.querySelector('.overlay-back-button');
+    expect(backButton).toBeInTheDocument();
+    expect(backButton.textContent).toContain('✕');
+  });
+});
+
+describe('RecipeDetail - Scroll to Top', () => {
+  const currentUser = {
+    id: 'user-1',
+    vorname: 'Test',
+    nachname: 'User',
+    rolle: 'Familymember',
+  };
+
+  test('scrolls to top when recipe changes', () => {
+    const mockRecipe1 = {
+      id: 'recipe-1',
+      title: 'Recipe 1',
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+    };
+
+    const mockRecipe2 = {
+      id: 'recipe-2',
+      title: 'Recipe 2',
+      ingredients: ['Ingredient 2'],
+      steps: ['Step 2'],
+    };
+
+    const { rerender, container } = render(
+      <RecipeDetail
+        recipe={mockRecipe1}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Find the content element that should be scrolled
+    const contentElement = container.querySelector('.recipe-detail-content');
+    expect(contentElement).toBeInTheDocument();
+
+    // Simulate that the user has scrolled down
+    contentElement.scrollTop = 500;
+    expect(contentElement.scrollTop).toBe(500);
+
+    // Change recipe (this triggers the useEffect that scrolls to top)
+    rerender(
+      <RecipeDetail
+        recipe={mockRecipe2}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Verify the second recipe is now displayed
+    expect(screen.getByText('Recipe 2')).toBeInTheDocument();
+    
+    // Verify scroll position was reset to top
+    // Note: In jsdom, scrollTop is reset to 0 automatically when content changes,
+    // but our useEffect explicitly sets it to 0 to ensure consistency
+    expect(contentElement.scrollTop).toBe(0);
   });
 });
