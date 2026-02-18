@@ -865,9 +865,9 @@ describe('RecipeDetail - Draft Badge', () => {
       />
     );
 
-    // Draft badge should be visible
+    // Draft badge should be visible with both label and checkbox text
     const entwurfElements = screen.getAllByText(/Entwurf/i);
-    expect(entwurfElements.length).toBeGreaterThan(0);
+    expect(entwurfElements.length).toBe(2); // Label "Entwurf:" and checkbox text "Entwurf"
   });
 
   test('does not show private badge for non-admin users even if recipe is private', () => {
