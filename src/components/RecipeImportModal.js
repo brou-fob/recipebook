@@ -26,7 +26,12 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
     
     // Otherwise, handle text import
     if (!importText.trim()) {
-      setError('Bitte geben Sie Rezeptdaten ein oder wählen Sie eine CSV-Datei aus');
+      if (csvFileName) {
+        // CSV file was selected but parsing failed
+        setError('CSV-Datei konnte nicht verarbeitet werden. Bitte überprüfen Sie das Dateiformat.');
+      } else {
+        setError('Bitte geben Sie Rezeptdaten ein oder wählen Sie eine CSV-Datei aus');
+      }
       return;
     }
 
@@ -132,6 +137,7 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
             placeholder={`JSON:\n{\n  "title": "Rezeptname",\n  "ingredients": [...],\n  "steps": [...]\n}\n\nNotion Markdown:\n# Rezeptname\nPortionen: 4\n## Zutaten\n- Zutat 1\n## Zubereitung\n1. Schritt 1`}
             rows="15"
             disabled={csvRecipes && csvRecipes.length > 0}
+            aria-label={csvRecipes && csvRecipes.length > 0 ? 'Texteingabe deaktiviert, da CSV-Datei geladen' : 'Rezeptdaten als Text eingeben'}
           />
 
           {error && (

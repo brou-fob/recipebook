@@ -345,7 +345,7 @@ Test Recipe;Hauptgericht;Ingredient;Step`;
       expect(mockGetCategoryImage).toHaveBeenCalledWith(['Hauptgericht']);
     });
 
-    test('does not override existing image with category image', () => {
+    test('applies category image when recipe has no image', () => {
       const mockGetCategoryImage = jest.fn(() => 'base64-category-image');
 
       const csv = `Name;Speisenkategorie;Zutat1;Zubereitungsschritt1
