@@ -805,8 +805,10 @@
 
 .step-card {
   flex: 0 0 auto;
-  width: calc(100vw - 32px); /* Full width minus padding on mobile */
-  max-width: 398px; /* Card width as per requirements */
+  /* On mobile (430px viewport), card is 398px with 16px peek on each side */
+  /* This creates: 16px (left peek) + 398px (card) + 16px (right peek) = 430px */
+  width: calc(100vw - 32px);
+  max-width: 398px;
   background: white;
   padding: 2rem;
   border-radius: 12px;
@@ -818,19 +820,19 @@
   position: relative;
   text-align: left;
   scroll-snap-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
   cursor: pointer;
 }
 
 .step-card:not(.active) {
-  opacity: 0.6;
-  transform: scale(0.95);
+  opacity: 0.5;
+  transform: scale(0.92);
 }
 
 .step-card.active {
   opacity: 1;
   transform: scale(1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(150, 98, 47, 0.2); /* CI brown shadow */
 }
 
 .step-content {
