@@ -1017,6 +1017,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
                 checked={isPrivate}
                 onChange={(e) => setIsPrivate(e.target.checked)}
                 className="draft-checkbox"
+                aria-label="Rezept als Entwurf markieren"
               />
             </label>
           </div>

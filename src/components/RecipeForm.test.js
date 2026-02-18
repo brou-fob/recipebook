@@ -1937,10 +1937,8 @@ describe('RecipeForm - Private Checkbox', () => {
       expect(screen.getByText(/Entwurf:/i)).toBeInTheDocument();
     });
     
-    // Check that checkbox exists
-    const checkboxes = screen.getAllByRole('checkbox');
-    // Find the draft checkbox (it should be checked/unchecked based on state)
-    const draftCheckbox = checkboxes.find(cb => cb.className.includes('draft-checkbox'));
+    // Check that checkbox exists using aria-label
+    const draftCheckbox = screen.getByRole('checkbox', { name: /Rezept als Entwurf markieren/i });
     expect(draftCheckbox).toBeInTheDocument();
     expect(draftCheckbox).not.toBeChecked();
   });
@@ -2009,8 +2007,7 @@ describe('RecipeForm - Private Checkbox', () => {
     );
 
     await waitFor(() => {
-      const checkboxes = screen.getAllByRole('checkbox');
-      const draftCheckbox = checkboxes.find(cb => cb.className.includes('draft-checkbox'));
+      const draftCheckbox = screen.getByRole('checkbox', { name: /Rezept als Entwurf markieren/i });
       expect(draftCheckbox).toBeChecked();
     });
   });
@@ -2042,10 +2039,9 @@ describe('RecipeForm - Private Checkbox', () => {
       target: { value: 'Test Private Recipe' },
     });
 
-    // Check the draft checkbox
+    // Check the draft checkbox using aria-label
     await waitFor(() => {
-      const checkboxes = screen.getAllByRole('checkbox');
-      const draftCheckbox = checkboxes.find(cb => cb.className.includes('draft-checkbox'));
+      const draftCheckbox = screen.getByRole('checkbox', { name: /Rezept als Entwurf markieren/i });
       fireEvent.click(draftCheckbox);
       expect(draftCheckbox).toBeChecked();
     });

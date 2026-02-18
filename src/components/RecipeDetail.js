@@ -771,6 +771,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                       checked={recipe.isPrivate}
                       onChange={handleToggleDraftStatus}
                       className="draft-checkbox"
+                      aria-label="Rezept als Entwurf markieren"
                     />
                   </label>
                 </div>
