@@ -59,10 +59,11 @@ function Settings({ onBack, currentUser }) {
       const faviconTxt = await getFaviconText();
       const appLogoImg = await getAppLogoImage();
       const icons = await getButtonIcons();
+      const catImages = await getCategoryImages();
       
       setLists(lists);
       setHeaderSlogan(slogan);
-      setCategoryImages(getCategoryImages());
+      setCategoryImages(catImages);
       setFaviconImage(faviconImg);
       setFaviconText(faviconTxt);
       setAppLogoImage(appLogoImg);
@@ -198,20 +199,22 @@ function Settings({ onBack, currentUser }) {
       
       if (editingImageId) {
         // Update existing image
-        updateCategoryImage(editingImageId, { image: compressedBase64 });
-        setCategoryImages(getCategoryImages());
+        await updateCategoryImage(editingImageId, { image: compressedBase64 });
+        const catImages = await getCategoryImages();
+        setCategoryImages(catImages);
         setEditingImageId(null);
       } else {
         // Add new image with selected categories
-        const alreadyAssigned = getAlreadyAssignedCategories(selectedCategories);
+        const alreadyAssigned = await getAlreadyAssignedCategories(selectedCategories);
         if (alreadyAssigned.length > 0) {
           alert(CATEGORY_ALREADY_ASSIGNED_ERROR.replace('{categories}', alreadyAssigned.join(', ')));
           setUploadingImage(false);
           return;
         }
         
-        addCategoryImage(compressedBase64, selectedCategories);
-        setCategoryImages(getCategoryImages());
+        await addCategoryImage(compressedBase64, selectedCategories);
+        const catImages = await getCategoryImages();
+        setCategoryImages(catImages);
         setSelectedCategories([]);
       }
     } catch (error) {
@@ -231,10 +234,11 @@ function Settings({ onBack, currentUser }) {
     });
   };
 
-  const handleRemoveCategoryImage = (imageId) => {
+  const handleRemoveCategoryImage = async (imageId) => {
     if (window.confirm('Möchten Sie dieses Bild wirklich entfernen?')) {
-      removeCategoryImage(imageId);
-      setCategoryImages(getCategoryImages());
+      await removeCategoryImage(imageId);
+      const catImages = await getCategoryImages();
+      setCategoryImages(catImages);
     }
   };
 
@@ -246,17 +250,18 @@ function Settings({ onBack, currentUser }) {
     }
   };
 
-  const handleSaveImageCategories = () => {
+  const handleSaveImageCategories = async () => {
     if (!editingImageId) return;
 
-    const alreadyAssigned = getAlreadyAssignedCategories(selectedCategories, editingImageId);
+    const alreadyAssigned = await getAlreadyAssignedCategories(selectedCategories, editingImageId);
     if (alreadyAssigned.length > 0) {
       alert(CATEGORY_ALREADY_ASSIGNED_ERROR.replace('{categories}', alreadyAssigned.join(', ')));
       return;
     }
 
-    updateCategoryImage(editingImageId, { categories: selectedCategories });
-    setCategoryImages(getCategoryImages());
+    await updateCategoryImage(editingImageId, { categories: selectedCategories });
+    const catImages = await getCategoryImages();
+    setCategoryImages(catImages);
     setEditingImageId(null);
     setSelectedCategories([]);
   };

@@ -473,7 +473,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -485,7 +485,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     let finalImage = image.trim();
     if (!recipe && !finalImage && speisekategorie.length > 0) {
       // New recipe without title image - try to get image from category
-      const categoryImage = getImageForCategories(speisekategorie);
+      const categoryImage = await getImageForCategories(speisekategorie);
       if (categoryImage) {
         finalImage = categoryImage;
       }

@@ -7,85 +7,129 @@ import {
   getImageForCategory,
   getImageForCategories,
   isCategoryAssigned,
-  getAlreadyAssignedCategories
+  getAlreadyAssignedCategories,
+  _resetMigrationFlag
 } from './categoryImages';
+
+// Mock Firebase
+jest.mock('../firebase', () => ({
+  db: {}
+}));
+
+// Mock Firestore functions
+jest.mock('firebase/firestore', () => ({
+  doc: jest.fn(() => ({})),
+  getDoc: jest.fn(),
+  updateDoc: jest.fn()
+}));
+
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 describe('categoryImages', () => {
   beforeEach(() => {
     localStorage.clear();
+    jest.clearAllMocks();
+    _resetMigrationFlag();
+    
+    // Default mock: return empty settings document
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ categoryImages: [] })
+    });
   });
 
   describe('getCategoryImages', () => {
-    test('returns empty array when no images stored', () => {
-      expect(getCategoryImages()).toEqual([]);
+    test('returns empty array when no images stored in Firestore', async () => {
+      expect(await getCategoryImages()).toEqual([]);
     });
 
-    test('returns stored images', () => {
+    test('returns stored images from Firestore', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      expect(await getCategoryImages()).toEqual(images);
+    });
+
+    test('migrates from localStorage when Firestore is empty', async () => {
       const images = [
         { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
       ];
       localStorage.setItem('categoryImages', JSON.stringify(images));
-      expect(getCategoryImages()).toEqual(images);
+      
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: [] })
+      });
+      
+      const result = await getCategoryImages();
+      expect(result).toEqual(images);
+      expect(updateDoc).toHaveBeenCalled();
+      expect(localStorage.getItem('categoryImages')).toBeNull();
     });
 
-    test('handles corrupted data gracefully', () => {
+    test('falls back to localStorage on Firestore error', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
+      localStorage.setItem('categoryImages', JSON.stringify(images));
+      
+      getDoc.mockRejectedValue(new Error('Firestore error'));
+      
+      expect(await getCategoryImages()).toEqual(images);
+    });
+
+    test('handles corrupted localStorage data gracefully', async () => {
       localStorage.setItem('categoryImages', 'invalid json');
-      expect(getCategoryImages()).toEqual([]);
+      getDoc.mockRejectedValue(new Error('Firestore error'));
+      expect(await getCategoryImages()).toEqual([]);
     });
   });
 
   describe('saveCategoryImages', () => {
-    test('saves images to localStorage', () => {
+    test('saves images to Firestore', async () => {
       const images = [
         { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
       ];
-      saveCategoryImages(images);
-      expect(JSON.parse(localStorage.getItem('categoryImages'))).toEqual(images);
+      const mockDocRef = { id: 'app' };
+      doc.mockReturnValue(mockDocRef);
+      
+      await saveCategoryImages(images);
+      expect(updateDoc).toHaveBeenCalledWith(mockDocRef, { categoryImages: images });
     });
 
-    test('throws German error message on QuotaExceededError', () => {
-      // Mock localStorage.setItem to throw QuotaExceededError
-      const originalSetItem = Storage.prototype.setItem;
-      Storage.prototype.setItem = jest.fn(() => {
-        const error = new Error('QuotaExceededError');
-        error.name = 'QuotaExceededError';
-        throw error;
-      });
+    test('throws German error message on resource-exhausted error', async () => {
+      const error = new Error('Resource exhausted');
+      error.code = 'resource-exhausted';
+      updateDoc.mockRejectedValue(error);
 
       const images = [
         { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
       ];
 
-      expect(() => saveCategoryImages(images)).toThrow(
+      await expect(saveCategoryImages(images)).rejects.toThrow(
         'Speicherplatz voll. Bitte entfernen Sie einige Kategoriebilder oder verwenden Sie kleinere Bilder.'
       );
-
-      // Restore original setItem
-      Storage.prototype.setItem = originalSetItem;
     });
 
-    test('re-throws other storage errors', () => {
-      // Mock localStorage.setItem to throw a different error
-      const originalSetItem = Storage.prototype.setItem;
+    test('re-throws other storage errors', async () => {
       const testError = new Error('Some other error');
-      Storage.prototype.setItem = jest.fn(() => {
-        throw testError;
-      });
+      updateDoc.mockRejectedValue(testError);
 
       const images = [
         { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
       ];
 
-      expect(() => saveCategoryImages(images)).toThrow('Some other error');
-
-      // Restore original setItem
-      Storage.prototype.setItem = originalSetItem;
+      await expect(saveCategoryImages(images)).rejects.toThrow('Some other error');
     });
   });
 
   describe('addCategoryImage', () => {
-    test('adds new image with categories', () => {
-      const image = addCategoryImage('data:image/png;base64,abc', ['Appetizer', 'Dessert']);
+    test('adds new image with categories', async () => {
+      const image = await addCategoryImage('data:image/png;base64,abc', ['Appetizer', 'Dessert']);
       
       expect(image).toMatchObject({
         image: 'data:image/png;base64,abc',
@@ -93,145 +137,215 @@ describe('categoryImages', () => {
       });
       expect(image.id).toBeDefined();
       
-      const stored = getCategoryImages();
-      expect(stored).toHaveLength(1);
-      expect(stored[0]).toEqual(image);
+      expect(updateDoc).toHaveBeenCalled();
     });
 
-    test('adds image with no categories', () => {
-      const image = addCategoryImage('data:image/png;base64,xyz');
+    test('adds image with no categories', async () => {
+      const image = await addCategoryImage('data:image/png;base64,xyz');
       
       expect(image.categories).toEqual([]);
     });
   });
 
   describe('updateCategoryImage', () => {
-    test('updates existing image', () => {
-      const image = addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+    test('updates existing image', async () => {
+      const image = await addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
       
-      const result = updateCategoryImage(image.id, { 
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: [image] })
+      });
+      
+      const result = await updateCategoryImage(image.id, { 
         categories: ['Main Course', 'Dessert'] 
       });
       
       expect(result).toBe(true);
-      
-      const updated = getCategoryImages()[0];
-      expect(updated.categories).toEqual(['Main Course', 'Dessert']);
-      expect(updated.image).toBe('data:image/png;base64,abc');
+      expect(updateDoc).toHaveBeenCalled();
     });
 
-    test('returns false for non-existent image', () => {
-      const result = updateCategoryImage('non-existent', { categories: [] });
+    test('returns false for non-existent image', async () => {
+      const result = await updateCategoryImage('non-existent', { categories: [] });
       expect(result).toBe(false);
     });
   });
 
   describe('removeCategoryImage', () => {
-    test('removes existing image', () => {
-      const image1 = addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
-      const image2 = addCategoryImage('data:image/png;base64,def', ['Dessert']);
+    test('removes existing image', async () => {
+      const image1 = await addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+      const image2 = await addCategoryImage('data:image/png;base64,def', ['Dessert']);
       
-      const result = removeCategoryImage(image1.id);
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: [image1, image2] })
+      });
+      
+      const result = await removeCategoryImage(image1.id);
       
       expect(result).toBe(true);
-      
-      const remaining = getCategoryImages();
-      expect(remaining).toHaveLength(1);
-      expect(remaining[0].id).toBe(image2.id);
+      expect(updateDoc).toHaveBeenCalled();
     });
 
-    test('returns false for non-existent image', () => {
-      const result = removeCategoryImage('non-existent');
+    test('returns false for non-existent image', async () => {
+      const result = await removeCategoryImage('non-existent');
       expect(result).toBe(false);
     });
   });
 
   describe('getImageForCategory', () => {
-    test('returns image for assigned category', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer', 'Salad']);
-      addCategoryImage('data:image/png;base64,def', ['Dessert']);
+    test('returns image for assigned category', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer', 'Salad'] },
+        { id: '2', image: 'data:image/png;base64,def', categories: ['Dessert'] }
+      ];
       
-      expect(getImageForCategory('Appetizer')).toBe('data:image/png;base64,abc');
-      expect(getImageForCategory('Salad')).toBe('data:image/png;base64,abc');
-      expect(getImageForCategory('Dessert')).toBe('data:image/png;base64,def');
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await getImageForCategory('Appetizer')).toBe('data:image/png;base64,abc');
+      expect(await getImageForCategory('Salad')).toBe('data:image/png;base64,abc');
+      expect(await getImageForCategory('Dessert')).toBe('data:image/png;base64,def');
     });
 
-    test('returns null for unassigned category', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+    test('returns null for unassigned category', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
       
-      expect(getImageForCategory('Main Course')).toBeNull();
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await getImageForCategory('Main Course')).toBeNull();
     });
   });
 
   describe('getImageForCategories', () => {
-    test('returns first matching image for categories', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
-      addCategoryImage('data:image/png;base64,def', ['Main Course']);
-      addCategoryImage('data:image/png;base64,ghi', ['Dessert']);
+    test('returns first matching image for categories', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] },
+        { id: '2', image: 'data:image/png;base64,def', categories: ['Main Course'] },
+        { id: '3', image: 'data:image/png;base64,ghi', categories: ['Dessert'] }
+      ];
       
-      expect(getImageForCategories(['Main Course', 'Dessert'])).toBe('data:image/png;base64,def');
-      expect(getImageForCategories(['Dessert', 'Main Course'])).toBe('data:image/png;base64,ghi');
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await getImageForCategories(['Main Course', 'Dessert'])).toBe('data:image/png;base64,def');
+      expect(await getImageForCategories(['Dessert', 'Main Course'])).toBe('data:image/png;base64,ghi');
     });
 
-    test('returns null when no categories match', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+    test('returns null when no categories match', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
       
-      expect(getImageForCategories(['Main Course', 'Dessert'])).toBeNull();
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await getImageForCategories(['Main Course', 'Dessert'])).toBeNull();
     });
 
-    test('returns null for empty categories array', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
-      
-      expect(getImageForCategories([])).toBeNull();
+    test('returns null for empty categories array', async () => {
+      expect(await getImageForCategories([])).toBeNull();
     });
   });
 
   describe('isCategoryAssigned', () => {
-    test('returns true if category is assigned', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer', 'Salad']);
+    test('returns true if category is assigned', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer', 'Salad'] }
+      ];
       
-      expect(isCategoryAssigned('Appetizer')).toBe(true);
-      expect(isCategoryAssigned('Salad')).toBe(true);
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await isCategoryAssigned('Appetizer')).toBe(true);
+      expect(await isCategoryAssigned('Salad')).toBe(true);
     });
 
-    test('returns false if category is not assigned', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+    test('returns false if category is not assigned', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
       
-      expect(isCategoryAssigned('Main Course')).toBe(false);
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await isCategoryAssigned('Main Course')).toBe(false);
     });
 
-    test('excludes specified image from check', () => {
-      const image = addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+    test('excludes specified image from check', async () => {
+      const images = [
+        { id: 'test-id', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
       
-      expect(isCategoryAssigned('Appetizer', image.id)).toBe(false);
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      expect(await isCategoryAssigned('Appetizer', 'test-id')).toBe(false);
     });
   });
 
   describe('getAlreadyAssignedCategories', () => {
-    test('returns categories already assigned to other images', () => {
-      const image1 = addCategoryImage('data:image/png;base64,abc', ['Appetizer', 'Salad']);
-      addCategoryImage('data:image/png;base64,def', ['Main Course']);
+    test('returns categories already assigned to other images', async () => {
+      const images = [
+        { id: 'image1', image: 'data:image/png;base64,abc', categories: ['Appetizer', 'Salad'] },
+        { id: 'image2', image: 'data:image/png;base64,def', categories: ['Main Course'] }
+      ];
       
-      const assigned = getAlreadyAssignedCategories(
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      const assigned = await getAlreadyAssignedCategories(
         ['Appetizer', 'Dessert', 'Main Course'], 
-        image1.id
+        'image1'
       );
       
       expect(assigned).toEqual(['Main Course']);
     });
 
-    test('returns empty array when no categories are assigned', () => {
-      addCategoryImage('data:image/png;base64,abc', ['Appetizer']);
+    test('returns empty array when no categories are assigned', async () => {
+      const images = [
+        { id: '1', image: 'data:image/png;base64,abc', categories: ['Appetizer'] }
+      ];
       
-      const assigned = getAlreadyAssignedCategories(['Dessert', 'Main Course']);
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      const assigned = await getAlreadyAssignedCategories(['Dessert', 'Main Course']);
       
       expect(assigned).toEqual([]);
     });
 
-    test('excludes own image when checking assignments', () => {
-      const image = addCategoryImage('data:image/png;base64,abc', ['Appetizer', 'Salad']);
+    test('excludes own image when checking assignments', async () => {
+      const images = [
+        { id: 'test-id', image: 'data:image/png;base64,abc', categories: ['Appetizer', 'Salad'] }
+      ];
       
-      const assigned = getAlreadyAssignedCategories(['Appetizer', 'Salad'], image.id);
+      getDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ categoryImages: images })
+      });
+      
+      const assigned = await getAlreadyAssignedCategories(['Appetizer', 'Salad'], 'test-id');
       
       expect(assigned).toEqual([]);
     });
