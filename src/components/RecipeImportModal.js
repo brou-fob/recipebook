@@ -52,12 +52,10 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
   const readCSVFileWithEncoding = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
     
-    // Try UTF-8 first
+    // Try UTF-8 first with fatal flag to detect encoding errors
     try {
       const decoder = new TextDecoder('utf-8', { fatal: true });
-      const text = decoder.decode(arrayBuffer);
-      // If decoding succeeds and contains valid text, use it
-      return text;
+      return decoder.decode(arrayBuffer);
     } catch (e) {
       // UTF-8 decoding failed, try Windows-1252
       // This is common for CSV files created by Excel in European locales
