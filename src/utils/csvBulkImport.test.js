@@ -290,5 +290,83 @@ Pizza Bianco al Tartufo;08.02.2026;Benjamin Rousselli;Italienische Küche;Hauptg
       expect(recipes[0].title).toBe('Recipe; Special Name');
       expect(recipes[0].kulinarik).toEqual(['Italian', 'Asian']);
     });
+
+    test('removes numbering from preparation steps', () => {
+      const csv = `Name;Zutat1;Zubereitungsschritt1;Zubereitungsschritt2;Zubereitungsschritt3;Zubereitungsschritt4;Zubereitungsschritt5
+Test Recipe;Ingredient;1. First step;2) Second step;3 - Third step;4: Fourth step;5. Fifth step`;
+
+      const recipes = parseBulkCSV(csv);
+
+      expect(recipes[0].steps).toHaveLength(5);
+      expect(recipes[0].steps[0]).toEqual({ type: 'step', text: 'First step' });
+      expect(recipes[0].steps[1]).toEqual({ type: 'step', text: 'Second step' });
+      expect(recipes[0].steps[2]).toEqual({ type: 'step', text: 'Third step' });
+      expect(recipes[0].steps[3]).toEqual({ type: 'step', text: 'Fourth step' });
+      expect(recipes[0].steps[4]).toEqual({ type: 'step', text: 'Fifth step' });
+    });
+
+    test('does not remove numbering from ingredients', () => {
+      const csv = `Name;Zutat1;Zutat2;Zubereitungsschritt1
+Test Recipe;1. 500g Flour;2. 200ml Water;Mix ingredients`;
+
+      const recipes = parseBulkCSV(csv);
+
+      expect(recipes[0].ingredients).toHaveLength(2);
+      expect(recipes[0].ingredients[0]).toEqual({ type: 'ingredient', text: '1. 500g Flour' });
+      expect(recipes[0].ingredients[1]).toEqual({ type: 'ingredient', text: '2. 200ml Water' });
+    });
+
+    test('handles UTF-8 BOM in CSV content', () => {
+      // Create CSV with BOM character
+      const csvWithBOM = '\uFEFF' + `Name;Zutat1;Zubereitungsschritt1
+Käsespätzle;500g Mehl;Teig kneten`;
+
+      const recipes = parseBulkCSV(csvWithBOM);
+
+      expect(recipes).toHaveLength(1);
+      expect(recipes[0].title).toBe('Käsespätzle');
+      expect(recipes[0].ingredients[0].text).toBe('500g Mehl');
+    });
+
+    test('applies category images when getCategoryImage function provided', () => {
+      const mockGetCategoryImage = jest.fn((categories) => {
+        if (categories.includes('Hauptgericht')) {
+          return 'base64-image-main-dish';
+        }
+        return null;
+      });
+
+      const csv = `Name;Speisenkategorie;Zutat1;Zubereitungsschritt1
+Test Recipe;Hauptgericht;Ingredient;Step`;
+
+      const recipes = parseBulkCSV(csv, '', mockGetCategoryImage);
+
+      expect(recipes[0].image).toBe('base64-image-main-dish');
+      expect(mockGetCategoryImage).toHaveBeenCalledWith(['Hauptgericht']);
+    });
+
+    test('does not override existing image with category image', () => {
+      const mockGetCategoryImage = jest.fn(() => 'base64-category-image');
+
+      const csv = `Name;Speisenkategorie;Zutat1;Zubereitungsschritt1
+Test Recipe;Hauptgericht;Ingredient;Step`;
+
+      const recipes = parseBulkCSV(csv, '', mockGetCategoryImage);
+
+      // Since recipe.image starts as '' and we have category, it should apply
+      expect(recipes[0].image).toBe('base64-category-image');
+    });
+
+    test('handles recipes without meal categories for image assignment', () => {
+      const mockGetCategoryImage = jest.fn(() => 'base64-category-image');
+
+      const csv = `Name;Zutat1;Zubereitungsschritt1
+Test Recipe;Ingredient;Step`;
+
+      const recipes = parseBulkCSV(csv, '', mockGetCategoryImage);
+
+      expect(recipes[0].image).toBe('');
+      expect(mockGetCategoryImage).not.toHaveBeenCalled();
+    });
   });
 });
