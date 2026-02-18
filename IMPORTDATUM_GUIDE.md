@@ -53,24 +53,30 @@ Erstellen oder aktualisieren Sie die Datei `ImportDatum.csv` im Hauptverzeichnis
 
 ### Schritt 2: Dependencies installieren (nur beim ersten Mal)
 
+Das Script benötigt das `firebase-admin` Paket. Sie können es entweder:
+
+**Option A: Von der functions Directory aus ausführen**
 ```bash
 cd functions
-npm install
+npm install  # Falls noch nicht geschehen
+node ../scripts/updateRecipeCreationDates.js
 cd ..
+```
+
+**Option B: NODE_PATH verwenden**
+```bash
+NODE_PATH=./functions/node_modules node scripts/updateRecipeCreationDates.js
+```
+
+**Option C: firebase-admin global installieren**
+```bash
+npm install -g firebase-admin
+node scripts/updateRecipeCreationDates.js
 ```
 
 ### Schritt 3: Script ausführen
 
-```bash
-node scripts/updateRecipeCreationDates.js
-```
-
-oder (wenn Sie die Firebase Functions verwenden):
-
-```bash
-cd functions
-node ../scripts/updateRecipeCreationDates.js
-```
+Verwenden Sie eine der in Schritt 2 beschriebenen Optionen.
 
 ### Schritt 4: Ausgabe überprüfen
 
