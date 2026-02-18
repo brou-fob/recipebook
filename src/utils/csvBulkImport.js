@@ -2,6 +2,10 @@
  * CSV Bulk Import Utility
  * Handles importing multiple recipes from CSV files with specific column mappings
  * 
+ * Delimiter support:
+ * - Automatically detects comma (,) or semicolon (;) delimiters
+ * - Detection is based on analyzing the header row
+ * 
  * Supported columns:
  * - Name → Recipe title
  * - Erstellt am → Created date
@@ -20,11 +24,43 @@
  */
 
 /**
+ * Detect the CSV delimiter from the header line
+ * @param {string} headerLine - First line of CSV
+ * @returns {string} - Detected delimiter (comma or semicolon)
+ */
+function detectDelimiter(headerLine) {
+  // Count occurrences of comma and semicolon outside of quotes
+  let commaCount = 0;
+  let semicolonCount = 0;
+  let inQuotes = false;
+
+  for (let i = 0; i < headerLine.length; i++) {
+    const char = headerLine[i];
+    
+    if (char === '"') {
+      if (inQuotes && i + 1 < headerLine.length && headerLine[i + 1] === '"') {
+        i++; // Skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (!inQuotes) {
+      if (char === ',') commaCount++;
+      else if (char === ';') semicolonCount++;
+    }
+  }
+
+  // Return the delimiter that appears more frequently
+  // Default to comma if both are equal or both are zero
+  return semicolonCount > commaCount ? ';' : ',';
+}
+
+/**
  * Parse a CSV line handling quoted values
  * @param {string} line - CSV line to parse
+ * @param {string} delimiter - CSV delimiter character (default: ',')
  * @returns {Array<string>} - Array of values
  */
-function parseCSVLine(line) {
+function parseCSVLine(line, delimiter = ',') {
   const values = [];
   let currentValue = '';
   let inQuotes = false;
@@ -40,7 +76,7 @@ function parseCSVLine(line) {
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       values.push(currentValue);
       currentValue = '';
     } else {
@@ -248,8 +284,11 @@ export function parseBulkCSV(csvContent, currentUserName = '') {
     throw new Error('CSV muss mindestens Header und eine Datenzeile enthalten');
   }
   
+  // Detect delimiter from header line
+  const delimiter = detectDelimiter(lines[0]);
+  
   // Parse header
-  const headers = parseCSVLine(lines[0]);
+  const headers = parseCSVLine(lines[0], delimiter);
   
   // Parse data rows
   const recipes = [];
@@ -257,7 +296,7 @@ export function parseBulkCSV(csvContent, currentUserName = '') {
   
   for (let i = 1; i < lines.length; i++) {
     try {
-      const values = parseCSVLine(lines[i]);
+      const values = parseCSVLine(lines[i], delimiter);
       const recipe = parseRecipeRow(headers, values, currentUserName);
       
       // Validate recipe
