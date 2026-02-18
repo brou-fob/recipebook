@@ -20,7 +20,7 @@
  * 
  * Special formatting:
  * - Items starting with "###" are treated as headers (remove "###" and format as heading)
- * - All recipes are marked as private by default
+ * - All recipes are marked as draft (isPrivate: true) by default
  */
 
 /**
@@ -207,7 +207,7 @@ function parseRecipeRow(headers, values, currentUserName = '', getCategoryImage 
     steps: [],
     createdAt: null,
     authorName: '',
-    isPrivate: true, // All imported recipes are private
+    isPrivate: true, // All imported recipes are draft
   };
   
   // Process each column
