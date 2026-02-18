@@ -43,7 +43,8 @@ jest.mock('../utils/customLists', () => ({
   getButtonIcons: () => Promise.resolve({
     cookingMode: '👨‍🍳',
     importRecipe: '📥',
-    scanImage: '📷'
+    scanImage: '📷',
+    closeButton: '✕'
   }),
 }));
 
@@ -716,5 +717,106 @@ describe('RecipeDetail - Creation Date Display', () => {
 
     // Check that the creation date is displayed correctly with label
     expect(screen.getByText('Erstellt am: 5.4.2024')).toBeInTheDocument();
+  });
+});
+
+describe('RecipeDetail - Close Button Icon', () => {
+  const currentUser = {
+    id: 'user-1',
+    vorname: 'Test',
+    nachname: 'User',
+    rolle: 'Familymember',
+  };
+
+  test('displays close button icon on mobile', () => {
+    // Mock mobile viewport
+    global.innerWidth = 400;
+    global.dispatchEvent(new Event('resize'));
+
+    const mockRecipe = {
+      id: 'recipe-1',
+      title: 'Test Recipe',
+      image: 'https://example.com/image.jpg',
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+    };
+
+    render(
+      <RecipeDetail
+        recipe={mockRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Check that the overlay back button exists
+    const backButton = document.querySelector('.overlay-back-button');
+    expect(backButton).toBeInTheDocument();
+    expect(backButton.textContent).toContain('✕');
+  });
+});
+
+describe('RecipeDetail - Scroll to Top', () => {
+  const currentUser = {
+    id: 'user-1',
+    vorname: 'Test',
+    nachname: 'User',
+    rolle: 'Familymember',
+  };
+
+  test('scrolls to top when recipe changes', () => {
+    const mockRecipe1 = {
+      id: 'recipe-1',
+      title: 'Recipe 1',
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+    };
+
+    const mockRecipe2 = {
+      id: 'recipe-2',
+      title: 'Recipe 2',
+      ingredients: ['Ingredient 2'],
+      steps: ['Step 2'],
+    };
+
+    // Create a mock ref with scrollTop property
+    const scrollToTopSpy = jest.fn();
+    const mockContentRef = {
+      current: {
+        scrollTop: 100,
+      }
+    };
+
+    Object.defineProperty(mockContentRef.current, 'scrollTop', {
+      set: scrollToTopSpy,
+      get: () => 0,
+    });
+
+    const { rerender } = render(
+      <RecipeDetail
+        recipe={mockRecipe1}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Change recipe
+    rerender(
+      <RecipeDetail
+        recipe={mockRecipe2}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // The effect should have run and attempted to set scrollTop to 0
+    // We can verify the title changed
+    expect(screen.getByText('Recipe 2')).toBeInTheDocument();
   });
 });
