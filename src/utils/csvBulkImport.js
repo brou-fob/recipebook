@@ -207,7 +207,7 @@ function parseRecipeRow(headers, values, currentUserName = '', getCategoryImage 
     steps: [],
     createdAt: null,
     authorName: '',
-    isPrivate: true, // All imported recipes are private
+    isPrivate: true, // All imported recipes are draft
   };
   
   // Process each column

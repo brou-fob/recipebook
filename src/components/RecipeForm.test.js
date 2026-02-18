@@ -1938,7 +1938,7 @@ describe('RecipeForm - Private Checkbox', () => {
     });
     
     // Check that checkbox exists
-    const checkbox = screen.getByRole('checkbox', { name: /Dieses Rezept als privat markieren/i });
+    const checkbox = screen.getByRole('checkbox', { name: /Dieses Rezept als Entwurf markieren/i });
     expect(checkbox).toBeInTheDocument();
     expect(checkbox).not.toBeChecked();
   });
