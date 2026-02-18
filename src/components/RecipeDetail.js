@@ -536,9 +536,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                   Schritt {currentStepIndex + 1} von {totalSteps}
                 </div>
               </div>
-              <div className="swipe-hint">
-                ← Wischen für nächsten/vorherigen Schritt →
-              </div>
             </section>
           </>
         ) : (
