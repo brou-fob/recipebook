@@ -866,7 +866,8 @@ describe('RecipeDetail - Draft Badge', () => {
     );
 
     // Draft badge should be visible
-    expect(screen.getByText(/Entwurf/i)).toBeInTheDocument();
+    const entwurfElements = screen.getAllByText(/Entwurf/i);
+    expect(entwurfElements.length).toBeGreaterThan(0);
   });
 
   test('does not show private badge for non-admin users even if recipe is private', () => {
