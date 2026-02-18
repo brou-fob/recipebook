@@ -114,5 +114,76 @@ describe('Firestore Utilities', () => {
       
       expect(result.data).toBe(nestedObj); // Same reference
     });
+
+    it('should filter out Promise objects', () => {
+      const promiseObj = Promise.resolve('test-value');
+      const input = {
+        title: 'Test Recipe',
+        image: promiseObj,
+        portionen: 4
+      };
+      
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const result = removeUndefinedFields(input);
+      
+      expect(result).toEqual({
+        title: 'Test Recipe',
+        portionen: 4
+      });
+      expect(result.image).toBeUndefined();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Promise object')
+      );
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should filter out custom thenable objects', () => {
+      // Custom object that looks like a Promise
+      const thenableObj = {
+        value: 'test',
+        then: function(onFulfilled) {
+          return onFulfilled(this.value);
+        }
+      };
+      
+      const input = {
+        title: 'Test Recipe',
+        image: thenableObj,
+        portionen: 4
+      };
+      
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const result = removeUndefinedFields(input);
+      
+      expect(result).toEqual({
+        title: 'Test Recipe',
+        portionen: 4
+      });
+      expect(result.image).toBeUndefined();
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should keep regular objects without then method', () => {
+      const regularObj = {
+        nested: 'value',
+        count: 42
+      };
+      
+      const input = {
+        title: 'Test Recipe',
+        metadata: regularObj,
+        portionen: 4
+      };
+      
+      const result = removeUndefinedFields(input);
+      
+      expect(result).toEqual({
+        title: 'Test Recipe',
+        metadata: regularObj,
+        portionen: 4
+      });
+    });
   });
 });

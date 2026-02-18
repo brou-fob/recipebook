@@ -65,8 +65,8 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
     try {
       const text = await file.text();
       
-      // Parse CSV with category image support
-      const recipes = parseBulkCSV(text, '', getImageForCategories);
+      // Parse CSV with category image support (parseBulkCSV is now async)
+      const recipes = await parseBulkCSV(text, '', getImageForCategories);
       
       // Store parsed recipes for later import when button is clicked
       setCsvRecipes(recipes);
