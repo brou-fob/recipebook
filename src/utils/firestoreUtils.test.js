@@ -161,6 +161,9 @@ describe('Firestore Utilities', () => {
         portionen: 4
       });
       expect(result.image).toBeUndefined();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Promise object')
+      );
       
       consoleSpy.mockRestore();
     });
