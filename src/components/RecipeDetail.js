@@ -304,13 +304,12 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     if (!cookingMode) return;
 
     const handleKeyDown = (e) => {
-      const steps = stepItems;
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setCurrentStepIndex(prev => Math.max(0, prev - 1));
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        setCurrentStepIndex(prev => Math.min(steps.length - 1, prev + 1));
+        setCurrentStepIndex(prev => Math.min(stepItems.length - 1, prev + 1));
       }
     };
 
