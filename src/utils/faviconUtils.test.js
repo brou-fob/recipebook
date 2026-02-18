@@ -1,4 +1,4 @@
-import { updateFavicon, updatePageTitle, applyFaviconSettings } from './faviconUtils';
+import { updateFavicon, updateAppLogo, updatePageTitle, applyFaviconSettings } from './faviconUtils';
 import { getSettings } from './customLists';
 
 // Mock customLists module
@@ -48,22 +48,31 @@ describe('faviconUtils', () => {
   });
 
   describe('updateFavicon', () => {
-    test('updates both icon and apple-touch-icon with custom base64 image', () => {
+    test('updates icon and social media tags with custom base64 image', () => {
       const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
       
       updateFavicon(testImage);
       
       const iconLink = document.querySelector("link[rel='icon']");
-      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
       
       expect(iconLink).not.toBeNull();
       expect(iconLink.href).toBe(testImage);
-      
-      expect(appleIconLink).not.toBeNull();
-      expect(appleIconLink.href).toBe(testImage);
     });
 
-    test('resets to default icons when imageBase64 is null', () => {
+    test('does not update apple-touch-icon (that is now handled by updateAppLogo)', () => {
+      const testImage = 'data:image/png;base64,test';
+      
+      // Get initial apple icon href
+      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
+      const initialHref = appleIconLink.href;
+      
+      updateFavicon(testImage);
+      
+      // Apple icon should not be changed by updateFavicon
+      expect(appleIconLink.href).toBe(initialHref);
+    });
+
+    test('resets to default icon when imageBase64 is null', () => {
       // First set a custom image
       const testImage = 'data:image/png;base64,test';
       updateFavicon(testImage);
@@ -72,10 +81,8 @@ describe('faviconUtils', () => {
       updateFavicon(null);
       
       const iconLink = document.querySelector("link[rel='icon']");
-      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
       
       expect(iconLink.href).toContain('/favicon.ico');
-      expect(appleIconLink.href).toContain('/logo192.png');
     });
 
     test('creates icon element if it does not exist', () => {
@@ -89,19 +96,6 @@ describe('faviconUtils', () => {
       const iconLink = document.querySelector("link[rel='icon']");
       expect(iconLink).not.toBeNull();
       expect(iconLink.href).toBe(testImage);
-    });
-
-    test('creates apple-touch-icon element if it does not exist', () => {
-      // Remove existing apple-touch-icon
-      const existingAppleIcon = document.querySelector("link[rel='apple-touch-icon']");
-      existingAppleIcon.remove();
-      
-      const testImage = 'data:image/png;base64,test';
-      updateFavicon(testImage);
-      
-      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
-      expect(appleIconLink).not.toBeNull();
-      expect(appleIconLink.href).toBe(testImage);
     });
 
     test('uses exact selectors to avoid matching wrong elements', () => {
@@ -197,11 +191,52 @@ describe('faviconUtils', () => {
     });
   });
 
+  describe('updateAppLogo', () => {
+    test('updates apple-touch-icon with custom base64 image', () => {
+      const testImage = 'data:image/png;base64,appLogo';
+      
+      updateAppLogo(testImage);
+      
+      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
+      
+      expect(appleIconLink).not.toBeNull();
+      expect(appleIconLink.href).toBe(testImage);
+    });
+
+    test('resets to default apple-touch-icon when imageBase64 is null', () => {
+      // First set a custom image
+      const testImage = 'data:image/png;base64,test';
+      updateAppLogo(testImage);
+      
+      // Then reset to defaults
+      updateAppLogo(null);
+      
+      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
+      
+      expect(appleIconLink.href).toContain('/logo192.png');
+    });
+
+    test('creates apple-touch-icon element if it does not exist', () => {
+      // Remove existing apple-touch-icon
+      const existingAppleIcon = document.querySelector("link[rel='apple-touch-icon']");
+      existingAppleIcon.remove();
+      
+      const testImage = 'data:image/png;base64,test';
+      updateAppLogo(testImage);
+      
+      const appleIconLink = document.querySelector("link[rel='apple-touch-icon']");
+      expect(appleIconLink).not.toBeNull();
+      expect(appleIconLink.href).toBe(testImage);
+    });
+  });
+
   describe('applyFaviconSettings', () => {
     test('applies custom favicon image and text from settings', async () => {
-      const testImage = 'data:image/png;base64,test';
+      const testFaviconImage = 'data:image/png;base64,favicon';
+      const testAppLogoImage = 'data:image/png;base64,applogo';
       getSettings.mockResolvedValue({
-        faviconImage: testImage,
+        faviconImage: testFaviconImage,
+        appLogoImage: testAppLogoImage,
         faviconText: 'Custom Recipe Book',
         headerSlogan: 'Delicious Recipes'
       });
@@ -213,14 +248,14 @@ describe('faviconUtils', () => {
       const ogImage = document.querySelector("meta[property='og:image']");
       const twitterImage = document.querySelector("meta[name='twitter:image']");
       
-      expect(iconLink.href).toBe(testImage);
-      expect(appleIconLink.href).toBe(testImage);
-      expect(ogImage.getAttribute('content')).toBe(testImage);
-      expect(twitterImage.getAttribute('content')).toBe(testImage);
+      expect(iconLink.href).toBe(testFaviconImage);
+      expect(appleIconLink.href).toBe(testAppLogoImage);
+      expect(ogImage.getAttribute('content')).toBe(testFaviconImage);
+      expect(twitterImage.getAttribute('content')).toBe(testFaviconImage);
       expect(document.title).toBe('Custom Recipe Book - Delicious Recipes');
     });
 
-    test('applies default icons when faviconImage is not set', async () => {
+    test('applies default icons when images are not set', async () => {
       getSettings.mockResolvedValue({
         faviconText: 'Custom Recipe Book',
         headerSlogan: 'Delicious Recipes'
@@ -240,9 +275,10 @@ describe('faviconUtils', () => {
       expect(document.title).toBe('Custom Recipe Book - Delicious Recipes');
     });
 
-    test('applies default icons when faviconImage is null', async () => {
+    test('applies default icons when images are null', async () => {
       getSettings.mockResolvedValue({
         faviconImage: null,
+        appLogoImage: null,
         faviconText: 'Custom Recipe Book',
         headerSlogan: 'Delicious Recipes'
       });

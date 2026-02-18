@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
-import { getHeaderSlogan, getFaviconImage } from '../utils/customLists';
+import { getHeaderSlogan, getAppLogoImage } from '../utils/customLists';
 import SearchIcon from './icons/SearchIcon';
 
 function Header({ 
@@ -16,7 +16,7 @@ function Header({
   onSearchChange
 }) {
   const [headerSlogan, setHeaderSlogan] = useState('');
-  const [faviconImage, setFaviconImage] = useState(null);
+  const [appLogoImage, setAppLogoImage] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,9 +26,9 @@ function Header({
   useEffect(() => {
     const loadHeaderData = async () => {
       const slogan = await getHeaderSlogan();
-      const logo = await getFaviconImage();
+      const logo = await getAppLogoImage();
       setHeaderSlogan(slogan);
-      setFaviconImage(logo);
+      setAppLogoImage(logo);
     };
     loadHeaderData();
   }, []);
@@ -101,8 +101,8 @@ function Header({
     <header className={`header ${!visible ? 'header-hidden' : ''}`}>
       <div className="header-content">
         <div className="header-title">
-          {faviconImage && (
-            <img src={faviconImage} alt="Logo" className="header-logo" />
+          {appLogoImage && (
+            <img src={appLogoImage} alt="Logo" className="header-logo" />
           )}
           <div className="header-title-text">
             <h1>DishBook</h1>
