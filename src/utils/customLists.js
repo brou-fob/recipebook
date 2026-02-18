@@ -92,6 +92,7 @@ export async function getSettings() {
         headerSlogan: settings.headerSlogan || DEFAULT_SLOGAN,
         faviconText: settings.faviconText || DEFAULT_FAVICON_TEXT,
         faviconImage: settings.faviconImage || null,
+        appLogoImage: settings.appLogoImage || null,
         buttonIcons: settings.buttonIcons || DEFAULT_BUTTON_ICONS
       };
       
@@ -107,6 +108,7 @@ export async function getSettings() {
       headerSlogan: DEFAULT_SLOGAN,
       faviconText: DEFAULT_FAVICON_TEXT,
       faviconImage: null,
+      appLogoImage: null,
       buttonIcons: DEFAULT_BUTTON_ICONS
     };
     
@@ -127,6 +129,7 @@ export async function getSettings() {
       headerSlogan: DEFAULT_SLOGAN,
       faviconText: DEFAULT_FAVICON_TEXT,
       faviconImage: null,
+      appLogoImage: null,
       buttonIcons: DEFAULT_BUTTON_ICONS
     };
   }
@@ -247,6 +250,45 @@ export async function saveFaviconImage(imageBase64) {
     }
   } catch (error) {
     console.error('Error saving favicon image:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the app logo image from Firestore
+ * @returns {Promise<string|null>} Promise resolving to base64 encoded image or null
+ */
+export async function getAppLogoImage() {
+  const settings = await getSettings();
+  return settings.appLogoImage;
+}
+
+/**
+ * Save the app logo image to Firestore
+ * @param {string} imageBase64 - Base64 encoded image
+ * @returns {Promise<void>}
+ */
+export async function saveAppLogoImage(imageBase64) {
+  try {
+    const settingsRef = doc(db, 'settings', 'app');
+    
+    if (imageBase64) {
+      await updateDoc(settingsRef, { appLogoImage: imageBase64 });
+      
+      // Update cache
+      if (settingsCache) {
+        settingsCache.appLogoImage = imageBase64;
+      }
+    } else {
+      await updateDoc(settingsRef, { appLogoImage: null });
+      
+      // Update cache
+      if (settingsCache) {
+        settingsCache.appLogoImage = null;
+      }
+    }
+  } catch (error) {
+    console.error('Error saving app logo image:', error);
     throw error;
   }
 }

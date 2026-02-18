@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getButtonIcons, saveButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getButtonIcons, saveButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
 import { isCurrentUserAdmin } from '../utils/userManagement';
 import UserManagement from './UserManagement';
 import { getCategoryImages, addCategoryImage, updateCategoryImage, removeCategoryImage, getAlreadyAssignedCategories } from '../utils/categoryImages';
 import { fileToBase64, isBase64Image, compressImage } from '../utils/imageUtils';
-import { updateFavicon, updatePageTitle } from '../utils/faviconUtils';
+import { updateFavicon, updatePageTitle, updateAppLogo } from '../utils/faviconUtils';
 
 const CATEGORY_ALREADY_ASSIGNED_ERROR = 'Die folgenden Kategorien sind bereits einem anderen Bild zugeordnet: {categories}\n\nBitte wählen Sie andere Kategorien.';
 
@@ -36,6 +36,10 @@ function Settings({ onBack, currentUser }) {
   const [faviconText, setFaviconText] = useState('');
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
+  // App logo state
+  const [appLogoImage, setAppLogoImage] = useState(null);
+  const [uploadingAppLogo, setUploadingAppLogo] = useState(false);
+
   // Button icons state
   const [buttonIcons, setButtonIcons] = useState({
     cookingMode: '👨‍🍳',
@@ -52,6 +56,7 @@ function Settings({ onBack, currentUser }) {
       const slogan = await getHeaderSlogan();
       const faviconImg = await getFaviconImage();
       const faviconTxt = await getFaviconText();
+      const appLogoImg = await getAppLogoImage();
       const icons = await getButtonIcons();
       
       setLists(lists);
@@ -59,6 +64,7 @@ function Settings({ onBack, currentUser }) {
       setCategoryImages(getCategoryImages());
       setFaviconImage(faviconImg);
       setFaviconText(faviconTxt);
+      setAppLogoImage(appLogoImg);
       setButtonIcons(icons);
     };
     loadSettings();
@@ -69,11 +75,13 @@ function Settings({ onBack, currentUser }) {
     saveHeaderSlogan(headerSlogan);
     saveFaviconImage(faviconImage);
     saveFaviconText(faviconText);
+    saveAppLogoImage(appLogoImage);
     saveButtonIcons(buttonIcons);
     
     // Apply favicon changes immediately
     updateFavicon(faviconImage);
     updatePageTitle(faviconText);
+    updateAppLogo(appLogoImage);
     
     alert('Einstellungen erfolgreich gespeichert!');
   };
@@ -267,6 +275,28 @@ function Settings({ onBack, currentUser }) {
     setFaviconImage(null);
   };
 
+  // App logo handlers
+  const handleAppLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingAppLogo(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const compressedBase64 = await compressImage(base64);
+      setAppLogoImage(compressedBase64);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setUploadingAppLogo(false);
+    }
+  };
+
+  const handleRemoveAppLogo = () => {
+    setAppLogoImage(null);
+  };
+
   // Button icon image handlers
   const handleButtonIconImageUpload = async (iconKey, e) => {
     const file = e.target.files[0];
@@ -363,7 +393,7 @@ function Settings({ onBack, currentUser }) {
 
               {/* Favicon Image */}
               <div className="favicon-image-section">
-                <label>Favicon-Bild:</label>
+                <label>Logo für Browser-Tab und Social-Media:</label>
                 {faviconImage ? (
                   <div className="favicon-preview">
                     <img src={faviconImage} alt="Favicon" style={{ width: '32px', height: '32px' }} />
@@ -383,7 +413,7 @@ function Settings({ onBack, currentUser }) {
                 ) : (
                   <div className="favicon-upload">
                     <label htmlFor="faviconImageFile" className="image-upload-label">
-                      {uploadingFavicon ? 'Hochladen...' : '📷 Favicon hochladen'}
+                      {uploadingFavicon ? 'Hochladen...' : '📷 Logo hochladen'}
                     </label>
                   </div>
                 )}
@@ -397,7 +427,49 @@ function Settings({ onBack, currentUser }) {
                 />
                 <p className="input-hint">
                   Unterstützte Formate: JPEG, PNG, GIF, WebP. Maximale Größe: 5MB. 
-                  Empfohlene Größe: 32x32 oder 64x64 Pixel.
+                  Empfohlene Größe: 32x32, 64x64 oder 512x512 Pixel (quadratisch).
+                  Wird verwendet für Browser-Favicon und Social-Media-Vorschauen (OpenGraph, Twitter).
+                </p>
+              </div>
+
+              {/* App Logo Image */}
+              <div className="favicon-image-section">
+                <label>App-Logo für Header und Apple Touch Icon:</label>
+                {appLogoImage ? (
+                  <div className="favicon-preview">
+                    <img src={appLogoImage} alt="App Logo" style={{ width: '64px', height: '64px' }} />
+                    <div className="favicon-actions">
+                      <label htmlFor="appLogoImageFile" className="favicon-change-btn">
+                        {uploadingAppLogo ? 'Hochladen...' : '🔄 Ändern'}
+                      </label>
+                      <button 
+                        className="favicon-remove-btn" 
+                        onClick={handleRemoveAppLogo}
+                        disabled={uploadingAppLogo}
+                      >
+                        ✕ Entfernen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="favicon-upload">
+                    <label htmlFor="appLogoImageFile" className="image-upload-label">
+                      {uploadingAppLogo ? 'Hochladen...' : '📷 App-Logo hochladen'}
+                    </label>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="appLogoImageFile"
+                  accept="image/*"
+                  onChange={handleAppLogoUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingAppLogo}
+                />
+                <p className="input-hint">
+                  Unterstützte Formate: JPEG, PNG, GIF, WebP. Maximale Größe: 5MB. 
+                  Empfohlene Größe: 192x192 oder 512x512 Pixel (quadratisch).
+                  Wird verwendet für App-Header-Logo und Apple Touch Icon.
                 </p>
               </div>
             </div>

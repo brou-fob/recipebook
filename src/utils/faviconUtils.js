@@ -1,7 +1,7 @@
 import { DEFAULT_FAVICON_TEXT, DEFAULT_SLOGAN, getSettings } from './customLists';
 
 /**
- * Update the browser's favicon and apple-touch-icon
+ * Update the browser's favicon and social media meta tags
  * @param {string|null} imageBase64 - Base64 encoded image or null to use default
  */
 export function updateFavicon(imageBase64) {
@@ -14,6 +14,22 @@ export function updateFavicon(imageBase64) {
     document.head.appendChild(link);
   }
   
+  if (imageBase64) {
+    link.href = imageBase64;
+  } else {
+    // Reset to default icon
+    link.href = `${process.env.PUBLIC_URL}/favicon.ico`;
+  }
+  
+  // Update Open Graph and Twitter meta tags for social media sharing
+  updateSocialMetaTags(imageBase64);
+}
+
+/**
+ * Update the apple-touch-icon with app logo
+ * @param {string|null} imageBase64 - Base64 encoded image or null to use default
+ */
+export function updateAppLogo(imageBase64) {
   // Find or create the apple-touch-icon link element
   let appleLink = document.querySelector("link[rel='apple-touch-icon']");
   
@@ -24,16 +40,11 @@ export function updateFavicon(imageBase64) {
   }
   
   if (imageBase64) {
-    link.href = imageBase64;
     appleLink.href = imageBase64;
   } else {
-    // Reset to default icons
-    link.href = `${process.env.PUBLIC_URL}/favicon.ico`;
+    // Reset to default icon
     appleLink.href = `${process.env.PUBLIC_URL}/logo192.png`;
   }
-  
-  // Update Open Graph and Twitter meta tags for social media sharing
-  updateSocialMetaTags(imageBase64);
 }
 
 /**
@@ -87,6 +98,9 @@ export async function applyFaviconSettings() {
     
     // Always call updateFavicon to ensure proper fallback to defaults
     updateFavicon(settings.faviconImage);
+    
+    // Update app logo (apple-touch-icon) separately
+    updateAppLogo(settings.appLogoImage);
     
     updatePageTitle(settings.faviconText, settings.headerSlogan);
     
