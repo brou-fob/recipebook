@@ -210,6 +210,9 @@ Test Recipe,Ingredient`;
     });
 
     test('continues parsing valid rows when some rows fail', () => {
+      // Spy on console.warn to verify warning is logged
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
       const csv = `Name,Zutat1,Zubereitungsschritt1
 Good Recipe 1,Ingredient,Step
 ,Missing Name,Step
@@ -221,6 +224,14 @@ Good Recipe 2,Ingredient,Step`;
       expect(recipes).toHaveLength(2);
       expect(recipes[0].title).toBe('Good Recipe 1');
       expect(recipes[1].title).toBe('Good Recipe 2');
+      
+      // Verify console.warn was called with error information
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Einige Rezepte konnten nicht importiert werden:',
+        expect.arrayContaining([expect.stringContaining('Rezeptname fehlt')])
+      );
+
+      consoleSpy.mockRestore();
     });
   });
 });

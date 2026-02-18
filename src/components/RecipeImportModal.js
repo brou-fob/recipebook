@@ -31,9 +31,14 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file extension
+    // Check file extension and MIME type
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setError('Bitte wählen Sie eine CSV-Datei aus');
+      return;
+    }
+    
+    if (file.type && file.type !== 'text/csv' && file.type !== 'application/vnd.ms-excel') {
+      setError('Ungültiger Dateityp. Bitte wählen Sie eine CSV-Datei aus');
       return;
     }
 

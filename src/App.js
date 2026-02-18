@@ -196,7 +196,7 @@ function App() {
 
     try {
       let successCount = 0;
-      let errorCount = 0;
+      const errors = [];
 
       for (const recipe of recipes) {
         try {
@@ -204,7 +204,7 @@ function App() {
           successCount++;
         } catch (error) {
           console.error('Error importing recipe:', recipe.title, error);
-          errorCount++;
+          errors.push({ title: recipe.title, error: error.message });
         }
       }
 
@@ -212,11 +212,16 @@ function App() {
       setEditingRecipe(null);
       setIsCreatingVersion(false);
 
-      // Show success message
-      if (errorCount === 0) {
-        alert(`${successCount} Rezept(e) erfolgreich importiert!`);
+      // Show success message with details
+      if (errors.length === 0) {
+        alert(`✓ ${successCount} Rezept(e) erfolgreich importiert!`);
       } else {
-        alert(`${successCount} Rezept(e) erfolgreich importiert, ${errorCount} fehlgeschlagen.`);
+        const failedRecipes = errors.map(e => `- ${e.title}: ${e.error}`).join('\n');
+        alert(
+          `Import abgeschlossen:\n\n` +
+          `✓ ${successCount} Rezept(e) erfolgreich importiert\n` +
+          `✗ ${errors.length} fehlgeschlagen:\n\n${failedRecipes}`
+        );
       }
     } catch (error) {
       console.error('Error bulk importing recipes:', error);
