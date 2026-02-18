@@ -157,18 +157,27 @@ function parseCommaSeparated(value) {
 /**
  * Process an ingredient or step field, detecting headers
  * Items starting with "###" are headers (remove "###" and format)
+ * For steps, also removes leading numbering (e.g., "1. ", "2) ", etc.)
  * @param {string} value - Field value
+ * @param {string} itemType - 'ingredient' or 'step'
  * @returns {Object|null} - {type: 'heading'|'step'|'ingredient', text: string} or null
  */
 function processListItem(value, itemType = 'ingredient') {
   if (!value || !value.trim()) return null;
   
-  const trimmed = value.trim();
+  let trimmed = value.trim();
   
   // Check if it's a header (starts with ###)
   if (trimmed.startsWith('###')) {
     const text = trimmed.substring(3).trim();
     return { type: 'heading', text };
+  }
+  
+  // For steps, remove leading numbering like "1. ", "2) ", "3 - ", etc.
+  if (itemType === 'step') {
+    // Remove patterns like "1.", "1)", "1 -", "1 –", "1:", at the start
+    // Handles both with and without space after number
+    trimmed = trimmed.replace(/^\d+\s*[.):\-–]\s*/, '');
   }
   
   // Regular item
@@ -181,9 +190,10 @@ function processListItem(value, itemType = 'ingredient') {
  * @param {Array<string>} headers - CSV headers
  * @param {Array<string>} values - CSV values for this row
  * @param {string} currentUserName - Name of the current user (for authorId mapping)
+ * @param {Function} getCategoryImage - Optional function to get image for categories
  * @returns {Object} - Recipe object
  */
-function parseRecipeRow(headers, values, currentUserName = '') {
+function parseRecipeRow(headers, values, currentUserName = '', getCategoryImage = null) {
   const recipe = {
     title: '',
     image: '',
@@ -243,6 +253,15 @@ function parseRecipeRow(headers, values, currentUserName = '') {
     }
   }
   
+  // Apply category image if a getCategoryImage function was provided
+  // and the recipe has meal categories but no image yet
+  if (getCategoryImage && !recipe.image && recipe.speisekategorie.length > 0) {
+    const categoryImage = getCategoryImage(recipe.speisekategorie);
+    if (categoryImage) {
+      recipe.image = categoryImage;
+    }
+  }
+  
   return recipe;
 }
 
@@ -270,15 +289,22 @@ function validateRecipe(recipe, rowNumber) {
  * Parse CSV content and extract multiple recipes
  * @param {string} csvContent - CSV file content
  * @param {string} currentUserName - Name of current user
+ * @param {Function} getCategoryImage - Optional function to get image for categories
  * @returns {Array<Object>} - Array of recipe objects
  * @throws {Error} - If CSV is invalid or parsing fails
  */
-export function parseBulkCSV(csvContent, currentUserName = '') {
+export function parseBulkCSV(csvContent, currentUserName = '', getCategoryImage = null) {
   if (!csvContent || typeof csvContent !== 'string') {
     throw new Error('Ungültiger CSV-Inhalt');
   }
   
-  const lines = csvContent.split('\n').filter(line => line.trim());
+  // Remove UTF-8 BOM if present (Excel and some editors add this)
+  let content = csvContent;
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.substring(1);
+  }
+  
+  const lines = content.split('\n').filter(line => line.trim());
   
   if (lines.length < 2) {
     throw new Error('CSV muss mindestens Header und eine Datenzeile enthalten');
@@ -297,7 +323,7 @@ export function parseBulkCSV(csvContent, currentUserName = '') {
   for (let i = 1; i < lines.length; i++) {
     try {
       const values = parseCSVLine(lines[i], delimiter);
-      const recipe = parseRecipeRow(headers, values, currentUserName);
+      const recipe = parseRecipeRow(headers, values, currentUserName, getCategoryImage);
       
       // Validate recipe
       validateRecipe(recipe, i + 1);
