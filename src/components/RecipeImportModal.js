@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import './RecipeImportModal.css';
-import { importRecipe, EXAMPLE_NOTION_RECIPE } from '../utils/recipeImport';
-import { EXAMPLE_NOTION_MARKDOWN } from '../utils/notionParser';
-import { parseBulkCSV, EXAMPLE_CSV } from '../utils/csvBulkImport';
+import { importRecipe } from '../utils/recipeImport';
+import { parseBulkCSV } from '../utils/csvBulkImport';
 
 function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
   const [importText, setImportText] = useState('');
   const [error, setError] = useState('');
-  const [showExample, setShowExample] = useState(false);
-  const [exampleType, setExampleType] = useState('json'); // 'json', 'markdown', or 'csv'
 
   const handleImport = () => {
     setError('');
@@ -60,16 +57,7 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
     }
   };
 
-  const handleLoadExample = (type) => {
-    if (type === 'json') {
-      setImportText(JSON.stringify(EXAMPLE_NOTION_RECIPE, null, 2));
-    } else if (type === 'markdown') {
-      setImportText(EXAMPLE_NOTION_MARKDOWN);
-    } else if (type === 'csv') {
-      setImportText(EXAMPLE_CSV);
-    }
-    setShowExample(false);
-  };
+
 
   return (
     <div className="modal-overlay">
@@ -119,114 +107,6 @@ function RecipeImportModal({ onImport, onBulkImport, onCancel }) {
               {error}
             </div>
           )}
-
-          <div className="import-help">
-            <button 
-              type="button"
-              className="example-button"
-              onClick={() => setShowExample(!showExample)}
-            >
-              {showExample ? '▼ Beispiele ausblenden' : '▶ Beispiele anzeigen'}
-            </button>
-            
-            {showExample && (
-              <div className="example-section">
-                <div className="example-tabs">
-                  <button
-                    className={`example-tab ${exampleType === 'json' ? 'active' : ''}`}
-                    onClick={() => setExampleType('json')}
-                  >
-                    JSON
-                  </button>
-                  <button
-                    className={`example-tab ${exampleType === 'markdown' ? 'active' : ''}`}
-                    onClick={() => setExampleType('markdown')}
-                  >
-                    Notion Markdown
-                  </button>
-                  <button
-                    className={`example-tab ${exampleType === 'csv' ? 'active' : ''}`}
-                    onClick={() => setExampleType('csv')}
-                  >
-                    CSV
-                  </button>
-                </div>
-                
-                {exampleType === 'json' ? (
-                  <>
-                    <h4>Beispiel-Rezept (JSON)</h4>
-                    <pre className="example-json">
-                      {JSON.stringify(EXAMPLE_NOTION_RECIPE, null, 2)}
-                    </pre>
-                    <button 
-                      type="button"
-                      className="load-example-button"
-                      onClick={() => handleLoadExample('json')}
-                    >
-                      JSON-Beispiel laden
-                    </button>
-                  </>
-                ) : exampleType === 'markdown' ? (
-                  <>
-                    <h4>Beispiel-Rezept (Notion Markdown)</h4>
-                    <pre className="example-json">
-                      {EXAMPLE_NOTION_MARKDOWN}
-                    </pre>
-                    <button 
-                      type="button"
-                      className="load-example-button"
-                      onClick={() => handleLoadExample('markdown')}
-                    >
-                      Markdown-Beispiel laden
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <h4>Beispiel-CSV (Bulk-Import)</h4>
-                    <pre className="example-json">
-                      {EXAMPLE_CSV}
-                    </pre>
-                    <button 
-                      type="button"
-                      className="load-example-button"
-                      onClick={() => handleLoadExample('csv')}
-                    >
-                      CSV-Beispiel laden
-                    </button>
-                    <p className="csv-format-note">
-                      <strong>CSV-Format:</strong> Unterstützte Spalten: Name, Erstellt am, Erstellt von, 
-                      Kulinarik, Speisenkategorie, Portionen, Zubereitung, Schwierigkeit, 
-                      Zutat1-31, Zubereitungsschritt1-27. 
-                      Zutaten/Schritte mit "###" am Anfang werden als Überschriften formatiert.
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="notion-help">
-            <h4>💡 Notion-Rezepte importieren</h4>
-            <p><strong>Methode 1: Markdown Export (empfohlen)</strong></p>
-            <ol>
-              <li>Öffnen Sie das Rezept in Notion</li>
-              <li>Klicken Sie auf "..." → "Export" → "Markdown & CSV"</li>
-              <li>Öffnen Sie die exportierte .md Datei</li>
-              <li>Kopieren Sie den gesamten Inhalt</li>
-              <li>Fügen Sie ihn hier ein und klicken Sie auf "Importieren"</li>
-            </ol>
-            
-            <p><strong>Methode 2: Direkt kopieren</strong></p>
-            <ol>
-              <li>Kopieren Sie den Inhalt Ihres Notion-Rezepts</li>
-              <li>Strukturieren Sie es wie im Markdown-Beispiel</li>
-              <li>Fügen Sie es hier ein</li>
-            </ol>
-
-            <p className="notion-note">
-              <strong>Tipp:</strong> Das Format wird automatisch erkannt - Sie können JSON, Markdown oder CSV einfügen.
-            </p>
-          </div>
         </div>
 
         <div className="import-modal-actions">

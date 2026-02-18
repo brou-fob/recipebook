@@ -97,131 +97,6 @@
   font-size: 0.9rem;
 }
 
-.import-help {
-  margin-top: 20px;
-}
-
-.example-button {
-  background: none;
-  border: none;
-  color: #1976d2;
-  cursor: pointer;
-  font-size: 0.95rem;
-  padding: 8px 0;
-  text-align: left;
-  width: 100%;
-}
-
-.example-button:hover {
-  text-decoration: underline;
-}
-
-.example-section {
-  margin-top: 12px;
-  padding: 16px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-}
-
-.example-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.example-tab {
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #666;
-  transition: all 0.2s;
-}
-
-.example-tab:hover {
-  background-color: #f0f0f0;
-}
-
-.example-tab.active {
-  background-color: #2196F3;
-  color: white;
-  border-color: #2196F3;
-}
-
-.example-section h4 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #333;
-  font-size: 1rem;
-}
-
-.example-json {
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 12px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  overflow-x: auto;
-  margin-bottom: 12px;
-}
-
-.load-example-button {
-  background-color: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
-}
-
-.load-example-button:hover {
-  background-color: #1976D2;
-}
-
-.notion-help {
-  margin-top: 20px;
-  padding: 16px;
-  background-color: #e3f2fd;
-  border-radius: 4px;
-  border-left: 4px solid #2196F3;
-}
-
-.notion-help h4 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #1565C0;
-  font-size: 1rem;
-}
-
-.notion-help ol {
-  margin: 12px 0;
-  padding-left: 24px;
-  color: #333;
-}
-
-.notion-help li {
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-
-.notion-note {
-  margin: 12px 0 0 0;
-  padding: 12px;
-  background-color: white;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  color: #555;
-}
-
-.notion-note strong {
-  color: #1565C0;
-}
-
 .csv-upload-section {
   margin-bottom: 20px;
   padding: 16px;
@@ -285,20 +160,6 @@
   padding: 0 10px;
   color: #666;
   font-size: 0.9rem;
-}
-
-.csv-format-note {
-  margin-top: 12px;
-  padding: 12px;
-  background-color: #fff3cd;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  color: #856404;
-  line-height: 1.5;
-}
-
-.csv-format-note strong {
-  color: #856404;
 }
 
 .import-modal-actions {
@@ -383,10 +244,6 @@
 
   .import-textarea {
     font-size: 0.85rem;
-  }
-
-  .example-json {
-    font-size: 0.75rem;
   }
 
   .import-modal-actions {
