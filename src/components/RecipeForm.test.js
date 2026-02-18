@@ -1934,13 +1934,15 @@ describe('RecipeForm - Private Checkbox', () => {
 
     // Wait for component to load
     await waitFor(() => {
-      expect(screen.getByText(/Dieses Rezept als Entwurf markieren/i)).toBeInTheDocument();
+      expect(screen.getByText(/Entwurf:/i)).toBeInTheDocument();
     });
     
     // Check that checkbox exists
-    const checkbox = screen.getByRole('checkbox', { name: /Dieses Rezept als Entwurf markieren/i });
-    expect(checkbox).toBeInTheDocument();
-    expect(checkbox).not.toBeChecked();
+    const checkboxes = screen.getAllByRole('checkbox');
+    // Find the draft checkbox (it should be checked/unchecked based on state)
+    const draftCheckbox = checkboxes.find(cb => cb.className.includes('draft-checkbox'));
+    expect(draftCheckbox).toBeInTheDocument();
+    expect(draftCheckbox).not.toBeChecked();
   });
 
   test('does not show private checkbox for non-admin users', () => {
@@ -1966,7 +1968,7 @@ describe('RecipeForm - Private Checkbox', () => {
     );
 
     // Private checkbox should not be visible
-    expect(screen.queryByText(/Dieses Rezept als Entwurf markieren/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Entwurf:/i)).not.toBeInTheDocument();
   });
 
   test('loads isPrivate value from existing recipe', async () => {
@@ -2007,8 +2009,9 @@ describe('RecipeForm - Private Checkbox', () => {
     );
 
     await waitFor(() => {
-      const checkbox = screen.getByRole('checkbox', { name: /Dieses Rezept als Entwurf markieren/i });
-      expect(checkbox).toBeChecked();
+      const checkboxes = screen.getAllByRole('checkbox');
+      const draftCheckbox = checkboxes.find(cb => cb.className.includes('draft-checkbox'));
+      expect(draftCheckbox).toBeChecked();
     });
   });
 
@@ -2041,9 +2044,10 @@ describe('RecipeForm - Private Checkbox', () => {
 
     // Check the draft checkbox
     await waitFor(() => {
-      const checkbox = screen.getByRole('checkbox', { name: /Dieses Rezept als Entwurf markieren/i });
-      fireEvent.click(checkbox);
-      expect(checkbox).toBeChecked();
+      const checkboxes = screen.getAllByRole('checkbox');
+      const draftCheckbox = checkboxes.find(cb => cb.className.includes('draft-checkbox'));
+      fireEvent.click(draftCheckbox);
+      expect(draftCheckbox).toBeChecked();
     });
 
     // Submit form
