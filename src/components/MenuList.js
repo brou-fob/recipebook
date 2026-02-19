@@ -56,7 +56,23 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
     return null;
   };
 
-  // Filter menus based on privacy and favorites
+  const getMenuSortDate = (menu) => {
+    if (menu.menuDate) {
+      return new Date(menu.menuDate).getTime();
+    }
+    if (menu.createdAt) {
+      if (menu.createdAt?.toDate) {
+        return menu.createdAt.toDate().getTime();
+      } else if (typeof menu.createdAt === 'string') {
+        return new Date(menu.createdAt).getTime();
+      } else if (menu.createdAt instanceof Date) {
+        return menu.createdAt.getTime();
+      }
+    }
+    return 0;
+  };
+
+  // Filter menus based on privacy and favorites, then sort by date descending (newest first)
   const filteredMenus = menus.filter(menu => {
     // Filter out private menus that don't belong to current user
     if (menu.isPrivate && menu.createdBy !== currentUser?.id) {
@@ -69,7 +85,7 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
     }
     
     return true;
-  });
+  }).sort((a, b) => getMenuSortDate(b) - getMenuSortDate(a));
 
   return (
     <div className="menu-list-container">
