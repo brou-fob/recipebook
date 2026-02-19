@@ -102,6 +102,8 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
         <div className="menu-grid">
           {filteredMenus.map(menu => {
             const isFavorite = favoriteIds.includes(menu.id);
+            const menuDate = getMenuDate(menu);
+            const authorName = getAuthorName(menu);
             return (
               <div
                 key={menu.id}
@@ -120,8 +122,8 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
                   )}
                   <div className="menu-meta">
                     <span>{getRecipeCount(menu)} Rezepte</span>
-                    {getMenuDate(menu) && <span>{getMenuDate(menu)}</span>}
-                    {getAuthorName(menu) && <span>{getAuthorName(menu)}</span>}
+                    {menuDate && <span>{menuDate}</span>}
+                    {authorName && <span>{authorName}</span>}
                   </div>
                   {menu.isPrivate && (
                     <div className="menu-footer">
