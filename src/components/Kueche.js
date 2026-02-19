@@ -64,6 +64,7 @@ function Kueche({ recipes, menus = [], onSelectRecipe, onSelectMenu, allUsers, c
         onSelectRecipe={handleSelectItem}
         allUsers={allUsers}
         timelineBubbleIcon={timelineBubbleIcon}
+        timelineMenuBubbleIcon={timelineMenuBubbleIcon}
         categoryImages={categoryImages}
         defaultImage={timelineMenuDefaultImage}
       />

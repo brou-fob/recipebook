@@ -13,7 +13,7 @@ function getDateKey(timestamp) {
   }
 }
 
-function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubbleIcon = null, defaultImage = null, categoryImages = [], itemType = 'recipe' }) {
+function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubbleIcon = null, timelineMenuBubbleIcon = null, defaultImage = null, categoryImages = [], itemType = 'recipe' }) {
   const [expandedDates, setExpandedDates] = useState({});
 
   // Sort recipes by createdAt in reverse chronological order (newest first)
@@ -133,13 +133,16 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
             style={{ animationDelay: `${groupIndex * 0.05}s` }}
           >
             <div className="timeline-marker">
-              {timelineBubbleIcon && (
-                isBase64Image(timelineBubbleIcon) ? (
-                  <img src={timelineBubbleIcon} alt="" className="timeline-marker-icon" />
+              {(() => {
+                const isMenu = (primaryRecipe.itemType || itemType) === 'menu';
+                const icon = isMenu ? timelineMenuBubbleIcon : timelineBubbleIcon;
+                if (!icon) return null;
+                return isBase64Image(icon) ? (
+                  <img src={icon} alt="" className="timeline-marker-icon" />
                 ) : (
-                  <span className="timeline-marker-emoji">{timelineBubbleIcon}</span>
-                )
-              )}
+                  <span className="timeline-marker-emoji">{icon}</span>
+                );
+              })()}
             </div>
             <div className="timeline-content">
               <div className="timeline-date">
