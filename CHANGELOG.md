@@ -11,9 +11,13 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Automatische Versionierung bei jedem Deployment
 - Commit-basierte Versionserkennung (Conventional Commits)
 - Automatisches Tagging von Versionen
+- Zugriffsbeschränkung für Entwurfs-Rezepte: Nur Administratoren und Autoren können Rezepte im Entwurfstatus (isPrivate) sehen
 
 ### Geändert
 - GitHub Actions Workflow erweitert um automatisches Version-Bumping
+
+### Sicherheit
+- Rezepte mit `isPrivate: true` werden nun gefiltert und sind nur für Administratoren und die jeweiligen Autoren sichtbar
 
 ## [0.1.1] - 2026-02-17
 
