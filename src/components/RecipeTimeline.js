@@ -101,7 +101,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
       <div className="timeline-info">
         <h3 className="timeline-title">{recipe.title}</h3>
         <div className="timeline-meta">
-          {effectiveItemType === 'menu' ? (
+          {(recipe.itemType || itemType) === 'menu' ? (
             <span>{recipe.ingredients?.length || 0} Rezepte</span>
           ) : (
             <>
