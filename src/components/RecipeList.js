@@ -165,6 +165,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
               className={`view-mode-button ${viewMode === 'timeline' ? 'active' : ''}`}
               onClick={() => setViewMode(viewMode === 'grid' ? 'timeline' : 'grid')}
               title={viewMode === 'grid' ? 'Zeitstrahl-Ansicht' : 'Raster-Ansicht'}
+              aria-label={viewMode === 'grid' ? 'Zur Zeitstrahl-Ansicht wechseln' : 'Zur Raster-Ansicht wechseln'}
             >
               {viewMode === 'grid' ? '📅' : '▦'}
             </button>
