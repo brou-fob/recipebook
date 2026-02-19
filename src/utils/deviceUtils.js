@@ -30,6 +30,7 @@ export function isDesktopDevice() {
   const isTouchPrimary = (
     'ontouchstart' in window &&
     navigator.maxTouchPoints > 0 &&
+    window.matchMedia &&
     !window.matchMedia('(pointer: fine)').matches
   );
 

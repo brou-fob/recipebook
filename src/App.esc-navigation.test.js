@@ -133,16 +133,16 @@ describe('ESC key navigation behavior', () => {
       
       // Start with desktop
       jest.spyOn(deviceUtils, 'isDesktopDevice').mockReturnValue(true);
-      const { rerender } = render(<TestComponent onEscape={mockCallback} isDesktop={deviceUtils.isDesktopDevice()} />);
+      const { rerender } = render(<TestComponent onEscape={mockCallback} isDesktop={true} />);
       
       fireEvent.keyDown(window, { key: 'Escape' });
       await waitFor(() => {
         expect(mockCallback).toHaveBeenCalledTimes(1);
       });
       
-      // Switch to mobile
+      // Switch to mobile - need to pass false explicitly
       jest.spyOn(deviceUtils, 'isDesktopDevice').mockReturnValue(false);
-      rerender(<TestComponent onEscape={mockCallback} isDesktop={deviceUtils.isDesktopDevice()} />);
+      rerender(<TestComponent onEscape={mockCallback} isDesktop={false} />);
       
       fireEvent.keyDown(window, { key: 'Escape' });
       

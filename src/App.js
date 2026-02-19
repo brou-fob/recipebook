@@ -487,6 +487,10 @@ function App() {
 
     window.addEventListener('keydown', handleEscapeKey);
     return () => window.removeEventListener('keydown', handleEscapeKey);
+    // Note: Handler functions (handleCloseSettings, handleBackFromRecipeDetail, etc.) 
+    // are intentionally not in the dependency array to avoid unnecessary re-renders.
+    // They are simple state setters that don't change behavior.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isSettingsOpen,
     selectedRecipe,
