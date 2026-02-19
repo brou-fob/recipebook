@@ -5,8 +5,11 @@ import Kueche from './Kueche';
 jest.mock('../utils/customLists', () => ({
   getTimelineBubbleIcon: () => Promise.resolve(null),
   getTimelineMenuBubbleIcon: () => Promise.resolve(null),
-  getTimelineRecipeDefaultImage: () => Promise.resolve(null),
   getTimelineMenuDefaultImage: () => Promise.resolve(null),
+}));
+
+jest.mock('../utils/categoryImages', () => ({
+  getCategoryImages: () => Promise.resolve([]),
 }));
 
 describe('Kueche', () => {
