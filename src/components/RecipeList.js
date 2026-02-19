@@ -3,7 +3,7 @@ import './RecipeList.css';
 import { canEditRecipes, getUsers } from '../utils/userManagement';
 import { groupRecipesByParent, sortRecipeVersions } from '../utils/recipeVersioning';
 import { getUserFavorites } from '../utils/userFavorites';
-import { getCustomLists, getButtonIcons } from '../utils/customLists';
+import { getCustomLists, getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
 
 function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, currentUser, onCategoryFilterChange, searchTerm, onOpenFilterPage }) {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -11,7 +11,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [customLists, setCustomLists] = useState({ mealCategories: [] });
   const [buttonIcons, setButtonIcons] = useState({
-    filterButton: '⚙'
+    filterButton: DEFAULT_BUTTON_ICONS.filterButton
   });
   
   // Load all users once on mount

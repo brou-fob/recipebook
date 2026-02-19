@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import RecipeList from './RecipeList';
 import * as userFavorites from '../utils/userFavorites';
+import { DEFAULT_BUTTON_ICONS } from '../utils/customLists';
 
 // Mock the user management utility
 jest.mock('../utils/userManagement', () => ({
@@ -15,8 +16,11 @@ jest.mock('../utils/customLists', () => ({
     mealCategories: ['Appetizer', 'Main Course', 'Dessert']
   }),
   getButtonIcons: () => Promise.resolve({
+    filterButton: DEFAULT_BUTTON_ICONS.filterButton
+  }),
+  DEFAULT_BUTTON_ICONS: {
     filterButton: '⚙'
-  })
+  }
 }));
 
 const mockRecipes = [
