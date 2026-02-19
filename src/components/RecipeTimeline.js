@@ -101,7 +101,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
       <div className="timeline-info">
         <h3 className="timeline-title">{recipe.title}</h3>
         <div className="timeline-meta">
-          {itemType === 'menu' ? (
+          {effectiveItemType === 'menu' ? (
             <span>{recipe.ingredients?.length || 0} Rezepte</span>
           ) : (
             <>
@@ -171,7 +171,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                     <div className="timeline-info">
                       <h3 className="timeline-title">{primaryRecipe.title}</h3>
                       <div className="timeline-meta">
-                        {itemType === 'menu' ? (
+                        {(primaryRecipe.itemType || itemType) === 'menu' ? (
                           <span>{primaryRecipe.ingredients?.length || 0} Rezepte</span>
                         ) : (
                           <>

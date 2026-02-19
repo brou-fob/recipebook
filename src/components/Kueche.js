@@ -40,11 +40,19 @@ function Kueche({ recipes, menus = [], onSelectRecipe, onSelectMenu, allUsers, c
     ingredients: menu.recipeIds || [],
     steps: [],
     authorId: menu.authorId || menu.createdBy,
+    itemType: 'menu',
+    _defaultImage: timelineMenuDefaultImage,
   }));
 
-  const handleSelectMenuItem = (item) => {
-    const menu = filteredMenus.find(m => m.id === item.id);
-    if (menu && onSelectMenu) onSelectMenu(menu);
+  const combinedItems = [...filteredRecipes, ...menuTimelineItems];
+
+  const handleSelectItem = (item) => {
+    if (item.itemType === 'menu') {
+      const menu = filteredMenus.find(m => m.id === item.id);
+      if (menu && onSelectMenu) onSelectMenu(menu);
+    } else {
+      if (onSelectRecipe) onSelectRecipe(item);
+    }
   };
 
   return (
@@ -53,27 +61,12 @@ function Kueche({ recipes, menus = [], onSelectRecipe, onSelectMenu, allUsers, c
         <h2>Küche</h2>
       </div>
       <RecipeTimeline
-        recipes={filteredRecipes}
-        onSelectRecipe={onSelectRecipe}
+        recipes={combinedItems}
+        onSelectRecipe={handleSelectItem}
         allUsers={allUsers}
         timelineBubbleIcon={timelineBubbleIcon}
         categoryImages={categoryImages}
       />
-      {menuTimelineItems.length > 0 && (
-        <>
-          <div className="kueche-section-title">
-            <h3>Menüs</h3>
-          </div>
-          <RecipeTimeline
-            recipes={menuTimelineItems}
-            onSelectRecipe={handleSelectMenuItem}
-            allUsers={allUsers}
-            timelineBubbleIcon={timelineMenuBubbleIcon}
-            defaultImage={timelineMenuDefaultImage}
-            itemType="menu"
-          />
-        </>
-      )}
     </div>
   );
 }
