@@ -101,8 +101,6 @@ describe('RecipeTimeline', () => {
     );
     
     expect(screen.getByText('Recipe 1')).toBeInTheDocument();
-    expect(screen.getByText('2 Zutaten')).toBeInTheDocument();
-    expect(screen.getByText('2 Schritte')).toBeInTheDocument();
     expect(screen.getByText('15. Januar 2024')).toBeInTheDocument();
   });
 
@@ -348,7 +346,7 @@ describe('RecipeTimeline', () => {
     expect(img).toHaveAttribute('src', defaultImg);
   });
 
-  test('shows "X Rezepte" meta label when itemType is menu', () => {
+  test('does not show meta info (Rezepte/Zutaten/Schritte) for menu items', () => {
     const menuItem = {
       id: 'm1',
       title: 'Test Menu',
@@ -366,7 +364,8 @@ describe('RecipeTimeline', () => {
       />
     );
 
-    expect(screen.getByText('3 Rezepte')).toBeInTheDocument();
+    expect(screen.getByText('Test Menu')).toBeInTheDocument();
+    expect(screen.queryByText(/Rezepte/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Zutaten/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Schritte/)).not.toBeInTheDocument();
   });

@@ -100,16 +100,6 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
       )}
       <div className="timeline-info">
         <h3 className="timeline-title">{recipe.title}</h3>
-        <div className="timeline-meta">
-          {(recipe.itemType || itemType) === 'menu' ? (
-            <span>{recipe.ingredients?.length || 0} Rezepte</span>
-          ) : (
-            <>
-              <span>{recipe.ingredients?.length || 0} Zutaten</span>
-              <span>{recipe.steps?.length || 0} Schritte</span>
-            </>
-          )}
-        </div>
         {getAuthorName(recipe.authorId) && (
           <div className="timeline-author">{getAuthorName(recipe.authorId)}</div>
         )}
@@ -173,16 +163,6 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                     )}
                     <div className="timeline-info">
                       <h3 className="timeline-title">{primaryRecipe.title}</h3>
-                      <div className="timeline-meta">
-                        {(primaryRecipe.itemType || itemType) === 'menu' ? (
-                          <span>{primaryRecipe.ingredients?.length || 0} Rezepte</span>
-                        ) : (
-                          <>
-                            <span>{primaryRecipe.ingredients?.length || 0} Zutaten</span>
-                            <span>{primaryRecipe.steps?.length || 0} Schritte</span>
-                          </>
-                        )}
-                      </div>
                       {getAuthorName(primaryRecipe.authorId) && (
                         <div className="timeline-author">{getAuthorName(primaryRecipe.authorId)}</div>
                       )}
