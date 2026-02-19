@@ -160,7 +160,7 @@ select.filter-select[multiple] option:checked {
   color: white;
 }
 
-
+@media (max-width: 480px) {
   .filter-page-actions {
     flex-direction: column;
   }
