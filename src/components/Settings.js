@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getButtonIcons, saveButtonIcons, DEFAULT_BUTTON_ICONS, getTimelineBubbleIcon, saveTimelineBubbleIcon } from '../utils/customLists';
+import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getButtonIcons, saveButtonIcons, DEFAULT_BUTTON_ICONS, getTimelineBubbleIcon, saveTimelineBubbleIcon, getTimelineMenuBubbleIcon, saveTimelineMenuBubbleIcon, getTimelineRecipeDefaultImage, saveTimelineRecipeDefaultImage, getTimelineMenuDefaultImage, saveTimelineMenuDefaultImage } from '../utils/customLists';
 import { isCurrentUserAdmin } from '../utils/userManagement';
 import UserManagement from './UserManagement';
 import { getCategoryImages, addCategoryImage, updateCategoryImage, removeCategoryImage, getAlreadyAssignedCategories } from '../utils/categoryImages';
@@ -140,6 +140,16 @@ function Settings({ onBack, currentUser }) {
   const [timelineBubbleIcon, setTimelineBubbleIcon] = useState(null);
   const [uploadingTimelineBubbleIcon, setUploadingTimelineBubbleIcon] = useState(false);
 
+  // Timeline menu bubble icon state
+  const [timelineMenuBubbleIcon, setTimelineMenuBubbleIcon] = useState(null);
+  const [uploadingTimelineMenuBubbleIcon, setUploadingTimelineMenuBubbleIcon] = useState(false);
+
+  // Timeline default images state
+  const [timelineRecipeDefaultImage, setTimelineRecipeDefaultImage] = useState(null);
+  const [uploadingTimelineRecipeDefaultImage, setUploadingTimelineRecipeDefaultImage] = useState(false);
+  const [timelineMenuDefaultImage, setTimelineMenuDefaultImage] = useState(null);
+  const [uploadingTimelineMenuDefaultImage, setUploadingTimelineMenuDefaultImage] = useState(false);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     const loadSettings = async () => {
@@ -151,6 +161,9 @@ function Settings({ onBack, currentUser }) {
       const icons = await getButtonIcons();
       const catImages = await getCategoryImages();
       const timelineIcon = await getTimelineBubbleIcon();
+      const timelineMenuIcon = await getTimelineMenuBubbleIcon();
+      const timelineRecipeImg = await getTimelineRecipeDefaultImage();
+      const timelineMenuImg = await getTimelineMenuDefaultImage();
       
       setLists(lists);
       setHeaderSlogan(slogan);
@@ -160,6 +173,9 @@ function Settings({ onBack, currentUser }) {
       setAppLogoImage(appLogoImg);
       setButtonIcons(icons);
       setTimelineBubbleIcon(timelineIcon);
+      setTimelineMenuBubbleIcon(timelineMenuIcon);
+      setTimelineRecipeDefaultImage(timelineRecipeImg);
+      setTimelineMenuDefaultImage(timelineMenuImg);
     };
     loadSettings();
   }, []);
@@ -172,6 +188,9 @@ function Settings({ onBack, currentUser }) {
     saveAppLogoImage(appLogoImage);
     saveButtonIcons(buttonIcons);
     saveTimelineBubbleIcon(timelineBubbleIcon);
+    saveTimelineMenuBubbleIcon(timelineMenuBubbleIcon);
+    saveTimelineRecipeDefaultImage(timelineRecipeDefaultImage);
+    saveTimelineMenuDefaultImage(timelineMenuDefaultImage);
     
     // Apply favicon changes immediately
     updateFavicon(faviconImage);
@@ -518,6 +537,72 @@ function Settings({ onBack, currentUser }) {
 
   const handleRemoveTimelineBubbleIcon = () => {
     setTimelineBubbleIcon(null);
+  };
+
+  // Timeline menu bubble icon handlers
+  const handleTimelineMenuBubbleIconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingTimelineMenuBubbleIcon(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const compressedBase64 = await compressImage(base64);
+      setTimelineMenuBubbleIcon(compressedBase64);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setUploadingTimelineMenuBubbleIcon(false);
+    }
+  };
+
+  const handleRemoveTimelineMenuBubbleIcon = () => {
+    setTimelineMenuBubbleIcon(null);
+  };
+
+  // Timeline recipe default image handlers
+  const handleTimelineRecipeDefaultImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingTimelineRecipeDefaultImage(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const compressedBase64 = await compressImage(base64);
+      setTimelineRecipeDefaultImage(compressedBase64);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setUploadingTimelineRecipeDefaultImage(false);
+    }
+  };
+
+  const handleRemoveTimelineRecipeDefaultImage = () => {
+    setTimelineRecipeDefaultImage(null);
+  };
+
+  // Timeline menu default image handlers
+  const handleTimelineMenuDefaultImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingTimelineMenuDefaultImage(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const compressedBase64 = await compressImage(base64);
+      setTimelineMenuDefaultImage(compressedBase64);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setUploadingTimelineMenuDefaultImage(false);
+    }
+  };
+
+  const handleRemoveTimelineMenuDefaultImage = () => {
+    setTimelineMenuDefaultImage(null);
   };
 
   return (
@@ -1031,9 +1116,9 @@ function Settings({ onBack, currentUser }) {
             </div>
 
             <div className="settings-section">
-              <h3>Zeitleisten-Bubble-Icon</h3>
+              <h3>Zeitleisten-Bubble-Icon (Rezepte)</h3>
               <p className="section-description">
-                Optionales Icon, das in den orangen Bubbles der Zeitleiste angezeigt wird.
+                Optionales Icon, das in den orangen Bubbles der Zeitleiste für Rezepte angezeigt wird.
                 Unterstützte Formate: JPEG, PNG, SVG. Empfohlen: quadratisches Bild.
               </p>
               <div className="favicon-image-section">
@@ -1067,6 +1152,131 @@ function Settings({ onBack, currentUser }) {
                   onChange={handleTimelineBubbleIconUpload}
                   style={{ display: 'none' }}
                   disabled={uploadingTimelineBubbleIcon}
+                />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Zeitleisten-Bubble-Icon (Menüs)</h3>
+              <p className="section-description">
+                Optionales Icon, das in den Bubbles der Zeitleiste für Menüs angezeigt wird.
+                Unterstützte Formate: JPEG, PNG, SVG. Empfohlen: quadratisches Bild.
+              </p>
+              <div className="favicon-image-section">
+                {timelineMenuBubbleIcon ? (
+                  <div className="favicon-preview">
+                    <img src={timelineMenuBubbleIcon} alt="Menü-Zeitleisten-Icon" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'contain' }} />
+                    <div className="favicon-actions">
+                      <label htmlFor="timelineMenuBubbleIconFile" className="favicon-change-btn">
+                        {uploadingTimelineMenuBubbleIcon ? 'Hochladen...' : '🔄 Ändern'}
+                      </label>
+                      <button
+                        className="favicon-remove-btn"
+                        onClick={handleRemoveTimelineMenuBubbleIcon}
+                        disabled={uploadingTimelineMenuBubbleIcon}
+                      >
+                        ✕ Entfernen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="favicon-upload">
+                    <label htmlFor="timelineMenuBubbleIconFile" className="image-upload-label">
+                      {uploadingTimelineMenuBubbleIcon ? 'Hochladen...' : '📷 Icon hochladen'}
+                    </label>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="timelineMenuBubbleIconFile"
+                  accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                  onChange={handleTimelineMenuBubbleIconUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingTimelineMenuBubbleIcon}
+                />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Standardbild für Rezepte in der Zeitleiste</h3>
+              <p className="section-description">
+                Dieses Bild wird für alle Rezeptkarten in der Zeitleiste als Titelbild verwendet,
+                unabhängig vom Bild in der Rezeptübersicht.
+                Unterstützte Formate: JPEG, PNG, WebP. Empfohlen: 16:9 oder quadratisches Format.
+              </p>
+              <div className="favicon-image-section">
+                {timelineRecipeDefaultImage ? (
+                  <div className="favicon-preview">
+                    <img src={timelineRecipeDefaultImage} alt="Standardbild Rezepte" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                    <div className="favicon-actions">
+                      <label htmlFor="timelineRecipeDefaultImageFile" className="favicon-change-btn">
+                        {uploadingTimelineRecipeDefaultImage ? 'Hochladen...' : '🔄 Ändern'}
+                      </label>
+                      <button
+                        className="favicon-remove-btn"
+                        onClick={handleRemoveTimelineRecipeDefaultImage}
+                        disabled={uploadingTimelineRecipeDefaultImage}
+                      >
+                        ✕ Entfernen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="favicon-upload">
+                    <label htmlFor="timelineRecipeDefaultImageFile" className="image-upload-label">
+                      {uploadingTimelineRecipeDefaultImage ? 'Hochladen...' : '📷 Standardbild hochladen'}
+                    </label>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="timelineRecipeDefaultImageFile"
+                  accept="image/*"
+                  onChange={handleTimelineRecipeDefaultImageUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingTimelineRecipeDefaultImage}
+                />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Standardbild für Menüs in der Zeitleiste</h3>
+              <p className="section-description">
+                Dieses Bild wird ausschließlich für Menükarten in der Zeitleiste verwendet.
+                Es wird nicht in der normalen Menüübersicht angezeigt.
+                Unterstützte Formate: JPEG, PNG, WebP. Empfohlen: 16:9 oder quadratisches Format.
+              </p>
+              <div className="favicon-image-section">
+                {timelineMenuDefaultImage ? (
+                  <div className="favicon-preview">
+                    <img src={timelineMenuDefaultImage} alt="Standardbild Menüs" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                    <div className="favicon-actions">
+                      <label htmlFor="timelineMenuDefaultImageFile" className="favicon-change-btn">
+                        {uploadingTimelineMenuDefaultImage ? 'Hochladen...' : '🔄 Ändern'}
+                      </label>
+                      <button
+                        className="favicon-remove-btn"
+                        onClick={handleRemoveTimelineMenuDefaultImage}
+                        disabled={uploadingTimelineMenuDefaultImage}
+                      >
+                        ✕ Entfernen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="favicon-upload">
+                    <label htmlFor="timelineMenuDefaultImageFile" className="image-upload-label">
+                      {uploadingTimelineMenuDefaultImage ? 'Hochladen...' : '📷 Standardbild hochladen'}
+                    </label>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="timelineMenuDefaultImageFile"
+                  accept="image/*"
+                  onChange={handleTimelineMenuDefaultImageUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingTimelineMenuDefaultImage}
                 />
               </div>
             </div>

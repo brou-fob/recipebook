@@ -513,7 +513,12 @@ function App() {
       ) : currentView === 'kueche' ? (
         <Kueche
           recipes={recipes}
+          menus={menus}
           onSelectRecipe={handleSelectRecipe}
+          onSelectMenu={(menu) => {
+            setSelectedMenu(menu);
+            setCurrentView('menus');
+          }}
           allUsers={allUsers}
           currentUser={currentUser}
         />
