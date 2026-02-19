@@ -57,7 +57,8 @@
   color: #333;
 }
 
-.favorites-filter-button {
+.favorites-filter-button,
+.view-mode-button {
   background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
   color: white;
   border: none;
@@ -70,19 +71,22 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.favorites-filter-button:hover {
+.favorites-filter-button:hover,
+.view-mode-button:hover {
   background: linear-gradient(135deg, #1a1a1a 0%, #402C1C 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.favorites-filter-button.active {
+.favorites-filter-button.active,
+.view-mode-button.active {
   background: linear-gradient(135deg, #DF7A00 0%, #c46900 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.favorites-filter-button.active:hover {
+.favorites-filter-button.active:hover,
+.view-mode-button.active:hover {
   background: linear-gradient(135deg, #c46900 0%, #DF7A00 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
