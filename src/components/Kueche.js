@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './Kueche.css';
 import RecipeTimeline from './RecipeTimeline';
-import { getTimelineBubbleIcon, getTimelineMenuBubbleIcon, getTimelineRecipeDefaultImage, getTimelineMenuDefaultImage } from '../utils/customLists';
+import { getTimelineBubbleIcon, getTimelineMenuBubbleIcon, getTimelineMenuDefaultImage } from '../utils/customLists';
+import { getCategoryImages } from '../utils/categoryImages';
 
 function Kueche({ recipes, menus = [], onSelectRecipe, onSelectMenu, allUsers, currentUser }) {
   const [timelineBubbleIcon, setTimelineBubbleIcon] = useState(null);
   const [timelineMenuBubbleIcon, setTimelineMenuBubbleIcon] = useState(null);
-  const [timelineRecipeDefaultImage, setTimelineRecipeDefaultImage] = useState(null);
+  const [categoryImages, setCategoryImages] = useState([]);
   const [timelineMenuDefaultImage, setTimelineMenuDefaultImage] = useState(null);
 
   useEffect(() => {
     Promise.all([
       getTimelineBubbleIcon(),
       getTimelineMenuBubbleIcon(),
-      getTimelineRecipeDefaultImage(),
+      getCategoryImages(),
       getTimelineMenuDefaultImage(),
-    ]).then(([icon, menuIcon, recipeImg, menuImg]) => {
+    ]).then(([icon, menuIcon, catImages, menuImg]) => {
       setTimelineBubbleIcon(icon);
       setTimelineMenuBubbleIcon(menuIcon);
-      setTimelineRecipeDefaultImage(recipeImg);
+      setCategoryImages(catImages);
       setTimelineMenuDefaultImage(menuImg);
     }).catch(() => {});
   }, []);
@@ -56,7 +57,7 @@ function Kueche({ recipes, menus = [], onSelectRecipe, onSelectMenu, allUsers, c
         onSelectRecipe={onSelectRecipe}
         allUsers={allUsers}
         timelineBubbleIcon={timelineBubbleIcon}
-        defaultImage={timelineRecipeDefaultImage}
+        categoryImages={categoryImages}
       />
       {menuTimelineItems.length > 0 && (
         <>

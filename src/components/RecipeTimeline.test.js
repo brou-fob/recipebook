@@ -153,11 +153,16 @@ describe('RecipeTimeline', () => {
   });
 
   test('displays image when provided', () => {
+    const categoryImgs = [
+      { id: 'c1', image: 'https://example.com/image1.jpg', categories: ['Main Course'] }
+    ];
+    const recipeWithCategory = { ...mockRecipes[0], speisekategorie: ['Main Course'] };
     render(
       <RecipeTimeline 
-        recipes={[mockRecipes[0]]} 
+        recipes={[recipeWithCategory]} 
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
+        categoryImages={categoryImgs}
       />
     );
     
@@ -166,16 +171,16 @@ describe('RecipeTimeline', () => {
     expect(image).toHaveAttribute('src', 'https://example.com/image1.jpg');
   });
 
-  test('renders without image when not provided', () => {
+  test('renders without image when no category image matches', () => {
     render(
       <RecipeTimeline 
-        recipes={[mockRecipes[1]]} 
+        recipes={[mockRecipes[0]]} 
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
       />
     );
     
-    expect(screen.queryByAltText('Recipe 2')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Recipe 1')).not.toBeInTheDocument();
   });
 
   test('groups multiple recipes on the same day as a stack', () => {
@@ -284,33 +289,62 @@ describe('RecipeTimeline', () => {
     expect(iconImg).toHaveAttribute('src', iconSrc);
   });
 
-  test('uses defaultImage instead of recipe image when provided', () => {
-    const defaultImg = 'data:image/png;base64,defaultimage';
+  test('uses categoryImages to show category image for recipe', () => {
+    const categoryImgs = [
+      { id: 'c1', image: 'data:image/png;base64,categoryimage', categories: ['Dessert'] }
+    ];
+    const recipeWithCategory = { ...mockRecipes[0], speisekategorie: ['Dessert'] };
     render(
       <RecipeTimeline
-        recipes={[mockRecipes[0]]}
+        recipes={[recipeWithCategory]}
         onSelectRecipe={() => {}}
         allUsers={[]}
-        defaultImage={defaultImg}
+        categoryImages={categoryImgs}
       />
     );
 
     const img = screen.getByAltText('Recipe 1');
-    expect(img).toHaveAttribute('src', defaultImg);
+    expect(img).toHaveAttribute('src', 'data:image/png;base64,categoryimage');
   });
 
-  test('shows defaultImage even when recipe has no image', () => {
-    const defaultImg = 'data:image/png;base64,defaultimage';
+  test('shows no image for recipe when category does not match', () => {
+    const categoryImgs = [
+      { id: 'c1', image: 'data:image/png;base64,categoryimage', categories: ['Dessert'] }
+    ];
+    const recipeWithOtherCategory = { ...mockRecipes[0], speisekategorie: ['Soup'] };
     render(
       <RecipeTimeline
-        recipes={[mockRecipes[1]]}
+        recipes={[recipeWithOtherCategory]}
         onSelectRecipe={() => {}}
         allUsers={[]}
-        defaultImage={defaultImg}
+        categoryImages={categoryImgs}
       />
     );
 
-    const img = screen.getByAltText('Recipe 2');
+    expect(screen.queryByAltText('Recipe 1')).not.toBeInTheDocument();
+  });
+
+  test('uses defaultImage for menu items', () => {
+    const defaultImg = 'data:image/png;base64,defaultimage';
+    const menuItem = {
+      id: 'm1',
+      title: 'Test Menu',
+      createdAt: { toDate: () => new Date('2024-01-15') },
+      ingredients: ['r1', 'r2'],
+      steps: [],
+      authorId: 'user-1',
+    };
+    render(
+      <RecipeTimeline
+        recipes={[menuItem]}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+        defaultImage={defaultImg}
+        itemType="menu"
+      />
+    );
+
+    const img = screen.getByAltText('Test Menu');
     expect(img).toHaveAttribute('src', defaultImg);
   });
 

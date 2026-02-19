@@ -13,7 +13,7 @@ function getDateKey(timestamp) {
   }
 }
 
-function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubbleIcon = null, defaultImage = null, itemType = 'recipe' }) {
+function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubbleIcon = null, defaultImage = null, categoryImages = [], itemType = 'recipe' }) {
   const [expandedDates, setExpandedDates] = useState({});
 
   // Sort recipes by createdAt in reverse chronological order (newest first)
@@ -70,8 +70,23 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     setExpandedDates(prev => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
+  const getDisplayImage = (recipe) => {
+    if (itemType === 'menu') return defaultImage;
+    if (!categoryImages || categoryImages.length === 0) return null;
+    const categories = Array.isArray(recipe.speisekategorie)
+      ? recipe.speisekategorie
+      : recipe.speisekategorie
+        ? [recipe.speisekategorie]
+        : [];
+    for (const cat of categories) {
+      const match = categoryImages.find(img => img.categories.includes(cat));
+      if (match) return match.image;
+    }
+    return null;
+  };
+
   const renderCard = (recipe) => {
-    const displayImage = defaultImage || recipe.image;
+    const displayImage = getDisplayImage(recipe);
     return (
     <div
       key={recipe.id}
@@ -148,9 +163,9 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                   {dayRecipes.length > 2 && <div className="timeline-stack-bg timeline-stack-bg-2" />}
                   {dayRecipes.length > 1 && <div className="timeline-stack-bg timeline-stack-bg-1" />}
                   <div className="timeline-card timeline-stack-front">
-                    {(defaultImage || primaryRecipe.image) && (
+                    {getDisplayImage(primaryRecipe) && (
                       <div className="timeline-image">
-                        <img src={defaultImage || primaryRecipe.image} alt={primaryRecipe.title} />
+                        <img src={getDisplayImage(primaryRecipe)} alt={primaryRecipe.title} />
                       </div>
                     )}
                     <div className="timeline-info">
