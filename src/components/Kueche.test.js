@@ -1,9 +1,12 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import Kueche from './Kueche';
 
 jest.mock('../utils/customLists', () => ({
   getTimelineBubbleIcon: () => Promise.resolve(null),
+  getTimelineMenuBubbleIcon: () => Promise.resolve(null),
+  getTimelineRecipeDefaultImage: () => Promise.resolve(null),
+  getTimelineMenuDefaultImage: () => Promise.resolve(null),
 }));
 
 describe('Kueche', () => {
@@ -22,6 +25,23 @@ describe('Kueche', () => {
       createdAt: { toDate: () => new Date('2024-01-20') },
       ingredients: ['c'],
       steps: ['d'],
+      authorId: 'user-2',
+    },
+  ];
+
+  const mockMenus = [
+    {
+      id: 'm1',
+      name: 'My Menu',
+      createdAt: { toDate: () => new Date('2024-01-16') },
+      recipeIds: ['1', '2'],
+      authorId: 'user-1',
+    },
+    {
+      id: 'm2',
+      name: 'Other Menu',
+      createdAt: { toDate: () => new Date('2024-01-18') },
+      recipeIds: ['1'],
       authorId: 'user-2',
     },
   ];
@@ -56,5 +76,92 @@ describe('Kueche', () => {
 
     expect(screen.getByText('My Recipe')).toBeInTheDocument();
     expect(screen.getByText('Other Recipe')).toBeInTheDocument();
+  });
+
+  test('shows only menus authored by the current user', () => {
+    render(
+      <Kueche
+        recipes={[]}
+        menus={mockMenus}
+        onSelectRecipe={() => {}}
+        onSelectMenu={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1' }}
+      />
+    );
+
+    expect(screen.getByText('My Menu')).toBeInTheDocument();
+    expect(screen.queryByText('Other Menu')).not.toBeInTheDocument();
+  });
+
+  test('shows menus section heading when menus exist for current user', () => {
+    render(
+      <Kueche
+        recipes={[]}
+        menus={mockMenus}
+        onSelectRecipe={() => {}}
+        onSelectMenu={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1' }}
+      />
+    );
+
+    expect(screen.getByText('Menüs')).toBeInTheDocument();
+  });
+
+  test('does not show menus section when no menus match current user', () => {
+    render(
+      <Kueche
+        recipes={mockRecipes}
+        menus={mockMenus}
+        onSelectRecipe={() => {}}
+        onSelectMenu={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-3' }}
+      />
+    );
+
+    expect(screen.queryByText('Menüs')).not.toBeInTheDocument();
+  });
+
+  test('calls onSelectMenu when a menu card is clicked', () => {
+    const handleSelectMenu = jest.fn();
+
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[mockMenus[0]]}
+        onSelectRecipe={() => {}}
+        onSelectMenu={handleSelectMenu}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1' }}
+      />
+    );
+
+    fireEvent.click(screen.getByText('My Menu').closest('.timeline-card'));
+    expect(handleSelectMenu).toHaveBeenCalledWith(mockMenus[0]);
+  });
+
+  test('menus use createdBy field as fallback for authorId', () => {
+    const menuWithCreatedBy = {
+      id: 'm3',
+      name: 'Created By Menu',
+      createdAt: { toDate: () => new Date('2024-01-17') },
+      recipeIds: [],
+      createdBy: 'user-1',
+    };
+
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[menuWithCreatedBy]}
+        onSelectRecipe={() => {}}
+        onSelectMenu={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1' }}
+      />
+    );
+
+    expect(screen.getByText('Created By Menu')).toBeInTheDocument();
   });
 });

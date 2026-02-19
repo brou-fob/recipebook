@@ -13,7 +13,7 @@ function getDateKey(timestamp) {
   }
 }
 
-function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubbleIcon = null }) {
+function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubbleIcon = null, defaultImage = null, itemType = 'recipe' }) {
   const [expandedDates, setExpandedDates] = useState({});
 
   // Sort recipes by createdAt in reverse chronological order (newest first)
@@ -70,29 +70,38 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     setExpandedDates(prev => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
-  const renderCard = (recipe) => (
+  const renderCard = (recipe) => {
+    const displayImage = defaultImage || recipe.image;
+    return (
     <div
       key={recipe.id}
       className="timeline-card"
       onClick={() => onSelectRecipe(recipe)}
     >
-      {recipe.image && (
+      {displayImage && (
         <div className="timeline-image">
-          <img src={recipe.image} alt={recipe.title} />
+          <img src={displayImage} alt={recipe.title} />
         </div>
       )}
       <div className="timeline-info">
         <h3 className="timeline-title">{recipe.title}</h3>
         <div className="timeline-meta">
-          <span>{recipe.ingredients?.length || 0} Zutaten</span>
-          <span>{recipe.steps?.length || 0} Schritte</span>
+          {itemType === 'menu' ? (
+            <span>{recipe.ingredients?.length || 0} Rezepte</span>
+          ) : (
+            <>
+              <span>{recipe.ingredients?.length || 0} Zutaten</span>
+              <span>{recipe.steps?.length || 0} Schritte</span>
+            </>
+          )}
         </div>
         {getAuthorName(recipe.authorId) && (
           <div className="timeline-author">{getAuthorName(recipe.authorId)}</div>
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="recipe-timeline-container">
@@ -126,7 +135,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                     onClick={() => toggleExpand(dateKey)}
                     aria-label={isExpanded ? 'Stapel einklappen' : 'Stapel ausklappen'}
                   >
-                    {isExpanded ? '▾' : '▸'} {dayRecipes.length} Rezepte
+                    {isExpanded ? '▾' : '▸'} {dayRecipes.length} {itemType === 'menu' ? 'Menüs' : 'Rezepte'}
                   </button>
                 )}
               </div>
@@ -139,16 +148,22 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                   {dayRecipes.length > 2 && <div className="timeline-stack-bg timeline-stack-bg-2" />}
                   {dayRecipes.length > 1 && <div className="timeline-stack-bg timeline-stack-bg-1" />}
                   <div className="timeline-card timeline-stack-front">
-                    {primaryRecipe.image && (
+                    {(defaultImage || primaryRecipe.image) && (
                       <div className="timeline-image">
-                        <img src={primaryRecipe.image} alt={primaryRecipe.title} />
+                        <img src={defaultImage || primaryRecipe.image} alt={primaryRecipe.title} />
                       </div>
                     )}
                     <div className="timeline-info">
                       <h3 className="timeline-title">{primaryRecipe.title}</h3>
                       <div className="timeline-meta">
-                        <span>{primaryRecipe.ingredients?.length || 0} Zutaten</span>
-                        <span>{primaryRecipe.steps?.length || 0} Schritte</span>
+                        {itemType === 'menu' ? (
+                          <span>{primaryRecipe.ingredients?.length || 0} Rezepte</span>
+                        ) : (
+                          <>
+                            <span>{primaryRecipe.ingredients?.length || 0} Zutaten</span>
+                            <span>{primaryRecipe.steps?.length || 0} Schritte</span>
+                          </>
+                        )}
                       </div>
                       {getAuthorName(primaryRecipe.authorId) && (
                         <div className="timeline-author">{getAuthorName(primaryRecipe.authorId)}</div>
@@ -167,7 +182,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
       })}
       {sortedRecipes.length === 0 && (
         <div className="timeline-empty">
-          <p>Keine Rezepte vorhanden</p>
+          <p>{itemType === 'menu' ? 'Keine Menüs vorhanden' : 'Keine Rezepte vorhanden'}</p>
         </div>
       )}
     </div>

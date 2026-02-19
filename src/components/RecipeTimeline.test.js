@@ -283,4 +283,89 @@ describe('RecipeTimeline', () => {
     expect(iconImg).toBeInTheDocument();
     expect(iconImg).toHaveAttribute('src', iconSrc);
   });
+
+  test('uses defaultImage instead of recipe image when provided', () => {
+    const defaultImg = 'data:image/png;base64,defaultimage';
+    render(
+      <RecipeTimeline
+        recipes={[mockRecipes[0]]}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+        defaultImage={defaultImg}
+      />
+    );
+
+    const img = screen.getByAltText('Recipe 1');
+    expect(img).toHaveAttribute('src', defaultImg);
+  });
+
+  test('shows defaultImage even when recipe has no image', () => {
+    const defaultImg = 'data:image/png;base64,defaultimage';
+    render(
+      <RecipeTimeline
+        recipes={[mockRecipes[1]]}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+        defaultImage={defaultImg}
+      />
+    );
+
+    const img = screen.getByAltText('Recipe 2');
+    expect(img).toHaveAttribute('src', defaultImg);
+  });
+
+  test('shows "X Rezepte" meta label when itemType is menu', () => {
+    const menuItem = {
+      id: 'm1',
+      title: 'Test Menu',
+      createdAt: { toDate: () => new Date('2024-01-15') },
+      ingredients: ['r1', 'r2', 'r3'],
+      steps: [],
+      authorId: 'user-1',
+    };
+    render(
+      <RecipeTimeline
+        recipes={[menuItem]}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+        itemType="menu"
+      />
+    );
+
+    expect(screen.getByText('3 Rezepte')).toBeInTheDocument();
+    expect(screen.queryByText(/Zutaten/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Schritte/)).not.toBeInTheDocument();
+  });
+
+  test('shows "Keine Menüs vorhanden" empty state when itemType is menu', () => {
+    render(
+      <RecipeTimeline
+        recipes={[]}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+        itemType="menu"
+      />
+    );
+
+    expect(screen.getByText('Keine Menüs vorhanden')).toBeInTheDocument();
+  });
+
+  test('stack toggle shows "X Menüs" label when itemType is menu', () => {
+    const sameDay = new Date('2024-03-05');
+    const menuItems = [
+      { id: 'm1', title: 'Menu A', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'm2', title: 'Menu B', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+    ];
+
+    render(
+      <RecipeTimeline
+        recipes={menuItems}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+        itemType="menu"
+      />
+    );
+
+    expect(screen.getByText(/2 Menüs/)).toBeInTheDocument();
+  });
 });

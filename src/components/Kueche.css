@@ -14,3 +14,15 @@
   font-weight: 700;
   color: #1a1a1a;
 }
+
+.kueche-section-title {
+  margin: 2rem 0 0.5rem;
+  padding-left: 1rem;
+}
+
+.kueche-section-title h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}

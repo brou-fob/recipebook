@@ -69,6 +69,7 @@ export const DEFAULT_BUTTON_ICONS = {
 // Cache for settings to avoid repeated Firestore reads
 let settingsCache = null;
 
+
 /**
  * Get settings from Firestore or return defaults
  * @returns {Promise<Object>} Promise resolving to settings object
@@ -96,7 +97,10 @@ export async function getSettings() {
         faviconImage: settings.faviconImage || null,
         appLogoImage: settings.appLogoImage || null,
         buttonIcons: settings.buttonIcons || DEFAULT_BUTTON_ICONS,
-        timelineBubbleIcon: settings.timelineBubbleIcon || null
+        timelineBubbleIcon: settings.timelineBubbleIcon || null,
+        timelineMenuBubbleIcon: settings.timelineMenuBubbleIcon || null,
+        timelineRecipeDefaultImage: settings.timelineRecipeDefaultImage || null,
+        timelineMenuDefaultImage: settings.timelineMenuDefaultImage || null
       };
       
       return settingsCache;
@@ -113,7 +117,10 @@ export async function getSettings() {
       faviconImage: null,
       appLogoImage: null,
       buttonIcons: DEFAULT_BUTTON_ICONS,
-      timelineBubbleIcon: null
+      timelineBubbleIcon: null,
+      timelineMenuBubbleIcon: null,
+      timelineRecipeDefaultImage: null,
+      timelineMenuDefaultImage: null
     };
     
     // Create the settings document
@@ -135,7 +142,10 @@ export async function getSettings() {
       faviconImage: null,
       appLogoImage: null,
       buttonIcons: DEFAULT_BUTTON_ICONS,
-      timelineBubbleIcon: null
+      timelineBubbleIcon: null,
+      timelineMenuBubbleIcon: null,
+      timelineRecipeDefaultImage: null,
+      timelineMenuDefaultImage: null
     };
   }
 }
@@ -397,6 +407,93 @@ export async function saveTimelineBubbleIcon(imageBase64) {
     }
   } catch (error) {
     console.error('Error saving timeline bubble icon:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the timeline menu bubble icon from Firestore
+ * @returns {Promise<string|null>} Promise resolving to base64 encoded image or null
+ */
+export async function getTimelineMenuBubbleIcon() {
+  const settings = await getSettings();
+  return settings.timelineMenuBubbleIcon || null;
+}
+
+/**
+ * Save the timeline menu bubble icon to Firestore
+ * @param {string|null} imageBase64 - Base64 encoded image or null to remove
+ * @returns {Promise<void>}
+ */
+export async function saveTimelineMenuBubbleIcon(imageBase64) {
+  try {
+    const settingsRef = doc(db, 'settings', 'app');
+    await updateDoc(settingsRef, { timelineMenuBubbleIcon: imageBase64 || null });
+
+    // Update cache
+    if (settingsCache) {
+      settingsCache.timelineMenuBubbleIcon = imageBase64 || null;
+    }
+  } catch (error) {
+    console.error('Error saving timeline menu bubble icon:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the default recipe image for the timeline from Firestore
+ * @returns {Promise<string|null>} Promise resolving to base64 encoded image or null
+ */
+export async function getTimelineRecipeDefaultImage() {
+  const settings = await getSettings();
+  return settings.timelineRecipeDefaultImage || null;
+}
+
+/**
+ * Save the default recipe image for the timeline to Firestore
+ * @param {string|null} imageBase64 - Base64 encoded image or null to remove
+ * @returns {Promise<void>}
+ */
+export async function saveTimelineRecipeDefaultImage(imageBase64) {
+  try {
+    const settingsRef = doc(db, 'settings', 'app');
+    await updateDoc(settingsRef, { timelineRecipeDefaultImage: imageBase64 || null });
+
+    // Update cache
+    if (settingsCache) {
+      settingsCache.timelineRecipeDefaultImage = imageBase64 || null;
+    }
+  } catch (error) {
+    console.error('Error saving timeline recipe default image:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the default menu image for the timeline from Firestore
+ * @returns {Promise<string|null>} Promise resolving to base64 encoded image or null
+ */
+export async function getTimelineMenuDefaultImage() {
+  const settings = await getSettings();
+  return settings.timelineMenuDefaultImage || null;
+}
+
+/**
+ * Save the default menu image for the timeline to Firestore
+ * @param {string|null} imageBase64 - Base64 encoded image or null to remove
+ * @returns {Promise<void>}
+ */
+export async function saveTimelineMenuDefaultImage(imageBase64) {
+  try {
+    const settingsRef = doc(db, 'settings', 'app');
+    await updateDoc(settingsRef, { timelineMenuDefaultImage: imageBase64 || null });
+
+    // Update cache
+    if (settingsCache) {
+      settingsCache.timelineMenuDefaultImage = imageBase64 || null;
+    }
+  } catch (error) {
+    console.error('Error saving timeline menu default image:', error);
     throw error;
   }
 }
