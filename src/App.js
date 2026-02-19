@@ -25,6 +25,7 @@ import {
 } from './utils/userFavorites';
 import { toggleMenuFavorite } from './utils/menuFavorites';
 import { applyFaviconSettings } from './utils/faviconUtils';
+import { isDesktopDevice } from './utils/deviceUtils';
 import {
   subscribeToRecipes,
   addRecipe as addRecipeToFirestore,
@@ -420,6 +421,80 @@ function App() {
   const handleSearchChange = (term) => {
     setSearchTerm(term);
   };
+
+  // ESC key handler for desktop devices
+  useEffect(() => {
+    // Only enable ESC key navigation on desktop devices
+    if (!isDesktopDevice()) {
+      return;
+    }
+
+    const handleEscapeKey = (event) => {
+      // Check if ESC key was pressed
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      // Don't trigger if user is typing in an input/textarea
+      const activeElement = document.activeElement;
+      if (activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.isContentEditable
+      )) {
+        return;
+      }
+
+      // Priority order for back navigation:
+      // 1. Settings view
+      if (isSettingsOpen) {
+        event.preventDefault();
+        handleCloseSettings();
+        return;
+      }
+
+      // 2. Recipe detail view
+      if (selectedRecipe) {
+        event.preventDefault();
+        handleBackFromRecipeDetail();
+        return;
+      }
+
+      // 3. Recipe form
+      if (isFormOpen) {
+        event.preventDefault();
+        handleCancelForm();
+        return;
+      }
+
+      // 4. Menu form
+      if (isMenuFormOpen) {
+        event.preventDefault();
+        handleCancelMenuForm();
+        return;
+      }
+
+      // 5. Menu detail view
+      if (selectedMenu) {
+        event.preventDefault();
+        handleBackToMenuList();
+        return;
+      }
+
+      // If we're at the main list views (RecipeList or MenuList), don't do anything
+      // as there's nowhere to go back to
+    };
+
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => window.removeEventListener('keydown', handleEscapeKey);
+  }, [
+    isSettingsOpen,
+    selectedRecipe,
+    isFormOpen,
+    isMenuFormOpen,
+    selectedMenu
+  ]);
+
 
   // Show loading state while checking auth
   if (authLoading) {
