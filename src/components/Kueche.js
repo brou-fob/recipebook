@@ -36,7 +36,7 @@ function Kueche({ recipes, menus = [], onSelectRecipe, onSelectMenu, allUsers, c
   const menuTimelineItems = filteredMenus.map(menu => ({
     id: menu.id,
     title: menu.name,
-    createdAt: menu.createdAt,
+    createdAt: menu.menuDate ? new Date(menu.menuDate) : menu.createdAt,
     ingredients: menu.recipeIds || [],
     steps: [],
     authorId: menu.authorId || menu.createdBy,

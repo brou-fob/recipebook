@@ -147,6 +147,33 @@ describe('Kueche', () => {
     expect(handleSelectMenu).toHaveBeenCalledWith(mockMenus[0]);
   });
 
+  test('menu uses menuDate for timeline ordering when set', () => {
+    // A menu with menuDate different from createdAt; the timeline should use menuDate
+    const menuWithMenuDate = {
+      id: 'm4',
+      name: 'Date Override Menu',
+      createdAt: { toDate: () => new Date('2024-01-01') },
+      menuDate: '2024-06-15',
+      recipeIds: [],
+      authorId: 'user-1',
+    };
+
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[menuWithMenuDate]}
+        onSelectRecipe={() => {}}
+        onSelectMenu={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1' }}
+      />
+    );
+
+    // The timeline should show the date from menuDate (15. Juni 2024), not createdAt (01. Januar 2024)
+    expect(screen.getByText('15. Juni 2024')).toBeInTheDocument();
+    expect(screen.queryByText('01. Januar 2024')).not.toBeInTheDocument();
+  });
+
   test('menus use createdBy field as fallback for authorId', () => {
     const menuWithCreatedBy = {
       id: 'm3',
