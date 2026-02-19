@@ -125,6 +125,15 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
         <h2>{getHeading()}</h2>
         <div className="recipe-list-actions">
           <div className="filter-group">
+            {onOpenFilterPage && (
+              <button 
+                className="filter-button"
+                onClick={onOpenFilterPage}
+                title="Weitere Filter"
+              >
+                {buttonIcons.filterButton}
+              </button>
+            )}
             {onCategoryFilterChange && (
               <select
                 className="category-filter-select"
@@ -145,15 +154,6 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
             >
               ★ Favoriten
             </button>
-            {onOpenFilterPage && (
-              <button 
-                className="filter-button"
-                onClick={onOpenFilterPage}
-                title="Weitere Filter"
-              >
-                {buttonIcons.filterButton}
-              </button>
-            )}
           </div>
           {userCanEdit && (
             <button className="add-button" onClick={onAddRecipe}>

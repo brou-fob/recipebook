@@ -16,7 +16,7 @@ jest.mock('../utils/customLists', () => ({
     mealCategories: ['Appetizer', 'Main Course', 'Dessert']
   }),
   getButtonIcons: () => Promise.resolve({
-    filterButton: DEFAULT_BUTTON_ICONS.filterButton
+    filterButton: '⚙'
   }),
   DEFAULT_BUTTON_ICONS: {
     filterButton: '⚙'
