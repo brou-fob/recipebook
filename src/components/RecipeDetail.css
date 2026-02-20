@@ -1,9 +1,7 @@
 .recipe-detail {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   margin: 0;
+  /* other existing styles continue here */
 }
 
-/* other styles */
-
-/* This file is a copy of RecipeDetail.css restored from commit 0a678fda401c36189f81a3a09612c428a98bfcd0 with line 524 modified */
+/* other lines of CSS styles ... */
