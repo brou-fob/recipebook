@@ -383,6 +383,130 @@ describe('RecipeTimeline', () => {
     expect(screen.getByText('Keine Menüs vorhanden')).toBeInTheDocument();
   });
 
+  test('collapses expanded stack when clicking on timeline-item background', () => {
+    const sameDay = new Date('2024-03-05');
+    const recipesOnSameDay = [
+      { id: 'a', title: 'Morning Cake', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'b', title: 'Evening Stew', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+    ];
+
+    render(
+      <RecipeTimeline
+        recipes={recipesOnSameDay}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+      />
+    );
+
+    // Expand the stack
+    fireEvent.click(screen.getByRole('button', { name: /Stapel ausklappen/ }));
+    expect(screen.getByText('Morning Cake')).toBeInTheDocument();
+    expect(document.querySelector('.timeline-stack')).not.toBeInTheDocument();
+
+    // Click on the timeline-item background to collapse
+    const timelineItem = document.querySelector('.timeline-item');
+    fireEvent.click(timelineItem, { target: timelineItem });
+    expect(document.querySelector('.timeline-stack')).toBeInTheDocument();
+  });
+
+  test('collapses expanded stack when clicking on timeline-content background', () => {
+    const sameDay = new Date('2024-03-05');
+    const recipesOnSameDay = [
+      { id: 'a', title: 'Morning Cake', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'b', title: 'Evening Stew', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+    ];
+
+    render(
+      <RecipeTimeline
+        recipes={recipesOnSameDay}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+      />
+    );
+
+    // Expand the stack
+    fireEvent.click(screen.getByRole('button', { name: /Stapel ausklappen/ }));
+    expect(screen.getByText('Morning Cake')).toBeInTheDocument();
+
+    // Click on the timeline-content background to collapse
+    const timelineContent = document.querySelector('.timeline-content');
+    fireEvent.click(timelineContent, { target: timelineContent });
+    expect(document.querySelector('.timeline-stack')).toBeInTheDocument();
+  });
+
+  test('does not collapse stack when clicking a card in expanded stack', () => {
+    const sameDay = new Date('2024-03-05');
+    const recipe1 = { id: 'a', title: 'Morning Cake', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] };
+    const recipe2 = { id: 'b', title: 'Evening Stew', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] };
+    const handleSelect = jest.fn();
+
+    render(
+      <RecipeTimeline
+        recipes={[recipe1, recipe2]}
+        onSelectRecipe={handleSelect}
+        allUsers={[]}
+      />
+    );
+
+    // Expand the stack
+    fireEvent.click(screen.getByRole('button', { name: /Stapel ausklappen/ }));
+    expect(document.querySelector('.timeline-stack')).not.toBeInTheDocument();
+
+    // Click a card - should call onSelectRecipe, not collapse
+    fireEvent.click(screen.getByText('Morning Cake').closest('.timeline-card'));
+    expect(handleSelect).toHaveBeenCalledWith(recipe1);
+    // Stack should still be expanded (no stack container visible)
+    expect(document.querySelector('.timeline-stack')).not.toBeInTheDocument();
+  });
+
+  test('adds expanded class to timeline-item when stack is expanded', () => {
+    const sameDay = new Date('2024-03-05');
+    const recipesOnSameDay = [
+      { id: 'a', title: 'Morning Cake', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'b', title: 'Evening Stew', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+    ];
+
+    render(
+      <RecipeTimeline
+        recipes={recipesOnSameDay}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+      />
+    );
+
+    const timelineItem = document.querySelector('.timeline-item');
+    expect(timelineItem).not.toHaveClass('expanded');
+
+    fireEvent.click(screen.getByRole('button', { name: /Stapel ausklappen/ }));
+    expect(document.querySelector('.timeline-item')).toHaveClass('expanded');
+  });
+
+  test('does not collapse non-expanded stack when clicking timeline-item background', () => {
+    const sameDay = new Date('2024-03-05');
+    const recipesOnSameDay = [
+      { id: 'a', title: 'Morning Cake', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'b', title: 'Evening Stew', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+    ];
+
+    render(
+      <RecipeTimeline
+        recipes={recipesOnSameDay}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+      />
+    );
+
+    // Stack is not expanded initially
+    expect(document.querySelector('.timeline-stack')).toBeInTheDocument();
+
+    // Click on timeline-item background (not expanded, should do nothing)
+    const timelineItem = document.querySelector('.timeline-item');
+    fireEvent.click(timelineItem, { target: timelineItem });
+
+    // Stack should remain collapsed (visible)
+    expect(document.querySelector('.timeline-stack')).toBeInTheDocument();
+  });
+
   test('stack toggle shows "X Menüs" label when itemType is menu', () => {
     const sameDay = new Date('2024-03-05');
     const menuItems = [
