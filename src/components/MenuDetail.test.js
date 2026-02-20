@@ -33,6 +33,15 @@ const mockMenu = {
   recipeIds: [],
 };
 
+const mockMenuWithMeta = {
+  id: 'menu-2',
+  name: 'Testmenü mit Metadaten',
+  description: 'Eine Beschreibung',
+  menuDate: '2024-01-15',
+  authorId: 'user-1',
+  recipeIds: [],
+};
+
 const currentUser = { id: 'user-1' };
 
 describe('MenuDetail - Action Buttons', () => {
@@ -75,5 +84,34 @@ describe('MenuDetail - Action Buttons', () => {
     expect(actionButtons).toBeInTheDocument();
     const buttons = actionButtons.querySelectorAll('button');
     expect(buttons.length).toBe(3);
+  });
+});
+
+describe('MenuDetail - Metadata before Description', () => {
+  test('metadata (author/date) appears before description in the DOM', () => {
+    const { container } = render(
+      <MenuDetail
+        menu={mockMenuWithMeta}
+        recipes={[]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onSelectRecipe={() => {}}
+        onToggleMenuFavorite={() => Promise.resolve()}
+        currentUser={currentUser}
+        allUsers={[{ id: 'user-1', vorname: 'Max', nachname: 'Mustermann' }]}
+      />
+    );
+
+    const description = container.querySelector('.menu-description');
+    const authorDate = container.querySelector('.menu-author-date');
+
+    expect(description).toBeInTheDocument();
+    expect(authorDate).toBeInTheDocument();
+
+    // Verify metadata appears before description in the DOM
+    expect(
+      authorDate.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
   });
 });

@@ -145,15 +145,15 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
           )}
         </div>
         
-        {menu.description && (
-          <p className="menu-description">{menu.description}</p>
-        )}
-
         {(formattedMenuDate || authorName) && (
           <div className="menu-author-date">
             {authorName && <span className="menu-author"><span className="menu-author-label">Autor:</span> {authorName}</span>}
             {formattedMenuDate && <span className="menu-date"><span className="menu-date-label">Datum:</span> {formattedMenuDate}</span>}
           </div>
+        )}
+
+        {menu.description && (
+          <p className="menu-description">{menu.description}</p>
         )}
 
         {recipeSections.map((section, index) => (
