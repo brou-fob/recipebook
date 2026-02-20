@@ -65,6 +65,9 @@ jobs:
           path: ./build
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -72,6 +75,29 @@ jobs:
     needs: build
     
     steps:
+      - name: Setup Pages
+        id: setup-pages
+        uses: actions/configure-pages@v4
+        continue-on-error: true
+      
+      - name: Check Pages Setup
+        if: steps.setup-pages.outcome == 'failure'
+        run: |
+          echo "::warning::GitHub Pages setup failed. Make sure GitHub Pages is enabled in repository settings."
+          echo "::warning::Go to Settings → Pages → Source: GitHub Actions"
+          exit 1
+      
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      
+      - name: Deployment Summary
+        if: success() || failure()
+        run: |
+          if [ "${{ steps.deployment.outcome }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+            echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"
+          else
+            echo "❌ Deployment failed"
+            echo "Check repository settings: Settings → Pages → Source should be 'GitHub Actions'"
+          fi
