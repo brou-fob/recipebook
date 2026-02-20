@@ -973,7 +973,7 @@ function Settings({ onBack, currentUser }) {
                 </div>
 
                 <div className="button-icon-item">
-                  <label htmlFor="closeButtonIcon">Schließen-Button (Rezeptdetailansicht):</label>
+                  <label htmlFor="closeButtonIcon">Schließen-Button (Rezept- und Menüdetailansicht):</label>
                   <div className="button-icon-input-group">
                     {!isBase64Image(buttonIcons.closeButton) ? (
                       <>
