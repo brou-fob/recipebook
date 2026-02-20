@@ -70,14 +70,6 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     setExpandedDates(prev => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
-  const handleItemBackgroundClick = (e, dateKey, isExpanded) => {
-    if (isExpanded &&
-        (e.target.classList.contains('timeline-content') ||
-         e.target.classList.contains('timeline-item'))) {
-      toggleExpand(dateKey);
-    }
-  };
-
   const getDisplayImage = (recipe) => {
     if ((recipe.itemType || itemType) === 'menu') return defaultImage;
     if (!categoryImages || categoryImages.length === 0) return null;
@@ -99,7 +91,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     <div
       key={recipe.id}
       className="timeline-card"
-      onClick={(e) => { e.stopPropagation(); onSelectRecipe(recipe); }}
+      onClick={() => onSelectRecipe(recipe)}
     >
       {displayImage && (
         <div className="timeline-image">
@@ -129,7 +121,6 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
             key={dateKey}
             className={`timeline-item${isExpanded ? ' expanded' : ''}`}
             style={{ animationDelay: `${groupIndex * 0.05}s` }}
-            onClick={(e) => handleItemBackgroundClick(e, dateKey, isExpanded)}
           >
             <div className="timeline-marker">
               {(() => {
@@ -149,7 +140,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                 {hasMultiple && (
                   <button
                     className="timeline-stack-toggle"
-                    onClick={(e) => { e.stopPropagation(); toggleExpand(dateKey); }}
+                    onClick={() => toggleExpand(dateKey)}
                     aria-label={isExpanded ? 'Stapel einklappen' : 'Stapel ausklappen'}
                   >
                     {isExpanded ? '▾' : '▸'} {dayRecipes.length} {itemType === 'menu' ? 'Menüs' : 'Rezepte'}
@@ -172,10 +163,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                   )}
                   <div
                     className="timeline-card timeline-stack-front"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectRecipe(primaryRecipe);
-                    }}
+                    onClick={() => onSelectRecipe(primaryRecipe)}
                   >
                     {getDisplayImage(primaryRecipe) && (
                       <div className="timeline-image">
@@ -196,8 +184,28 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                     {dayRecipes.length}
                   </div>
                 </div>
+              ) : hasMultiple ? (
+                // Expanded stack with gutter for collapse-by-click-beside
+                <div className="timeline-cards-row">
+                  <div className="timeline-cards">
+                    {dayRecipes.map((recipe) => renderCard(recipe))}
+                  </div>
+                  <div
+                    className="timeline-gutter"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Stapel einklappen"
+                    onClick={() => toggleExpand(dateKey)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleExpand(dateKey);
+                      }
+                    }}
+                  />
+                </div>
               ) : (
-                // Individual cards (single recipe or expanded stack)
+                // Single recipe
                 dayRecipes.map((recipe) => renderCard(recipe))
               )}
             </div>
