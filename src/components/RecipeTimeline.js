@@ -70,6 +70,14 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     setExpandedDates(prev => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
+  const handleItemBackgroundClick = (e, dateKey, isExpanded) => {
+    if (isExpanded &&
+        (e.target.classList.contains('timeline-content') ||
+         e.target.classList.contains('timeline-item'))) {
+      toggleExpand(dateKey);
+    }
+  };
+
   const getDisplayImage = (recipe) => {
     if ((recipe.itemType || itemType) === 'menu') return defaultImage;
     if (!categoryImages || categoryImages.length === 0) return null;
@@ -91,7 +99,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     <div
       key={recipe.id}
       className="timeline-card"
-      onClick={() => onSelectRecipe(recipe)}
+      onClick={(e) => { e.stopPropagation(); onSelectRecipe(recipe); }}
     >
       {displayImage && (
         <div className="timeline-image">
@@ -119,8 +127,9 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
         return (
           <div
             key={dateKey}
-            className="timeline-item"
+            className={`timeline-item${isExpanded ? ' expanded' : ''}`}
             style={{ animationDelay: `${groupIndex * 0.05}s` }}
+            onClick={(e) => handleItemBackgroundClick(e, dateKey, isExpanded)}
           >
             <div className="timeline-marker">
               {(() => {
@@ -140,7 +149,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                 {hasMultiple && (
                   <button
                     className="timeline-stack-toggle"
-                    onClick={() => toggleExpand(dateKey)}
+                    onClick={(e) => { e.stopPropagation(); toggleExpand(dateKey); }}
                     aria-label={isExpanded ? 'Stapel einklappen' : 'Stapel ausklappen'}
                   >
                     {isExpanded ? '▾' : '▸'} {dayRecipes.length} {itemType === 'menu' ? 'Menüs' : 'Rezepte'}

@@ -51,6 +51,11 @@
   overflow: hidden;
 }
 
+.timeline-item.expanded,
+.timeline-item.expanded .timeline-content {
+  cursor: pointer;
+}
+
 .timeline-content {
   position: relative;
 }
