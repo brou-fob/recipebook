@@ -4,10 +4,22 @@ import { getUserFavorites } from '../utils/userFavorites';
 import { getUserMenuFavorites } from '../utils/menuFavorites';
 import { groupRecipesBySections } from '../utils/menuSections';
 import { canEditMenu, canDeleteMenu } from '../utils/userManagement';
+import { isBase64Image } from '../utils/imageUtils';
 
 function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, onToggleMenuFavorite, currentUser, allUsers }) {
   const [favoriteMenuIds, setFavoriteMenuIds] = useState([]);
   const [favoriteRecipeIds, setFavoriteRecipeIds] = useState([]);
+  const [closeButtonIcon, setCloseButtonIcon] = useState('✕');
+
+  // Load close button icon from settings
+  useEffect(() => {
+    const loadButtonIcons = async () => {
+      const { getButtonIcons } = require('../utils/customLists');
+      const icons = await getButtonIcons();
+      setCloseButtonIcon(icons.closeButton || '✕');
+    };
+    loadButtonIcons();
+  }, []);
 
   // Load favorite IDs when user changes
   useEffect(() => {
@@ -97,9 +109,6 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
   return (
     <div className="menu-detail-container">
       <div className="menu-detail-header">
-        <button className="back-button" onClick={onBack}>
-          ← Zurück
-        </button>
         <div className="action-buttons">
           <button 
             className={`favorite-button ${isFavorite ? 'favorite-active' : ''}`}
@@ -119,6 +128,13 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
             </button>
           )}
         </div>
+        <button className="close-button" onClick={onBack} title="Schließen">
+          {isBase64Image(closeButtonIcon) ? (
+            <img src={closeButtonIcon} alt="Schließen" className="close-button-icon-img" />
+          ) : (
+            closeButtonIcon
+          )}
+        </button>
       </div>
 
       <div className="menu-detail-content">
@@ -137,8 +153,8 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
 
         {(formattedMenuDate || authorName) && (
           <div className="menu-author-date">
-            {formattedMenuDate && <span className="menu-date">📅 {formattedMenuDate}</span>}
-            {authorName && <span className="menu-author">👤 {authorName}</span>}
+            {formattedMenuDate && <span className="menu-date"><span className="menu-date-label">Datum:</span> {formattedMenuDate}</span>}
+            {authorName && <span className="menu-author"><span className="menu-author-label">Autor:</span> {authorName}</span>}
           </div>
         )}
 
