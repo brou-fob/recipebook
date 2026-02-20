@@ -571,4 +571,35 @@ describe('RecipeTimeline', () => {
 
     expect(screen.getByText(/2 Menüs/)).toBeInTheDocument();
   });
+
+  test('menus and recipes on the same day are grouped into separate stacks', () => {
+    const sameDay = new Date('2024-03-05');
+    const mixedItems = [
+      { id: 'r1', title: 'Recipe 1', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'r2', title: 'Recipe 2', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [] },
+      { id: 'm1', title: 'Menu 1', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [], itemType: 'menu' },
+      { id: 'm2', title: 'Menu 2', createdAt: { toDate: () => sameDay }, ingredients: [], steps: [], itemType: 'menu' },
+    ];
+
+    render(
+      <RecipeTimeline
+        recipes={mixedItems}
+        onSelectRecipe={() => {}}
+        allUsers={[]}
+      />
+    );
+
+    // Should produce two separate timeline-item groups (one for recipes, one for menus)
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    expect(timelineItems).toHaveLength(2);
+
+    // Each group should show its own stack badge with count 2
+    const badges = document.querySelectorAll('.timeline-stack-badge');
+    expect(badges).toHaveLength(2);
+    badges.forEach(badge => expect(badge).toHaveTextContent('2'));
+
+    // Toggle labels reflect the correct type per group
+    expect(screen.getByText(/2 Rezepte/)).toBeInTheDocument();
+    expect(screen.getByText(/2 Menüs/)).toBeInTheDocument();
+  });
 });
