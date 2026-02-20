@@ -211,6 +211,31 @@ describe('RecipeDetail - Portion Controller', () => {
     // Should now be 400g (200 * 2)
     expect(screen.getByText(/400.*g/)).toBeInTheDocument();
   });
+
+  test('serving control is placed inside section-header next to "Zutaten für" heading', () => {
+    const { container } = render(
+      <RecipeDetail
+        recipe={mockRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    // Find all section-header elements
+    const sectionHeaders = container.querySelectorAll('.section-header');
+    expect(sectionHeaders.length).toBeGreaterThan(0);
+
+    // At least one section-header should contain "Zutaten für" and a serving-control
+    const ingredientsHeader = Array.from(sectionHeaders).find(header => {
+      return header.querySelector('h2') &&
+        header.querySelector('h2').textContent === 'Zutaten für' &&
+        header.querySelector('.serving-control');
+    });
+
+    expect(ingredientsHeader).toBeTruthy();
+  });
 });
 
 describe('RecipeDetail - Rating Stars Color', () => {
