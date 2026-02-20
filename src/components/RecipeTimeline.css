@@ -251,7 +251,7 @@
   }
 
   .timeline-marker {
-    left: calc(56px / 2 - 3px / 2);
+    left: calc(56px / 2 - 15px / 2);
     transform: translateX(-50%);
     width: 56px;
     height: 56px;
@@ -289,7 +289,7 @@
   }
 
   .timeline-marker {
-    left: calc(48px / 2 - 2px / 2);
+    left: calc(48px / 2 - 16px / 2);
     transform: translateX(-50%);
     width: 48px;
     height: 48px;
