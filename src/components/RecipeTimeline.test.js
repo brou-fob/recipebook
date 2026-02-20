@@ -480,6 +480,7 @@ describe('RecipeTimeline', () => {
     expect(screen.getByText('Morning Cake')).toBeInTheDocument();
     expect(document.querySelector('.timeline-stack')).not.toBeInTheDocument();
 
+    // Click on the gutter to collapse
     // Click the gutter to collapse
     fireEvent.click(document.querySelector('.timeline-gutter'));
     expect(document.querySelector('.timeline-stack')).toBeInTheDocument();

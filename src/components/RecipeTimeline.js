@@ -205,6 +205,13 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                   />
                 </div>
               ) : (
+                // Individual cards (single recipe or expanded stack)
+                <>
+                  {dayRecipes.map((recipe) => renderCard(recipe))}
+                  {isExpanded && hasMultiple && (
+                    <div className="timeline-gutter" onClick={() => toggleExpand(dateKey)} />
+                  )}
+                </>
                 // Single recipe
                 dayRecipes.map((recipe) => renderCard(recipe))
               )}
