@@ -26,12 +26,13 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     return [...recipes].sort((a, b) => toMs(b.createdAt) - toMs(a.createdAt));
   }, [recipes]);
 
-  // Group recipes by calendar day (preserving reverse-chronological order)
+  // Group recipes by calendar day AND item type (preserving reverse-chronological order)
   const groupedByDate = useMemo(() => {
     const groups = [];
     const seen = new Map();
     for (const recipe of sortedRecipes) {
-      const key = getDateKey(recipe.createdAt);
+      const type = recipe.itemType || itemType;
+      const key = `${getDateKey(recipe.createdAt)}-${type}`;
       if (!seen.has(key)) {
         seen.set(key, []);
         groups.push({ dateKey: key, recipes: seen.get(key) });
@@ -39,7 +40,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
       seen.get(key).push(recipe);
     }
     return groups;
-  }, [sortedRecipes]);
+  }, [sortedRecipes, itemType]);
 
   // Helper function to format date
   const formatDate = (timestamp) => {
@@ -143,7 +144,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
                     onClick={() => toggleExpand(dateKey)}
                     aria-label={isExpanded ? 'Stapel einklappen' : 'Stapel ausklappen'}
                   >
-                    {isExpanded ? '▾' : '▸'} {dayRecipes.length} {itemType === 'menu' ? 'Menüs' : 'Rezepte'}
+                    {isExpanded ? '▾' : '▸'} {dayRecipes.length} {(primaryRecipe.itemType || itemType) === 'menu' ? 'Menüs' : 'Rezepte'}
                   </button>
                 )}
               </div>
