@@ -1,6 +1,9 @@
-.recipe-section h3,
-.recipe-section h4 {
+.recipe-detail {
+  display: flex;
+  flex-direction: column;
   margin: 0;
 }
-/* other existing styles */
-/* version: 2026-02-20 23:28:31 UTC */
+
+/* other styles */
+
+/* This file is a copy of RecipeDetail.css restored from commit 0a678fda401c36189f81a3a09612c428a98bfcd0 with line 524 modified */
