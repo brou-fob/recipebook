@@ -530,7 +530,7 @@
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   margin-bottom: 0rem;
   flex-wrap: wrap;
   gap: 0.5rem;
