@@ -64,7 +64,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
     if (!authorId) return null;
     const author = allUsers.find(u => u.id === authorId);
     if (!author) return null;
-    return `${author.vorname} ${author.nachname}`;
+    return author.vorname;
   };
 
   const toggleExpand = (dateKey) => {

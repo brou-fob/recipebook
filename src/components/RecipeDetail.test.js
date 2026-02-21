@@ -682,7 +682,7 @@ describe('RecipeDetail - Creation Date Display', () => {
     );
 
     // Check that both author and date are displayed
-    expect(screen.getByText(/Autor: Another Author/)).toBeInTheDocument();
+    expect(screen.getByText(/Autor: Another/)).toBeInTheDocument();
     expect(screen.getByText('Erstellt am: 20.2.2024')).toBeInTheDocument();
   });
 
@@ -708,7 +708,7 @@ describe('RecipeDetail - Creation Date Display', () => {
     );
 
     // Check that author is still displayed
-    expect(screen.getByText(/Autor: Test User/)).toBeInTheDocument();
+    expect(screen.getByText(/Autor: Test/)).toBeInTheDocument();
     
     // Creation date should not be in the document (no specific date text)
     expect(screen.queryByText(/\d{2}\.\d{2}\.\d{4}/)).not.toBeInTheDocument();

@@ -113,7 +113,7 @@ describe('RecipeTimeline', () => {
       />
     );
     
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('John')).toBeInTheDocument();
   });
 
   test('handles recipe click', () => {

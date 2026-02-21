@@ -43,7 +43,7 @@ function MenuDetail({ menu, recipes, onBack, onEdit, onDelete, onSelectRecipe, o
     if (!menu.authorId || !allUsers || allUsers.length === 0) return null;
     const author = allUsers.find(u => u.id === menu.authorId);
     if (!author) return null;
-    return `${author.vorname} ${author.nachname}`;
+    return author.vorname;
   }, [menu.authorId, allUsers]);
 
   const formattedMenuDate = useMemo(() => {
