@@ -202,11 +202,14 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                 )}
                 <div className="recipe-card-content">
                   <h3>{recipe.title}</h3>
-                  {recipe.kulinarik && recipe.kulinarik.length > 0 && (
+                  {recipe.kulinarik && (Array.isArray(recipe.kulinarik) ? recipe.kulinarik.length > 0 : recipe.kulinarik.trim().length > 0) && (
                     <div className="recipe-kulinarik">
-                      {recipe.kulinarik.map((k, i) => (
-                        <span key={i} className="kulinarik-tag">{k}</span>
-                      ))}
+                      {Array.isArray(recipe.kulinarik)
+                        ? recipe.kulinarik.map((k, i) => (
+                            <span key={i} className="kulinarik-tag">{k}</span>
+                          ))
+                        : <span className="kulinarik-tag">{recipe.kulinarik}</span>
+                      }
                     </div>
                   )}
                   <div className="recipe-footer">
