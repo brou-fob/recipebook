@@ -10,6 +10,7 @@ import {
   deleteUser,
   updateUserFotoscan,
   updateUserWebimport,
+  getUserAiOcrScanCount,
   ROLES,
   getRoleDisplayName
 } from '../utils/userManagement';
@@ -26,6 +27,7 @@ function UserManagement({ onBack, currentUser }) {
   const [selectedRole, setSelectedRole] = useState('');
   const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
   const [adminCount, setAdminCount] = useState(0);
+  const [aiOcrScanCounts, setAiOcrScanCounts] = useState({});
 
   useEffect(() => {
     loadUsers();
@@ -36,6 +38,12 @@ function UserManagement({ onBack, currentUser }) {
     setUsers(users);
     const count = await getAdminCount();
     setAdminCount(count);
+    // Load daily AI-OCR scan counts for all users
+    const counts = {};
+    await Promise.all(users.map(async (user) => {
+      counts[user.id] = await getUserAiOcrScanCount(user.id);
+    }));
+    setAiOcrScanCounts(counts);
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -218,6 +226,7 @@ function UserManagement({ onBack, currentUser }) {
                   <th>Berechtigung</th>
                   <th>Fotoscan</th>
                   <th>Webimport</th>
+                  <th title="KI-OCR Scans heute (reset 0 Uhr MEZ)">KI-OCR heute</th>
                   <th>Rezepte</th>
                   <th>Aktionen</th>
                 </tr>
@@ -252,6 +261,7 @@ function UserManagement({ onBack, currentUser }) {
                         {user.webimport ? '✓' : '✗'}
                       </button>
                     </td>
+                    <td>{aiOcrScanCounts[user.id] ?? 0}</td>
                     <td>{user.recipe_count ?? 0}</td>
                     <td>
                       <div className="action-buttons">
@@ -299,6 +309,11 @@ function UserManagement({ onBack, currentUser }) {
           </div>
           <div className="stat-item">
             <strong>Administratoren:</strong> {adminCount}
+          </div>
+          <div className="stat-item">
+            <button className="action-btn" onClick={loadUsers} title="KI-OCR Zähler aktualisieren">
+              ↻ KI-OCR Zähler aktualisieren
+            </button>
           </div>
         </div>
       </div>

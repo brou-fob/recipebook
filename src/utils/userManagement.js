@@ -849,6 +849,27 @@ export const updateUserFotoscan = async (userId, fotoscan) => {
 };
 
 /**
+ * Get the current daily AI-OCR scan count for a user
+ * Uses MEZ (Europe/Berlin) timezone to match server-side counter reset at 0 Uhr MEZ
+ * @param {string} userId - User ID
+ * @returns {Promise<number>} Number of AI-OCR scans today
+ */
+export const getUserAiOcrScanCount = async (userId) => {
+  try {
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }); // YYYY-MM-DD
+    const docRef = doc(db, 'aiScanLimits', `${userId}_${today}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data().count || 0;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error getting AI OCR scan count:', error);
+    return 0;
+  }
+};
+
+/**
  * Update user's webimport permission
  * @param {string} userId - User ID
  * @param {boolean} webimport - New webimport value
