@@ -613,7 +613,7 @@ function App() {
             currentFilters={recipeFilters}
             onApply={handleApplyFilters}
             onCancel={handleCancelFilterPage}
-            availableAuthors={allUsers.filter(u => (u.recipe_count ?? 0) > 0).map(u => ({ id: u.id, name: `${u.vorname} ${u.nachname}` }))}
+            availableAuthors={allUsers.filter(u => (u.recipe_count ?? 0) > 0).map(u => ({ id: u.id, name: u.vorname }))}
             isAdmin={currentUser?.isAdmin || false}
           />
         ) : (
