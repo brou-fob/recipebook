@@ -36,59 +36,52 @@ const ALLOWED_MIME_TYPES = [
 
 /**
  * Get the recipe extraction prompt
- * Loads from Firestore settings, falls back to default prompt
+ * Loads from Firestore settings, throws an error if not configured
  * @returns {Promise<string>} The formatted prompt
  */
 async function getRecipeExtractionPrompt() {
   const db = admin.firestore();
+
   try {
     const settingsDoc = await db.collection('settings').doc('app').get();
 
-    if (settingsDoc.exists) {
-      const settings = settingsDoc.data();
-      if (settings.aiRecipePrompt) {
-        return settings.aiRecipePrompt;
-      }
+    if (!settingsDoc.exists) {
+      console.error('Settings document does not exist in Firestore');
+      throw new HttpsError(
+        'failed-precondition',
+        'AI prompt not configured. Please configure the AI recipe prompt in Settings.'
+      );
     }
+
+    const settings = settingsDoc.data();
+
+    if (!settings.aiRecipePrompt || settings.aiRecipePrompt.trim() === '') {
+      console.error('aiRecipePrompt field is empty or missing in settings/app');
+      throw new HttpsError(
+        'failed-precondition',
+        'AI prompt not configured. Please configure the AI recipe prompt in Settings.'
+      );
+    }
+
+    console.log('Successfully loaded AI prompt from Firestore settings');
+    console.log(`Prompt length: ${settings.aiRecipePrompt.length} characters`);
+
+    return settings.aiRecipePrompt;
   } catch (error) {
-    console.error('Error loading AI prompt from settings:', error);
+    // If it's already an HttpsError, rethrow it
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    // Log the actual error
+    console.error('Error loading AI prompt from Firestore:', error);
+
+    // Throw a user-friendly error
+    throw new HttpsError(
+      'internal',
+      'Failed to load AI prompt configuration. Please try again or contact support.'
+    );
   }
-
-  // Fallback to default prompt
-  return `Analysiere dieses Rezeptbild und extrahiere alle Informationen als strukturiertes JSON.
-
-Bitte gib das Ergebnis im folgenden JSON-Format zurück:
-{
-  "titel": "Name des Rezepts",
-  "portionen": Anzahl der Portionen als Zahl (nur die Zahl, z.B. 4),
-  "zubereitungszeit": Zeit in Minuten als Zahl (nur die Zahl, z.B. 30),
-  "kochzeit": Kochzeit in Minuten als Zahl (optional),
-  "schwierigkeit": Schwierigkeitsgrad 1-5 (1=sehr einfach, 5=sehr schwer),
-  "kulinarik": "Kulinarische Herkunft (z.B. Italienisch, Asiatisch, Deutsch)",
-  "kategorie": "Kategorie (z.B. Hauptgericht, Dessert, Vorspeise, Beilage, Snack)",
-  "tags": ["vegetarisch", "vegan", "glutenfrei"], // nur falls explizit erwähnt
-  "zutaten": [
-    "500 g Spaghetti",
-    "200 g Speck",
-    "4 Eier"
-  ],
-  "zubereitung": [
-    "Wasser in einem großen Topf zum Kochen bringen und salzen",
-    "Spaghetti nach Packungsanweisung kochen",
-    "Speck in Würfel schneiden und in einer Pfanne knusprig braten"
-  ],
-  "notizen": "Zusätzliche Hinweise oder Tipps (optional)"
-}
-
-WICHTIGE REGELN:
-1. Mengenangaben: Verwende immer das Format "Zahl Einheit Zutat" (z.B. "500 g Mehl", "2 EL Olivenöl", "1 Prise Salz")
-2. Zahlen: portionen, zubereitungszeit, kochzeit und schwierigkeit müssen reine Zahlen sein (kein Text!)
-3. Zubereitungsschritte: Jeder Schritt sollte eine vollständige, klare Anweisung sein
-4. Fehlende Informationen: Wenn eine Information nicht lesbar oder nicht vorhanden ist, verwende null oder lasse das Array leer
-5. Einheiten: Standardisiere Einheiten (g statt Gramm, ml statt Milliliter, EL statt Esslöffel, TL statt Teelöffel)
-6. Tags: Füge nur Tags hinzu, die explizit im Rezept erwähnt werden oder eindeutig aus den Zutaten ableitbar sind
-
-Extrahiere nun alle sichtbaren Informationen aus dem Bild genau nach diesem Schema.`;
 }
 
 /**
@@ -212,6 +205,8 @@ function validateImageData(imageBase64) {
  */
 async function callGeminiAPI(base64Data, mimeType, lang, apiKey) {
   const prompt = await getRecipeExtractionPrompt();
+
+  console.log(`Using AI prompt (first 100 chars): ${prompt.substring(0, 100)}...`);
 
   const requestBody = {
     contents: [
