@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import RecipeDetail from './RecipeDetail';
 
 // Mock the utility modules
@@ -1131,6 +1131,51 @@ describe('RecipeDetail - Share Button Visibility', () => {
     expect(shareMock).toHaveBeenCalledWith(expect.objectContaining({ url: expect.stringContaining('some-share-id') }));
 
     Object.defineProperty(navigator, 'share', { value: originalShare, configurable: true });
+  });
+
+  test('toggling favorite preserves shareId (does not un-share the recipe)', async () => {
+    const sharedRecipe = { ...baseRecipe, shareId: 'share-abc' };
+    const unsharedRecipe = { ...baseRecipe, shareId: undefined };
+
+    let rerender;
+    const mockToggleFavorite = jest.fn(async () => {
+      // Simulate parent re-rendering with a new recipe reference that lacks shareId
+      // (the parent's stored recipe did not know about the shareId set locally)
+      rerender(
+        <RecipeDetail
+          recipe={unsharedRecipe}
+          onBack={() => {}}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          currentUser={currentUser}
+          onToggleFavorite={mockToggleFavorite}
+        />
+      );
+    });
+
+    const result = render(
+      <RecipeDetail
+        recipe={sharedRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+        onToggleFavorite={mockToggleFavorite}
+      />
+    );
+    rerender = result.rerender;
+
+    // Initially the copy-link button should be visible (recipe has shareId)
+    expect(screen.getByTitle('Share-Link kopieren')).toBeInTheDocument();
+
+    // Click the favorite button
+    await act(async () => {
+      fireEvent.click(screen.getByTitle('Zu Favoriten hinzufügen'));
+    });
+
+    // After toggling favorite, the copy-link button should still be visible (shareId preserved)
+    expect(screen.getByTitle('Share-Link kopieren')).toBeInTheDocument();
+    expect(screen.queryByTitle('Rezept teilen')).toBeNull();
   });
 
   test('clicking copy link button falls back to clipboard when navigator.share is unavailable', async () => {
