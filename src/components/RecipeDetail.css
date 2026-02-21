@@ -218,6 +218,13 @@
   color: #555;
   background: transparent;
   border: none;
+  font-size: 1.5rem;
+}
+
+.copy-link-icon-img {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
 }
 
 .share-copy-url-button:hover {

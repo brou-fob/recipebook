@@ -109,7 +109,7 @@ function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
         <button className="share-copy-button" onClick={handleCopyUrl} title="Link kopieren">
           {copySuccess ? '✓' : (
             isBase64Image(copyLinkIcon) ? (
-              <img src={copyLinkIcon} alt="Link kopieren" className="button-icon-img" />
+              <img src={copyLinkIcon} alt="Link kopieren" className="share-copy-icon-img" />
             ) : (
               copyLinkIcon
             )
