@@ -117,11 +117,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     if (!authorId) return null;
     const author = allUsers.find(u => u.id === authorId);
     if (!author) return null;
-    return `${author.vorname} ${author.nachname}`;
-  };
-
-  return (
-    <div className="recipe-list-container">
+    return author.vorname;
       <div className="recipe-list-header">
         <h2>{getHeading()}</h2>
         <div className="recipe-list-actions">
