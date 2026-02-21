@@ -445,8 +445,7 @@ describe('Recipe Firestore - Share Functionality', () => {
     it('should call updateDoc with a shareId and return it', async () => {
       const shareId = await enableRecipeSharing('recipe1');
 
-      expect(typeof shareId).toBe('string');
-      expect(shareId.length).toBeGreaterThan(0);
+      expect(shareId).toBe('mock-uuid-1234-5678-abcd-efghijklmnop');
       expect(mockUpdateDoc).toHaveBeenCalled();
     });
   });

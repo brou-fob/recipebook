@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './SharePage.css';
-import { getRecipeByShareId } from '../utils/recipeFirestore';
-import { addRecipe } from '../utils/recipeFirestore';
+import { getRecipeByShareId, addRecipe } from '../utils/recipeFirestore';
 
 function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
   const [recipe, setRecipe] = useState(null);
@@ -31,7 +30,7 @@ function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch {
-      // fallback
+      // Legacy fallback for older browsers that don't support the Clipboard API
       const input = document.createElement('input');
       input.value = window.location.href;
       document.body.appendChild(input);
@@ -50,7 +49,19 @@ function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
     }
     setAddLoading(true);
     try {
-      const { id, shareId: _shareId, authorId: _authorId, createdAt: _createdAt, updatedAt: _updatedAt, ...recipeData } = recipe;
+      const recipeData = {
+        title: recipe.title,
+        image: recipe.image,
+        portionen: recipe.portionen,
+        portionUnitId: recipe.portionUnitId,
+        kulinarik: recipe.kulinarik,
+        schwierigkeit: recipe.schwierigkeit,
+        kochdauer: recipe.kochdauer,
+        speisekategorie: recipe.speisekategorie,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        isPrivate: false,
+      };
       await addRecipe(recipeData, currentUser.id);
       setAddSuccess(true);
       onAddToMyRecipes && onAddToMyRecipes();

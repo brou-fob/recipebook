@@ -279,6 +279,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
       setShareUrlCopied(true);
       setTimeout(() => setShareUrlCopied(false), 2000);
     } catch {
+      // Legacy fallback for older browsers that don't support the Clipboard API
       const input = document.createElement('input');
       input.value = getShareUrl();
       document.body.appendChild(input);
