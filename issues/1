@@ -1,0 +1,43 @@
+### Title
+Rezeptdetailansicht: Entferne den „Teilen"-Button für bereits geteilte Rezepte
+
+### Body
+**Erwartetes Verhalten:**  
+Wenn ein Rezept in der Rezeptdetailansicht bereits geteilt wurde, soll der "Teilen"-Button nicht mehr angezeigt werden. Das verhindert eine doppelte Aktion und sorgt für eine klarere Benutzerführung.
+
+**Akzeptanzkriterien:**  
+- In der Rezeptdetailansicht wird der "Teilen"-Button nur für nicht geteilte Rezepte angezeigt.  
+- Bereits geteilte Rezepte zeigen keinen "Teilen"-Button an.
+
+**Relevant für die Umsetzung – Code-Ausschnitte:**
+
+In [`src/components/RecipeDetail.js`](https://github.com/brou-cgn/recipebook/blob/c59e4fc6ea9d158c47678a4be3416f6183a59e5e/src/components/RecipeDetail.js#L585-L607):  
+```javascript
+{userCanDirectlyEdit && (
+  <button
+    className={`share-button ${recipe.shareId ? 'share-active' : ''}`}
+    onClick={handleToggleShare}
+    disabled={shareLoading}
+    title={recipe.shareId ? 'Teilen deaktivieren' : 'Rezept teilen'}
+  >
+    {shareLoading ? '…' : recipe.shareId ? '🔗 Geteilt' : '↑ Teilen'}
+  </button>
+)}
+```
+Momentan wird der Button auch angezeigt, wenn `recipe.shareId` gesetzt ist – das sollte künftig verhindert werden.
+
+**Empfehlung:**  
+Nur anzeigen, wenn `recipe.shareId` (oder ähnlich) nicht vorhanden ist – zum Beispiel:  
+```javascript
+{userCanDirectlyEdit && !recipe.shareId && (
+  <button ...>Teilen</button>
+)}
+```
+
+**Zusätzliche Hinweise:**  
+- Prüfe, wie aktuell festgestellt wird, ob ein Rezept geteilt wurde.  
+- UI/UX-Kommentar: Die Anzeige soll eindeutig sein, damit Nutzer:innen nicht aus Versehen das gleiche Rezept mehrfach teilen.
+
+**Beispiel:**  
+1. Rezept wird erstmals geteilt – Button sichtbar.  
+2. Nach dem Teilen sollte der Button verschwunden sein (bzw. deaktiviert oder ersetzt durch andere Hinweise).
