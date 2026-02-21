@@ -1047,6 +1047,69 @@ describe('RecipeDetail - Draft Badge', () => {
   });
 });
 
+describe('RecipeDetail - Share Button Visibility', () => {
+  const currentUser = {
+    id: 'user-1',
+    vorname: 'Test',
+    nachname: 'User',
+  };
+
+  const baseRecipe = {
+    id: 'recipe-1',
+    title: 'Test Recipe',
+    authorId: 'user-1',
+    portionen: 4,
+    ingredients: ['Ingredient 1'],
+    steps: ['Step 1'],
+  };
+
+  test('shows Teilen button for recipe without shareId', () => {
+    render(
+      <RecipeDetail
+        recipe={baseRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.getByTitle('Rezept teilen')).toBeInTheDocument();
+  });
+
+  test('hides Teilen button for recipe with shareId', () => {
+    const sharedRecipe = { ...baseRecipe, shareId: 'some-share-id' };
+
+    render(
+      <RecipeDetail
+        recipe={sharedRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.queryByTitle('Rezept teilen')).toBeNull();
+  });
+
+  test('shows copy link button for recipe with shareId', () => {
+    const sharedRecipe = { ...baseRecipe, shareId: 'some-share-id' };
+
+    render(
+      <RecipeDetail
+        recipe={sharedRecipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.getByTitle('Share-Link kopieren')).toBeInTheDocument();
+  });
+});
+
 describe('RecipeDetail - Metadata Order', () => {
   const currentUser = {
     id: 'user-1',

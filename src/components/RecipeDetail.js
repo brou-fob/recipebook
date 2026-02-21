@@ -590,14 +590,14 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                 Löschen
               </button>
             )}
-            {userCanDirectlyEdit && (
+            {userCanDirectlyEdit && !recipe.shareId && (
               <button
-                className={`share-button ${recipe.shareId ? 'share-active' : ''}`}
+                className="share-button"
                 onClick={handleToggleShare}
                 disabled={shareLoading}
-                title={recipe.shareId ? 'Teilen deaktivieren' : 'Rezept teilen'}
+                title="Rezept teilen"
               >
-                {shareLoading ? '…' : recipe.shareId ? '🔗 Geteilt' : '↑ Teilen'}
+                {shareLoading ? '…' : '↑ Teilen'}
               </button>
             )}
             {userCanDirectlyEdit && recipe.shareId && (
@@ -755,14 +755,14 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                     Löschen
                   </button>
                 )}
-                {userCanDirectlyEdit && (
+                {userCanDirectlyEdit && !recipe.shareId && (
                   <button
-                    className={`share-button ${recipe.shareId ? 'share-active' : ''}`}
+                    className="share-button"
                     onClick={handleToggleShare}
                     disabled={shareLoading}
-                    title={recipe.shareId ? 'Teilen deaktivieren' : 'Rezept teilen'}
+                    title="Rezept teilen"
                   >
-                    {shareLoading ? '…' : recipe.shareId ? '🔗 Geteilt' : '↑ Teilen'}
+                    {shareLoading ? '…' : '↑ Teilen'}
                   </button>
                 )}
                 {userCanDirectlyEdit && recipe.shareId && (
