@@ -467,6 +467,9 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     } else {
       setFavoriteIds([...favoriteIds, recipe.id]);
     }
+    // Preserve local recipe state (e.g. shareId) in case the parent re-render
+    // resets selectedRecipe via the useEffect([initialRecipe]) before this resumes
+    setSelectedRecipe({ ...recipe });
   };
 
   const handleRecipeLinkClick = (recipeId) => {
