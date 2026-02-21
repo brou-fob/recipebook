@@ -28,6 +28,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
   const [portionUnits, setPortionUnits] = useState([]);
   const [cookingModeIcon, setCookingModeIcon] = useState('👨‍🍳');
   const [closeButtonIcon, setCloseButtonIcon] = useState('✕');
+  const [copyLinkButtonIcon, setCopyLinkButtonIcon] = useState('🔗');
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -37,6 +38,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
       setPortionUnits(lists.portionUnits || []);
       setCookingModeIcon(icons.cookingMode || '👨‍🍳');
       setCloseButtonIcon(icons.closeButton || '✕');
+      setCopyLinkButtonIcon(icons.copyLinkButton || '🔗');
     };
     loadSettings();
   }, []);
@@ -606,7 +608,11 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                 onClick={handleCopyShareUrl}
                 title="Share-Link kopieren"
               >
-                {shareUrlCopied ? '✓ Kopiert!' : '📋 Link kopieren'}
+                {shareUrlCopied ? '✓' : (
+                  isBase64Image(copyLinkButtonIcon)
+                    ? <img src={copyLinkButtonIcon} alt="Link kopieren" className="button-icon-image" />
+                    : copyLinkButtonIcon
+                )}
               </button>
             )}
           </div>
@@ -771,7 +777,11 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                     onClick={handleCopyShareUrl}
                     title="Share-Link kopieren"
                   >
-                    {shareUrlCopied ? '✓ Kopiert!' : '📋 Link kopieren'}
+                    {shareUrlCopied ? '✓' : (
+                      isBase64Image(copyLinkButtonIcon)
+                        ? <img src={copyLinkButtonIcon} alt="Link kopieren" className="button-icon-image" />
+                        : copyLinkButtonIcon
+                    )}
                   </button>
                 )}
               </div>
