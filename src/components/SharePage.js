@@ -12,7 +12,7 @@ function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
   const [copySuccess, setCopySuccess] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
-  const [copyLinkIcon, setCopyLinkIcon] = useState('🔗');
+  const [copyLinkIcon, setCopyLinkIcon] = useState('📋');
 
   useEffect(() => {
     const load = async () => {
@@ -31,7 +31,7 @@ function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
   useEffect(() => {
     const loadIcons = async () => {
       const icons = await getButtonIcons();
-      setCopyLinkIcon(icons.copyLink || '🔗');
+      setCopyLinkIcon(icons.copyLink || '📋');
     };
     loadIcons();
   }, []);
@@ -108,9 +108,11 @@ function SharePage({ shareId, currentUser, onAddToMyRecipes, onLogin }) {
       <div className="share-page-actions-banner">
         <button className="share-copy-button" onClick={handleCopyUrl} title="Link kopieren">
           {copySuccess ? '✓' : (
-            isBase64Image(copyLinkIcon)
-              ? <img src={copyLinkIcon} alt="Link kopieren" className="share-copy-icon-img" />
-              : <span>{copyLinkIcon}</span>
+            isBase64Image(copyLinkIcon) ? (
+              <img src={copyLinkIcon} alt="Link kopieren" className="button-icon-img" />
+            ) : (
+              copyLinkIcon
+            )
           )}
         </button>
         {addSuccess ? (

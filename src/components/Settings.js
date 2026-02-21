@@ -134,7 +134,7 @@ function Settings({ onBack, currentUser }) {
     closeButton: '✕',
     menuCloseButton: '✕',
     filterButton: '⚙',
-    copyLink: '🔗'
+    copyLink: '📋'
   });
   const [uploadingButtonIcon, setUploadingButtonIcon] = useState(null);
 
@@ -1157,7 +1157,7 @@ function Settings({ onBack, currentUser }) {
                 </div>
 
                 <div className="button-icon-item">
-                  <label htmlFor="copyLinkIcon">Link-kopieren-Button (Teilen-Seite):</label>
+                  <label htmlFor="copyLinkIcon">Link-kopieren-Button (Rezept teilen):</label>
                   <div className="button-icon-input-group">
                     {!isBase64Image(buttonIcons.copyLink) ? (
                       <>
@@ -1166,7 +1166,7 @@ function Settings({ onBack, currentUser }) {
                           id="copyLinkIcon"
                           value={buttonIcons.copyLink}
                           onChange={(e) => setButtonIcons({ ...buttonIcons, copyLink: e.target.value })}
-                          placeholder="z.B. 🔗"
+                          placeholder="z.B. 📋"
                           maxLength={10}
                         />
                         <label htmlFor="copyLinkIconFile" className="upload-icon-btn" title="Bild hochladen">
@@ -1190,7 +1190,7 @@ function Settings({ onBack, currentUser }) {
                           onClick={() => handleRemoveButtonIconImage('copyLink')}
                           title="Bild entfernen"
                         >
-                          ✕ Entfernen
+                          ✕
                         </button>
                       </>
                     )}
