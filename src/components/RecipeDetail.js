@@ -198,7 +198,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
     if (!recipe.authorId || !allUsers || allUsers.length === 0) return null;
     const author = allUsers.find(u => u.id === recipe.authorId);
     if (!author) return null;
-    return `${author.vorname} ${author.nachname}`;
+    return author.vorname;
   }, [recipe.authorId, allUsers]);
 
   // Format creation date
