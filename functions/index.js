@@ -126,7 +126,8 @@ function getRateLimit(isAdmin, isAuthenticated) {
  */
 async function checkRateLimit(userId, isAuthenticated, isAdmin = false) {
   const db = admin.firestore();
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  // Use MEZ (Europe/Berlin) timezone so counter resets at 0 Uhr MEZ
+  const today = new Date().toLocaleDateString('sv-SE', {timeZone: 'Europe/Berlin'}); // YYYY-MM-DD
   const docRef = db.collection('aiScanLimits').doc(`${userId}_${today}`);
 
   const limit = getRateLimit(isAdmin, isAuthenticated);
