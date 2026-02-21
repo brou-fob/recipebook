@@ -623,7 +623,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
               >
                 {shareUrlCopied ? '✓' : (
                   isBase64Image(copyLinkIcon) ? (
-                    <img src={copyLinkIcon} alt="Link kopieren" className="button-icon-img" />
+                    <img src={copyLinkIcon} alt="Link kopieren" className="copy-link-icon-img" />
                   ) : (
                     copyLinkIcon
                   )
@@ -794,7 +794,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onToggl
                   >
                     {shareUrlCopied ? '✓' : (
                       isBase64Image(copyLinkIcon) ? (
-                        <img src={copyLinkIcon} alt="Link kopieren" className="button-icon-img" />
+                        <img src={copyLinkIcon} alt="Link kopieren" className="copy-link-icon-img" />
                       ) : (
                         copyLinkIcon
                       )
