@@ -164,11 +164,11 @@ function SortableStep({ id, item, index, stepNumber, onChange, onRemove, canRemo
 function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCreatingVersion = false, allRecipes = [] }) {
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
-  const [portionen, setPortionen] = useState(4);
+  const [portionen, setPortionen] = useState('');
   const [portionUnitId, setPortionUnitId] = useState('portion');
   const [kulinarik, setKulinarik] = useState([]);
   const [schwierigkeit, setSchwierigkeit] = useState(3);
-  const [kochdauer, setKochdauer] = useState(30);
+  const [kochdauer, setKochdauer] = useState('');
   const [speisekategorie, setSpeisekategorie] = useState([]);
   const [ingredients, setIngredients] = useState([{ type: 'ingredient', text: '' }]);
   const [steps, setSteps] = useState([{ type: 'step', text: '' }]);
@@ -234,7 +234,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     if (recipe) {
       setTitle(recipe.title || '');
       setImage(recipe.image || '');
-      setPortionen(recipe.portionen || 4);
+      setPortionen(recipe.portionen ?? '');
       setPortionUnitId(recipe.portionUnitId || 'portion');
       // Handle both old string format and new array format for kulinarik
       if (Array.isArray(recipe.kulinarik)) {
@@ -245,7 +245,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         setKulinarik([]);
       }
       setSchwierigkeit(recipe.schwierigkeit || 3);
-      setKochdauer(recipe.kochdauer || 30);
+      setKochdauer(recipe.kochdauer ?? '');
       // Handle both old string format and new array format for speisekategorie
       if (Array.isArray(recipe.speisekategorie)) {
         setSpeisekategorie(recipe.speisekategorie);
@@ -541,11 +541,11 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     const recipeData = {
       title: title.trim(),
       image: finalImage,
-      portionen: parseInt(portionen) || 4,
+      portionen: portionen !== '' && !isNaN(parseInt(portionen, 10)) ? parseInt(portionen, 10) : undefined,
       portionUnitId: portionUnitId,
       kulinarik: kulinarik,
       schwierigkeit: parseInt(schwierigkeit) || 3,
-      kochdauer: parseInt(kochdauer) || 30,
+      kochdauer: kochdauer !== '' && !isNaN(parseInt(kochdauer, 10)) ? parseInt(kochdauer, 10) : undefined,
       speisekategorie: speisekategorie,
       ingredients: ingredientsToSave,
       steps: stepsToSave,
@@ -568,7 +568,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     // Populate form with imported data
     setTitle(importedRecipe.title || '');
     setImage(importedRecipe.image || '');
-    setPortionen(importedRecipe.portionen || 4);
+    setPortionen(importedRecipe.portionen ?? '');
     setPortionUnitId(importedRecipe.portionUnitId || 'portion');
     
     // Handle kulinarik as array
@@ -581,7 +581,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     }
     
     setSchwierigkeit(importedRecipe.schwierigkeit || 3);
-    setKochdauer(importedRecipe.kochdauer || 30);
+    setKochdauer(importedRecipe.kochdauer ?? '');
     
     // Handle speisekategorie as array
     if (Array.isArray(importedRecipe.speisekategorie)) {
