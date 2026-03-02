@@ -36,6 +36,14 @@ service cloud.firestore {
       allow get: if isAnyUser() || !resource.data.isPrivate;
       allow list: if isAnyUser() || resource.data.shareId != null;
       allow create, update, delete: if isEditOrAdmin();
+
+      // Ratings subcollection – anyone (including guests) may read and write.
+      // Guests are identified by a localStorage-generated ID; authenticated users
+      // by their Firebase UID. Only the last rating per rater key is stored.
+      match /ratings/{raterKey} {
+        allow read: if true;
+        allow write: if true;
+      }
     }
 
     // Menus collection
