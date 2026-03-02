@@ -3,6 +3,13 @@ import './RecipeRating.css';
 import { rateRecipe, getUserRating, subscribeToRatingSummary } from '../utils/recipeRatings';
 
 /**
+ * Returns true when a heart at position `n` (1–5) should be shown as filled,
+ * given the supplied average. Rounds to the nearest half-heart so a 3.5 avg
+ * fills positions 1–3 fully and position 4 partially (displayed as filled).
+ */
+const shouldFillHeart = (avg, n) => avg >= n - 0.5;
+
+/**
  * RecipeRating component
  *
  * Displays a 1–5 heart rating. In interactive mode the user can click a heart
@@ -65,8 +72,8 @@ function RecipeRating({ recipeId, ratingAvg: initialAvg, ratingCount: initialCou
       <div className="recipe-rating-compact" title={`Ø ${avg.toFixed(1)} (${count} Bewertungen)`}>
         <span className="rating-hearts-display" aria-hidden="true">
           {[1, 2, 3, 4, 5].map((n) => (
-            <span key={n} className={`rating-heart-icon ${avg >= n - 0.5 ? 'filled' : 'empty'}`}>
-              {avg >= n - 0.5 ? '♥' : '♡'}
+            <span key={n} className={`rating-heart-icon ${shouldFillHeart(avg, n) ? 'filled' : 'empty'}`}>
+              {shouldFillHeart(avg, n) ? '♥' : '♡'}
             </span>
           ))}
         </span>

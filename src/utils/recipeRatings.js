@@ -41,6 +41,14 @@ export const getRaterKey = (currentUser) => {
 };
 
 /**
+ * Compute and round a rating average to one decimal place.
+ * @param {number} sum   - Sum of all rating values
+ * @param {number} count - Number of ratings
+ * @returns {number} Rounded average
+ */
+const computeAvg = (sum, count) => Math.round((sum / count) * 10) / 10;
+
+/**
  * Recompute and store the rating summary (avg, count) on the recipe document.
  * Does NOT update the recipe's updatedAt timestamp to avoid polluting update history.
  * @param {string} recipeId - Recipe ID
@@ -61,7 +69,7 @@ const updateRatingSummary = async (recipeId) => {
     sum += d.data().rating;
   });
   const count = snapshot.size;
-  const avg = Math.round((sum / count) * 10) / 10;
+  const avg = computeAvg(sum, count);
 
   await updateDoc(recipeRef, { ratingAvg: avg, ratingCount: count });
 };
@@ -142,7 +150,7 @@ export const subscribeToRatingSummary = (recipeId, callback) => {
       });
       const count = snapshot.size;
       callback({
-        avg: Math.round((sum / count) * 10) / 10,
+        avg: computeAvg(sum, count),
         count
       });
     },
