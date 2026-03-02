@@ -198,6 +198,7 @@ function App() {
   const recipeCountsInitialized = useRef(false);
   const [sharedData, setSharedData] = useState({ images: [], title: '', text: '', url: '' });
   const [showUniversalImport, setShowUniversalImport] = useState(false);
+  const [webimportDeeplink, setWebimportDeeplink] = useState('');
 
   // IDs of groups the current user belongs to – used to filter group-scoped recipes
   const userGroupIds = useMemo(() => groups.map((g) => g.id), [groups]);
@@ -306,6 +307,22 @@ function App() {
       setShowUniversalImport(true);
     }
   }, [currentUser, sharedData]);
+
+  // Detect webimport deeplink URL parameter and open RecipeForm with WebImportModal
+  useEffect(() => {
+    if (!currentUser?.webimport) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const webimportUrl = urlParams.get('webimport');
+    if (webimportUrl) {
+      urlParams.delete('webimport');
+      const remainingSearch = urlParams.toString();
+      window.history.replaceState({}, '', window.location.pathname + (remainingSearch ? '?' + remainingSearch : '') + window.location.hash);
+      setWebimportDeeplink(webimportUrl);
+      setEditingRecipe(null);
+      setIsCreatingVersion(false);
+      setIsFormOpen(true);
+    }
+  }, [currentUser]);
 
   // Ensure the system-wide public group exists and store its ID
   useEffect(() => {
@@ -464,6 +481,7 @@ function App() {
       setEditingRecipe(null);
       setIsCreatingVersion(false);
       setActiveGroupId(null);
+      setWebimportDeeplink('');
     } catch (error) {
       console.error('Error saving recipe:', error);
       alert('Fehler beim Speichern des Rezepts. Bitte versuchen Sie es erneut.');
@@ -536,6 +554,7 @@ function App() {
     setEditingRecipe(null);
     setIsCreatingVersion(false);
     setActiveGroupId(null);
+    setWebimportDeeplink('');
   };
 
   const handleOpenSettings = () => {
@@ -907,6 +926,7 @@ function App() {
           allRecipes={recipes}
           activeGroupId={activeGroupId}
           groups={groups}
+          initialWebImportUrl={webimportDeeplink}
         />
       ) : selectedMenu ? (
         // Menu detail view - shown regardless of currentView

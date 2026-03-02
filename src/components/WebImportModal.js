@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './WebImportModal.css';
 import { captureWebsiteScreenshot } from '../utils/webImportService';
 import { recognizeRecipeWithAI } from '../utils/aiOcrService';
 
-function WebImportModal({ onImport, onCancel }) {
+function WebImportModal({ onImport, onCancel, initialUrl = '' }) {
   const [step, setStep] = useState('url'); // 'url', 'loading', 'result'
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(initialUrl);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
   const [aiResult, setAiResult] = useState(null);
@@ -106,6 +106,14 @@ function WebImportModal({ onImport, onCancel }) {
     setProgress(0);
     setAiResult(null);
   };
+
+  // Auto-submit when initialUrl is provided and valid
+  useEffect(() => {
+    if (initialUrl && isValidUrl(initialUrl) && step === 'url') {
+      handleSubmit();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="modal-overlay">

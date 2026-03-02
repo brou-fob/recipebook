@@ -161,7 +161,7 @@ function SortableStep({ id, item, index, stepNumber, onChange, onRemove, canRemo
   );
 }
 
-function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCreatingVersion = false, allRecipes = [], activeGroupId = null, groups = [] }) {
+function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCreatingVersion = false, allRecipes = [], activeGroupId = null, groups = [], initialWebImportUrl = '' }) {
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
   const [portionen, setPortionen] = useState('');
@@ -198,6 +198,14 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const [isPrivate, setIsPrivate] = useState(false);
   // AI OCR daily limit state
   const [aiOcrLimitReached, setAiOcrLimitReached] = useState(false);
+
+  // Auto-open WebImportModal when initialWebImportUrl is provided on mount
+  useEffect(() => {
+    if (initialWebImportUrl && !recipe) {
+      setShowWebImportModal(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Drag and drop sensors with touch support
   const sensors = useSensors(
@@ -1104,6 +1112,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
 
       {showWebImportModal && (
         <WebImportModal
+          initialUrl={initialWebImportUrl}
           onImport={handleWebImport}
           onCancel={() => setShowWebImportModal(false)}
         />
