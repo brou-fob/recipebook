@@ -314,7 +314,9 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const webimportUrl = urlParams.get('webimport');
     if (webimportUrl) {
-      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+      urlParams.delete('webimport');
+      const remainingSearch = urlParams.toString();
+      window.history.replaceState({}, '', window.location.pathname + (remainingSearch ? '?' + remainingSearch : '') + window.location.hash);
       setWebimportDeeplink(webimportUrl);
       setEditingRecipe(null);
       setIsCreatingVersion(false);
