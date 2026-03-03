@@ -155,6 +155,9 @@ describe('rateRecipe', () => {
     mockDoc.mockReturnValue('ref');
     mockSetDoc.mockResolvedValue();
     mockUpdateDoc.mockResolvedValue();
+    mockServerTimestamp.mockReturnValue('mock-timestamp');
+    // getDoc returns non-existing doc by default (new rating)
+    mockGetDoc.mockResolvedValue({ exists: () => false });
     // getDocs returns an empty snapshot by default (for updateRatingSummary)
     mockGetDocs.mockResolvedValue({
       empty: false,
@@ -184,17 +187,41 @@ describe('rateRecipe', () => {
   });
 
   it('calls setDoc with correct data for an authenticated user', async () => {
-    await rateRecipe('recipe1', 5, { id: 'user1' });
+    await rateRecipe('recipe1', 5, { id: 'user1', vorname: 'Max' });
 
     expect(mockSetDoc).toHaveBeenCalledTimes(1);
     const [, data] = mockSetDoc.mock.calls[0];
     expect(data.rating).toBe(5);
     expect(data.userType).toBe('user');
     expect(data.userId).toBe('user1');
+    expect(data.raterName).toBe('Max');
+  });
+
+  it('stores raterName for guest when provided', async () => {
+    await rateRecipe('recipe1', 4, null, null, 'Anna');
+
+    const [, data] = mockSetDoc.mock.calls[0];
+    expect(data.raterName).toBe('Anna');
+  });
+
+  it('sets createdAt for new ratings', async () => {
+    mockGetDoc.mockResolvedValue({ exists: () => false });
+    await rateRecipe('recipe1', 3, null);
+
+    const [, data] = mockSetDoc.mock.calls[0];
+    expect(data.createdAt).toBeDefined();
+  });
+
+  it('does not set createdAt when rating already exists', async () => {
+    mockGetDoc.mockResolvedValue({ exists: () => true });
+    await rateRecipe('recipe1', 3, null);
+
+    const [, data] = mockSetDoc.mock.calls[0];
+    expect(data.createdAt).toBeUndefined();
   });
 
   it('updates the rating summary on the recipe document', async () => {
-    await rateRecipe('recipe1', 4, { id: 'user1' });
+    await rateRecipe('recipe1', 4, { id: 'user1', vorname: 'Max' });
     expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
     const [, updates] = mockUpdateDoc.mock.calls[0];
     expect(updates.ratingAvg).toBeDefined();

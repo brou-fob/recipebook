@@ -80,26 +80,40 @@ const updateRatingSummary = async (recipeId) => {
  * @param {string} recipeId - Recipe ID
  * @param {number} rating - Rating value (1–5)
  * @param {Object|null} currentUser - Current user or null for guest
+ * @param {string|null} comment - Optional comment
+ * @param {string|null} raterName - Name of the rater (required for guests, auto-set for logged-in users)
  * @returns {Promise<void>}
  */
-export const rateRecipe = async (recipeId, rating, currentUser, comment = null) => {
+export const rateRecipe = async (recipeId, rating, currentUser, comment = null, raterName = null) => {
   if (!recipeId || !rating || rating < 1 || rating > 5) {
     throw new Error('Invalid rating parameters');
   }
 
   const raterKey = getRaterKey(currentUser);
   const userType = currentUser?.id ? 'user' : 'guest';
+  const resolvedName = currentUser && !currentUser.isGuest
+    ? (currentUser.vorname || null)
+    : (raterName || null);
 
   const ratingRef = doc(db, 'recipes', recipeId, 'ratings', raterKey);
-  await setDoc(ratingRef, {
+  const existingSnap = await getDoc(ratingRef);
+
+  const data = {
     recipeId,
     rating,
     raterKey,
     userType,
     userId: currentUser?.id || null,
+    raterName: resolvedName,
     comment: comment || null,
     updatedAt: serverTimestamp()
-  });
+  };
+
+  if (!existingSnap.exists()) {
+    data.createdAt = serverTimestamp();
+  }
+
+  await setDoc(ratingRef, data, { merge: true });
 
   await updateRatingSummary(recipeId);
 };
@@ -145,6 +159,40 @@ export const getUserRatingData = async (recipeId, currentUser) => {
   } catch (error) {
     console.error('Error getting user rating data:', error);
     return { rating: null, comment: null };
+  }
+};
+
+/**
+ * Get all ratings for a recipe (for display purposes).
+ * @param {string} recipeId - Recipe ID
+ * @returns {Promise<Array>} Array of rating objects with raterName, rating, comment, createdAt, updatedAt
+ */
+export const getAllRatings = async (recipeId) => {
+  if (!recipeId) return [];
+  try {
+    const ratingsRef = collection(db, 'recipes', recipeId, 'ratings');
+    const snapshot = await getDocs(ratingsRef);
+    const ratings = [];
+    snapshot.forEach((d) => {
+      const data = d.data();
+      ratings.push({
+        id: d.id,
+        rating: data.rating,
+        comment: data.comment || null,
+        raterName: data.raterName || null,
+        createdAt: data.createdAt || data.updatedAt || null,
+        updatedAt: data.updatedAt || null
+      });
+    });
+    ratings.sort((a, b) => {
+      const aTime = a.updatedAt?.toMillis?.() || 0;
+      const bTime = b.updatedAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+    return ratings;
+  } catch (error) {
+    console.error('Error getting all ratings:', error);
+    return [];
   }
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './RatingModal.css';
-import { rateRecipe, getUserRatingData, subscribeToRatingSummary } from '../utils/recipeRatings';
+import { rateRecipe, getUserRatingData, subscribeToRatingSummary, getAllRatings } from '../utils/recipeRatings';
 
 /**
  * RatingModal component
@@ -21,6 +21,10 @@ function RatingModal({ recipeId, currentUser, onClose }) {
   const [hoveredRating, setHoveredRating] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [allRatings, setAllRatings] = useState([]);
+
+  const isGuest = !currentUser || currentUser.isGuest;
 
   // Live rating summary subscription
   useEffect(() => {
@@ -40,12 +44,23 @@ function RatingModal({ recipeId, currentUser, onClose }) {
     });
   }, [recipeId, currentUser]);
 
+  // Load all ratings for display
+  useEffect(() => {
+    let cancelled = false;
+    getAllRatings(recipeId).then((ratings) => {
+      if (!cancelled) setAllRatings(ratings);
+    });
+    return () => { cancelled = true; };
+  }, [recipeId]);
+
   const handleSave = async () => {
     if (!selectedRating || isSubmitting) return;
+    if (isGuest && !guestName.trim()) return;
     setIsSubmitting(true);
     try {
-      await rateRecipe(recipeId, selectedRating, currentUser, comment);
+      await rateRecipe(recipeId, selectedRating, currentUser, comment, guestName.trim() || null);
       setSaved(true);
+      getAllRatings(recipeId).then(setAllRatings);
       setTimeout(onClose, 600);
     } catch (error) {
       console.error('Error saving rating:', error);
@@ -54,6 +69,12 @@ function RatingModal({ recipeId, currentUser, onClose }) {
   };
 
   const activeRating = hoveredRating || selectedRating || 0;
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
 
   return (
     <div className="rating-modal-overlay" onClick={onClose}>
@@ -83,6 +104,17 @@ function RatingModal({ recipeId, currentUser, onClose }) {
               </button>
             ))}
           </div>
+          {isGuest && (
+            <input
+              className="rating-name-input"
+              type="text"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="Dein Name *"
+              maxLength={50}
+              required
+            />
+          )}
           <textarea
             className="rating-comment-input"
             value={comment}
@@ -90,13 +122,34 @@ function RatingModal({ recipeId, currentUser, onClose }) {
             placeholder="Kommentar (optional)…"
             rows={3}
           />
+          {allRatings.length > 0 && (
+            <div className="rating-reviews-list">
+              <h3 className="rating-reviews-title">Alle Bewertungen</h3>
+              {allRatings.map((r) => (
+                <div key={r.id} className="rating-review-item">
+                  <div className="rating-review-header">
+                    <span className="rating-review-name">{r.raterName || 'Anonym'}</span>
+                    <span className="rating-review-date">{formatDate(r.updatedAt || r.createdAt)}</span>
+                  </div>
+                  <div className="rating-review-hearts" aria-label={`${r.rating} von 5 Herzen`}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <span key={n} className={`rating-review-heart ${r.rating >= n ? 'filled' : 'empty'}`}>
+                        {r.rating >= n ? '♥' : '♡'}
+                      </span>
+                    ))}
+                  </div>
+                  {r.comment && <p className="rating-review-comment">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="rating-modal-footer">
           <button className="rating-modal-cancel-btn" onClick={onClose}>Abbrechen</button>
           <button
             className="rating-modal-save-btn"
             onClick={handleSave}
-            disabled={!selectedRating || isSubmitting || saved}
+            disabled={!selectedRating || isSubmitting || saved || (isGuest && !guestName.trim())}
           >
             {saved ? '✓ Gespeichert' : isSubmitting ? 'Speichern…' : 'Speichern'}
           </button>
