@@ -68,7 +68,8 @@
 }
 
 .kueche-tile--mise-en-place .kueche-tile-meta,
-.kueche-tile--meinkochbuch .kueche-tile-meta {
+.kueche-tile--meinkochbuch .kueche-tile-meta,
+.kueche-tile--appaufrufe .kueche-tile-meta {
   position: absolute;
   bottom: 10px;
   margin-top: 0;
@@ -103,7 +104,8 @@
 
 .kueche-tile--chefkoch .kueche-tile-meta .meta-text,
 .kueche-tile--meinkochbuch .kueche-tile-meta .meta-text,
-.kueche-tile--mise-en-place .kueche-tile-meta .meta-text {
+.kueche-tile--mise-en-place .kueche-tile-meta .meta-text,
+.kueche-tile--appaufrufe .kueche-tile-meta .meta-text {
   margin-bottom: 6px;
 }
 

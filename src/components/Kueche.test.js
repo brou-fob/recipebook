@@ -14,11 +14,20 @@ jest.mock('../utils/categoryImages', () => ({
   getCategoryImages: () => Promise.resolve([]),
 }));
 
+jest.mock('../utils/appCallsFirestore', () => ({
+  getAppCalls: jest.fn(),
+}));
+
 jest.mock('../utils/userManagement', () => ({
   updateUserProfile: jest.fn(() => Promise.resolve({ success: true, message: 'Profil erfolgreich aktualisiert.' })),
 }));
 
 describe('Kueche', () => {
+  beforeEach(() => {
+    const { getAppCalls } = require('../utils/appCallsFirestore');
+    getAppCalls.mockResolvedValue([]);
+  });
+
   const mockRecipes = [
     {
       id: '1',
@@ -602,5 +611,90 @@ describe('Kueche', () => {
     const miseEnPlace = screen.getByTestId('mise-en-place-tile');
     const kochbuchTile = screen.getByRole('button', { name: /Toggle Meine Küche timeline/i });
     expect(miseEnPlace.compareDocumentPosition(kochbuchTile)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  test('App-Aufrufe tile is not rendered for non-admin users', () => {
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[]}
+        onSelectRecipe={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1', isAdmin: false }}
+      />
+    );
+
+    expect(screen.queryByText('App-Aufrufe')).not.toBeInTheDocument();
+  });
+
+  test('App-Aufrufe tile is rendered for admin users', () => {
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[]}
+        onSelectRecipe={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1', isAdmin: true }}
+      />
+    );
+
+    expect(screen.getByText('App-Aufrufe')).toBeInTheDocument();
+  });
+
+  test('App-Aufrufe tile shows today call count', async () => {
+    const { getAppCalls } = require('../utils/appCallsFirestore');
+    const now = new Date();
+    getAppCalls.mockResolvedValueOnce([
+      { id: 'c1', timestamp: { toDate: () => now } },
+      { id: 'c2', timestamp: { toDate: () => now } },
+    ]);
+
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[]}
+        onSelectRecipe={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1', isAdmin: true }}
+      />
+    );
+
+    expect(screen.getByText('App-Aufrufe')).toBeInTheDocument();
+    expect(await screen.findByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Aufrufe heute')).toBeInTheDocument();
+  });
+
+  test('App-Aufrufe tile calls onViewChange with appCalls when clicked', () => {
+    const handleViewChange = jest.fn();
+
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[]}
+        onSelectRecipe={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1', isAdmin: true }}
+        onViewChange={handleViewChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /App-Aufrufe Statistik öffnen/i }));
+    expect(handleViewChange).toHaveBeenCalledWith('appCalls');
+  });
+
+  test('App-Aufrufe tile renders bar chart with 7 bars', () => {
+    render(
+      <Kueche
+        recipes={[]}
+        menus={[]}
+        onSelectRecipe={() => {}}
+        allUsers={mockUsers}
+        currentUser={{ id: 'user-1', isAdmin: true }}
+      />
+    );
+
+    const chart = screen.getByTestId('app-calls-bar-chart');
+    expect(chart).toBeInTheDocument();
+    expect(chart.children).toHaveLength(7);
   });
 });
