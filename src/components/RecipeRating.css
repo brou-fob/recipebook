@@ -24,7 +24,7 @@
 }
 
 .recipe-rating-detail-summary:hover {
-  background: rgba(224, 92, 122, 0.08);
+  background: rgba(223, 122, 0, 0.08);
 }
 
 .recipe-rating-detail-summary .rating-heart-icon {
@@ -49,7 +49,7 @@
 }
 
 .rating-heart-icon.filled {
-  color: #e05c7a;
+  color: #DF7A00;
 }
 
 .rating-heart-icon.empty {
@@ -87,7 +87,7 @@
 }
 
 .rating-heart-btn.filled {
-  color: #e05c7a;
+  color: #DF7A00;
 }
 
 .rating-heart-btn:hover:not(:disabled),
