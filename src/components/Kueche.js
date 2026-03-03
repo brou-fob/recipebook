@@ -4,6 +4,7 @@ import RecipeTimeline from './RecipeTimeline';
 import PersonalDataPage from './PersonalDataPage';
 import { getTimelineBubbleIcon, getTimelineMenuBubbleIcon, getTimelineMenuDefaultImage } from '../utils/customLists';
 import { getCategoryImages } from '../utils/categoryImages';
+import { getAppCalls } from '../utils/appCallsFirestore';
 
 function getLastSixMonthsRecipeCounts(recipes) {
   const now = new Date();
@@ -29,6 +30,58 @@ function getLastSixMonthsRecipeCounts(recipes) {
 }
 
 const MIN_BAR_HEIGHT_PERCENT = 16;
+
+function parseCallTimestamp(call) {
+  if (call.timestamp && typeof call.timestamp.toDate === 'function') {
+    return call.timestamp.toDate();
+  } else if (call.timestamp instanceof Date) {
+    return call.timestamp;
+  } else if (call.timestamp) {
+    return new Date(call.timestamp);
+  }
+  return null;
+}
+
+function getLastSevenDaysAppCallCounts(appCalls) {
+  const now = new Date();
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    days.push({ year: d.getFullYear(), month: d.getMonth(), day: d.getDate(), count: 0 });
+  }
+  appCalls.forEach(call => {
+    const date = parseCallTimestamp(call);
+    if (!date || isNaN(date.getTime())) return;
+    const entry = days.find(d => d.year === date.getFullYear() && d.month === date.getMonth() && d.day === date.getDate());
+    if (entry) entry.count++;
+  });
+  return days;
+}
+
+function AppCallsBarChart({ appCalls }) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDay = now.getDate();
+  const dailyData = getLastSevenDaysAppCallCounts(appCalls);
+  const maxCount = Math.max(...dailyData.map(d => d.count), 1);
+
+  return (
+    <div className="kueche-bar-chart" data-testid="app-calls-bar-chart" aria-hidden="true">
+      {dailyData.map((d, i) => {
+        const isToday = d.year === currentYear && d.month === currentMonth && d.day === currentDay;
+        const heightPercent = Math.max(MIN_BAR_HEIGHT_PERCENT, Math.round((d.count / maxCount) * 100));
+        return (
+          <div
+            key={i}
+            className={`kueche-bar-chart__bar${isToday ? ' kueche-bar-chart__bar--current' : ''}`}
+            style={{ height: `${heightPercent}%` }}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 function RecipeBarChart({ recipes }) {
   const now = new Date();
@@ -61,6 +114,7 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
   const [categoryImages, setCategoryImages] = useState([]);
   const [timelineMenuDefaultImage, setTimelineMenuDefaultImage] = useState(null);
   const [showPersonalData, setShowPersonalData] = useState(false);
+  const [appCalls, setAppCalls] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -76,6 +130,11 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!currentUser?.isAdmin) return;
+    getAppCalls().then(calls => setAppCalls(calls)).catch(() => {});
+  }, [currentUser]);
+
   const filteredRecipes = currentUser
     ? recipes.filter(r => r.authorId === currentUser.id)
     : recipes;
@@ -87,6 +146,15 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
   const privateListCount = currentUser
     ? groups.filter(g => g.type === 'private' && (g.ownerId === currentUser.id || (g.memberIds && g.memberIds.includes(currentUser.id)))).length
     : 0;
+
+  const todayCallsCount = (() => {
+    const now = new Date();
+    return appCalls.filter(call => {
+      const date = parseCallTimestamp(call);
+      if (!date || isNaN(date.getTime())) return false;
+      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+    }).length;
+  })();
 
   // Transform menus into the shape expected by RecipeTimeline
   const menuTimelineItems = filteredMenus.map(menu => ({
@@ -204,6 +272,27 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
               categoryImages={categoryImages}
               defaultImage={timelineMenuDefaultImage}
             />
+          )}
+          {currentUser?.isAdmin && (
+            <div
+              className="kueche-tile kueche-tile--appaufrufe"
+              onClick={() => onViewChange && onViewChange('appCalls')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewChange && onViewChange('appCalls'); } }}
+              role="button"
+              tabIndex={0}
+              aria-label="App-Aufrufe Statistik öffnen"
+            >
+              <div className="kueche-tile-content">
+                <h3>App-Aufrufe</h3>
+                <div className="kueche-tile-meta">
+                  <span className="meta-text">
+                    <strong>{todayCallsCount}</strong>
+                    <span>{todayCallsCount === 1 ? 'Aufruf heute' : 'Aufrufe heute'}</span>
+                  </span>
+                </div>
+                <AppCallsBarChart appCalls={appCalls} />
+              </div>
+            </div>
           )}
         </>
       )}
