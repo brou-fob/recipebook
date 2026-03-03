@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
 import { getHeaderSlogan, getAppLogoImage } from '../utils/customLists';
 import { subscribeToFaqs } from '../utils/faqFirestore';
+import { ROLES } from '../utils/userManagement';
 import SearchIcon from './icons/SearchIcon';
 
 /**
@@ -246,7 +247,7 @@ function Header({
                       </button>
                     </div>
                   )}
-                  {onSettingsClick && currentUser?.isAdmin && (
+                  {onSettingsClick && (currentUser?.isAdmin || currentUser?.role === ROLES.MODERATOR) && (
                     <div className="menu-section">
                       <div className="menu-section-title">Verwaltung</div>
                       <button className="menu-item" onClick={() => {
@@ -255,12 +256,14 @@ function Header({
                       }}>
                         Einstellungen
                       </button>
-                      <button
-                        className={`menu-item ${currentView === 'appCalls' ? 'active' : ''}`}
-                        onClick={() => handleViewChangeInternal('appCalls')}
-                      >
-                        Appaufrufe
-                      </button>
+                      {currentUser?.isAdmin && (
+                        <button
+                          className={`menu-item ${currentView === 'appCalls' ? 'active' : ''}`}
+                          onClick={() => handleViewChangeInternal('appCalls')}
+                        >
+                          Appaufrufe
+                        </button>
+                      )}
                     </div>
                   )}
                   <div className="menu-section">
