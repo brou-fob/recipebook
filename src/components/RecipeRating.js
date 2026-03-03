@@ -95,7 +95,13 @@ function RecipeRating({ recipeId, ratingAvg: initialAvg, ratingCount: initialCou
         </button>
       );
     }
-    if (!count) return null;
+    if (!count) {
+      return (
+        <div className="recipe-rating-compact recipe-rating-empty" title="Noch keine Bewertungen" aria-label="Noch keine Bewertungen">
+          <span className="rating-heart-icon empty" aria-hidden="true">♡</span>
+        </div>
+      );
+    }
     return (
       <div className="recipe-rating-compact" title={`Ø ${formatRatingAvg(avg)} (${count} Bewertungen)`}>
         <span className="rating-hearts-display" aria-hidden="true">
