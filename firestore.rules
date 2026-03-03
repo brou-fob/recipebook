@@ -35,7 +35,14 @@ service cloud.firestore {
       // (e.g. recipes that are part of a shared menu) or query by shareId.
       allow get: if isAnyUser() || !resource.data.isPrivate;
       allow list: if isAnyUser() || resource.data.shareId != null;
-      allow create, update, delete: if isEditOrAdmin();
+      allow create, delete: if isEditOrAdmin();
+      allow update: if isEditOrAdmin()
+                 || (
+                      // Allow anyone (authenticated or guest-rated) to update only the
+                      // rating summary fields written by updateRatingSummary().
+                      request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['ratingAvg', 'ratingCount'])
+                    );
 
       // Ratings subcollection – anyone (including guests) may read and write.
       // Guests are identified by a localStorage-generated ID (prefixed 'guest_');
