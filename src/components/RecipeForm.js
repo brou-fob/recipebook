@@ -750,7 +750,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
                 />
               </>
             )}
-            {currentUser?.isAdmin && (
+            {currentUser?.recipeImport && (
               <button
                 type="button"
                 className="import-button-header"
