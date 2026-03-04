@@ -1399,6 +1399,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
         <RatingModal
           recipeId={recipe.id}
           currentUser={currentUser}
+          canDeleteRatings={currentUser?.deleteRating === true}
           onClose={() => setShowRatingModal(false)}
         />
       )}

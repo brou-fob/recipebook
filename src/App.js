@@ -308,6 +308,7 @@ function App() {
           appCalls: rolePerms.appCalls ?? false,
           appCallsMenu: rolePerms.appCallsMenu ?? false,
           recipeImport: rolePerms.recipeImport ?? false,
+          deleteRating: rolePerms.deleteRating ?? false,
         };
       });
     };

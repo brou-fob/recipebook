@@ -26,6 +26,8 @@ const mockCollection = jest.fn();
 const mockDoc = jest.fn();
 const mockServerTimestamp = jest.fn(() => 'mock-timestamp');
 
+const mockDeleteDoc = jest.fn();
+
 jest.mock('firebase/firestore', () => ({
   doc: (...args) => mockDoc(...args),
   setDoc: (...args) => mockSetDoc(...args),
@@ -33,11 +35,12 @@ jest.mock('firebase/firestore', () => ({
   getDocs: (...args) => mockGetDocs(...args),
   onSnapshot: (...args) => mockOnSnapshot(...args),
   updateDoc: (...args) => mockUpdateDoc(...args),
+  deleteDoc: (...args) => mockDeleteDoc(...args),
   collection: (...args) => mockCollection(...args),
   serverTimestamp: () => mockServerTimestamp()
 }));
 
-import { getGuestId, getRaterKey, rateRecipe, getUserRating, subscribeToRatingSummary } from './recipeRatings';
+import { getGuestId, getRaterKey, rateRecipe, getUserRating, subscribeToRatingSummary, deleteRating } from './recipeRatings';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -222,6 +225,42 @@ describe('rateRecipe', () => {
 
   it('updates the rating summary on the recipe document', async () => {
     await rateRecipe('recipe1', 4, { id: 'user1', vorname: 'Max' });
+    expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+    const [, updates] = mockUpdateDoc.mock.calls[0];
+    expect(updates.ratingAvg).toBeDefined();
+    expect(updates.ratingCount).toBeDefined();
+  });
+});
+
+describe('deleteRating', () => {
+  beforeEach(() => {
+    mockDoc.mockReturnValue('ref');
+    mockDeleteDoc.mockResolvedValue();
+    mockUpdateDoc.mockResolvedValue();
+    mockGetDocs.mockResolvedValue({
+      empty: false,
+      size: 1,
+      forEach: (cb) => cb({ data: () => ({ rating: 4 }) })
+    });
+    mockCollection.mockReturnValue('ratings-ref');
+  });
+
+  it('throws when recipeId is missing', async () => {
+    await expect(deleteRating(null, 'rating1')).rejects.toThrow('Invalid parameters for deleteRating');
+  });
+
+  it('throws when ratingId is missing', async () => {
+    await expect(deleteRating('recipe1', null)).rejects.toThrow('Invalid parameters for deleteRating');
+  });
+
+  it('calls deleteDoc for the rating document', async () => {
+    await deleteRating('recipe1', 'rater1');
+    expect(mockDeleteDoc).toHaveBeenCalledTimes(1);
+    expect(mockDeleteDoc).toHaveBeenCalledWith('ref');
+  });
+
+  it('updates the rating summary after deletion', async () => {
+    await deleteRating('recipe1', 'rater1');
     expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
     const [, updates] = mockUpdateDoc.mock.calls[0];
     expect(updates.ratingAvg).toBeDefined();
