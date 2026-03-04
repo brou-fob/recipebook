@@ -131,7 +131,7 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
   }, []);
 
   useEffect(() => {
-    if (!currentUser?.isAdmin) return;
+    if (!currentUser?.appCalls) return;
     getAppCalls().then(calls => setAppCalls(calls)).catch(() => {});
   }, [currentUser]);
 
@@ -273,7 +273,7 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
               defaultImage={timelineMenuDefaultImage}
             />
           )}
-          {currentUser?.isAdmin && (
+          {currentUser?.appCalls && (
             <div
               className="kueche-tile kueche-tile--appaufrufe"
               onClick={() => onViewChange && onViewChange('appCalls')}

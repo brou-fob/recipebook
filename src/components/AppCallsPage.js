@@ -15,7 +15,7 @@ function AppCallsPage({ onBack, currentUser }) {
     loadAppCalls();
   }, []);
 
-  if (!currentUser?.isAdmin) {
+  if (!currentUser?.appCalls) {
     return (
       <div className="app-calls-container">
         <div className="app-calls-header">

@@ -620,7 +620,7 @@ describe('Kueche', () => {
         menus={[]}
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
-        currentUser={{ id: 'user-1', isAdmin: false }}
+        currentUser={{ id: 'user-1', appCalls: false }}
       />
     );
 
@@ -634,7 +634,7 @@ describe('Kueche', () => {
         menus={[]}
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
-        currentUser={{ id: 'user-1', isAdmin: true }}
+        currentUser={{ id: 'user-1', appCalls: true }}
       />
     );
 
@@ -655,7 +655,7 @@ describe('Kueche', () => {
         menus={[]}
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
-        currentUser={{ id: 'user-1', isAdmin: true }}
+        currentUser={{ id: 'user-1', appCalls: true }}
       />
     );
 
@@ -673,7 +673,7 @@ describe('Kueche', () => {
         menus={[]}
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
-        currentUser={{ id: 'user-1', isAdmin: true }}
+        currentUser={{ id: 'user-1', appCalls: true }}
         onViewChange={handleViewChange}
       />
     );
@@ -689,7 +689,7 @@ describe('Kueche', () => {
         menus={[]}
         onSelectRecipe={() => {}}
         allUsers={mockUsers}
-        currentUser={{ id: 'user-1', isAdmin: true }}
+        currentUser={{ id: 'user-1', appCalls: true }}
       />
     );
 

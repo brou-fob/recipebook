@@ -943,6 +943,7 @@ describe('RecipeForm - OCR Scan Integration', () => {
       isAdmin: true,
       role: 'admin',
       fotoscan: true,
+      recipeImport: true,
     };
 
     render(
@@ -1062,6 +1063,7 @@ describe('RecipeForm - Fotoscan Feature', () => {
       isAdmin: true,
       role: 'admin',
       fotoscan: false,
+      recipeImport: true,
     };
 
     render(
@@ -1095,6 +1097,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       email: 'admin@example.com',
       isAdmin: true,
       role: 'admin',
+      recipeImport: true,
     };
 
     render(
@@ -1120,6 +1123,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       email: 'user@example.com',
       isAdmin: false,
       role: 'edit',
+      recipeImport: false,
     };
 
     render(
@@ -1131,7 +1135,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       />
     );
 
-    // Import button should NOT be visible for non-admin users
+    // Import button should NOT be visible for users without recipeImport permission
     const importButton = screen.queryByTitle('Rezept aus externer Quelle importieren');
     expect(importButton).not.toBeInTheDocument();
   });
@@ -1143,7 +1147,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       nachname: 'User',
       email: 'user@example.com',
       role: 'edit',
-      // isAdmin is undefined
+      // recipeImport is undefined
     };
 
     render(
@@ -1155,7 +1159,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       />
     );
 
-    // Import button should NOT be visible when isAdmin is undefined
+    // Import button should NOT be visible when recipeImport is undefined
     const importButton = screen.queryByTitle('Rezept aus externer Quelle importieren');
     expect(importButton).not.toBeInTheDocument();
   });
@@ -1168,6 +1172,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       email: 'admin@example.com',
       isAdmin: true,
       role: 'admin',
+      recipeImport: true,
     };
 
     const existingRecipe = {
@@ -1206,6 +1211,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       email: 'admin@example.com',
       isAdmin: true,
       role: 'admin',
+      recipeImport: true,
     };
 
     const existingRecipe = {
@@ -1245,6 +1251,7 @@ describe('RecipeForm - Import Button Authorization', () => {
       email: 'admin@example.com',
       isAdmin: true,
       role: 'admin',
+      recipeImport: true,
     };
 
     render(
