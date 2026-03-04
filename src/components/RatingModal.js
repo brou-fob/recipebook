@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './RatingModal.css';
-import { rateRecipe, getUserRatingData, subscribeToRatingSummary, getAllRatings } from '../utils/recipeRatings';
+import { rateRecipe, getUserRatingData, subscribeToRatingSummary, getAllRatings, deleteRating } from '../utils/recipeRatings';
 
 /**
  * RatingModal component
@@ -11,9 +11,10 @@ import { rateRecipe, getUserRatingData, subscribeToRatingSummary, getAllRatings 
  * @param {Object}   props
  * @param {string}   props.recipeId      - Recipe document ID
  * @param {Object}   [props.currentUser] - Current user or null for guests
+ * @param {boolean}  [props.canDeleteRatings] - Whether the current user may delete ratings
  * @param {Function} props.onClose       - Called when the modal should close
  */
-function RatingModal({ recipeId, currentUser, onClose }) {
+function RatingModal({ recipeId, currentUser, canDeleteRatings = false, onClose }) {
   const [avg, setAvg] = useState(0);
   const [count, setCount] = useState(0);
   const [selectedRating, setSelectedRating] = useState(null);
@@ -65,6 +66,15 @@ function RatingModal({ recipeId, currentUser, onClose }) {
     } catch (error) {
       console.error('Error saving rating:', error);
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteRating = async (ratingId) => {
+    try {
+      await deleteRating(recipeId, ratingId);
+      getAllRatings(recipeId).then(setAllRatings);
+    } catch (error) {
+      console.error('Error deleting rating:', error);
     }
   };
 
@@ -130,6 +140,16 @@ function RatingModal({ recipeId, currentUser, onClose }) {
                   <div className="rating-review-header">
                     <span className="rating-review-name">{r.raterName || 'Anonym'}</span>
                     <span className="rating-review-date">{formatDate(r.updatedAt || r.createdAt)}</span>
+                    {canDeleteRatings && (
+                      <button
+                        className="rating-review-delete-btn"
+                        onClick={() => handleDeleteRating(r.id)}
+                        title="Bewertung löschen"
+                        aria-label="Bewertung löschen"
+                      >
+                        🗑
+                      </button>
+                    )}
                   </div>
                   <div className="rating-review-hearts" aria-label={`${r.rating} von 5 Herzen`}>
                     {[1, 2, 3, 4, 5].map((n) => (

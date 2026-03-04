@@ -10,6 +10,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  deleteDoc,
   collection,
   getDocs,
   onSnapshot,
@@ -194,6 +195,21 @@ export const getAllRatings = async (recipeId) => {
     console.error('Error getting all ratings:', error);
     return [];
   }
+};
+
+/**
+ * Delete a specific rating from a recipe and update the summary.
+ * @param {string} recipeId - Recipe ID
+ * @param {string} ratingId - Rating document ID (raterKey) to delete
+ * @returns {Promise<void>}
+ */
+export const deleteRating = async (recipeId, ratingId) => {
+  if (!recipeId || !ratingId) {
+    throw new Error('Invalid parameters for deleteRating');
+  }
+  const ratingRef = doc(db, 'recipes', recipeId, 'ratings', ratingId);
+  await deleteDoc(ratingRef);
+  await updateRatingSummary(recipeId);
 };
 
 /**

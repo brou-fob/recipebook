@@ -219,7 +219,7 @@ function UserManagement({ onBack, currentUser, allUsers = [] }) {
 
         <div className="role-permissions-section">
           <h3>Funktionen nach Berechtigung</h3>
-          <p className="info-text">Legen Sie hier fest, welche Berechtigungsgruppen Zugriff auf Fotoscan, Webimport, App-Aufrufe (Daten), App-Aufrufe (Menüpunkt) und Rezepteimport haben.</p>
+          <p className="info-text">Legen Sie hier fest, welche Berechtigungsgruppen Zugriff auf Fotoscan, Webimport, App-Aufrufe (Daten), App-Aufrufe (Menüpunkt), Rezepteimport und Bewertungs-Löschen haben.</p>
           <div className="role-permissions-table-container">
             <table className="role-permissions-table">
               <thead>
@@ -230,11 +230,12 @@ function UserManagement({ onBack, currentUser, allUsers = [] }) {
                   <th>App-Aufrufe</th>
                   <th>Menüpunkt</th>
                   <th>Rezepteimport</th>
+                  <th>Bew. löschen</th>
                 </tr>
               </thead>
               <tbody>
                 {[ROLES.ADMIN, ROLES.MODERATOR, ROLES.EDIT, ROLES.COMMENT, ROLES.READ].map((role) => {
-                  const perms = rolePermissions?.[role] || { fotoscan: false, webimport: false, appCalls: false, appCallsMenu: false, recipeImport: false };
+                  const perms = rolePermissions?.[role] || { fotoscan: false, webimport: false, appCalls: false, appCallsMenu: false, recipeImport: false, deleteRating: false };
                   return (
                     <tr key={role}>
                       <td>
@@ -285,6 +286,15 @@ function UserManagement({ onBack, currentUser, allUsers = [] }) {
                           title={perms.recipeImport ? 'Rezepteimport deaktivieren' : 'Rezepteimport aktivieren'}
                         >
                           {perms.recipeImport ? '✓' : '✗'}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          className={`permission-toggle ${perms.deleteRating ? 'active' : ''}`}
+                          onClick={() => handleToggleRolePermission(role, 'deleteRating', perms.deleteRating)}
+                          title={perms.deleteRating ? 'Bewertungs-Löschen deaktivieren' : 'Bewertungs-Löschen aktivieren'}
+                        >
+                          {perms.deleteRating ? '✓' : '✗'}
                         </button>
                       </td>
                     </tr>
