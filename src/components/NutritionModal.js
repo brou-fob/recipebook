@@ -37,7 +37,7 @@ function clearStoredCalcResult(recipeId) {
   try { localStorage.removeItem(CALC_RESULT_STORAGE_KEY_PREFIX + recipeId); } catch { /* ignore */ }
 }
 
-function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
+function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser }) {
   const [kalorien, setKalorien] = useState('');
   const [protein, setProtein] = useState('');
   const [fett, setFett] = useState('');
@@ -72,6 +72,7 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
     return map;
   });
   const closeButtonRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   // Initialise fields from existing recipe data (stored as totals; display per portion)
   useEffect(() => {
@@ -194,6 +195,9 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
       return;
     }
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setAutoCalcLoading(true);
     setAutoCalcResult(null);
     clearStoredCalcResult(recipe?.id);
@@ -213,6 +217,9 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
 
     // Process regular ingredients via OpenFoodFacts
     for (let i = 0; i < ingredients.length; i++) {
+      if (abortController.signal.aborted) {
+        break;
+      }
       const ingredient = ingredients[i];
       const effectiveIngredient = reformulations[ingredient]?.text || ingredient;
       setCalcProgress({ done: i, total: ingredients.length + recipeLinkItems.length, current: effectiveIngredient });
@@ -247,6 +254,9 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
 
     // Process recipe-link ingredients dynamically from linked recipe's naehrwerte
     for (let i = 0; i < recipeLinkItems.length; i++) {
+      if (abortController.signal.aborted) {
+        break;
+      }
       const { ingredient, link } = recipeLinkItems[i];
       setCalcProgress({ done: ingredients.length + i, total: ingredients.length + recipeLinkItems.length, current: link.recipeName });
 
@@ -285,8 +295,14 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
     setBallaststoffe(perPortion.ballaststoffe != null ? String(perPortion.ballaststoffe) : '');
     setSalz(perPortion.salz != null ? String(perPortion.salz) : '');
 
+    abortControllerRef.current = null;
     setCalcProgress(null);
     setAutoCalcLoading(false);
+
+    if (abortController.signal.aborted) {
+      return;
+    }
+
     const totalCount = ingredients.length + recipeLinkItems.length;
     const result = { foundCount, totalCount, notIncluded };
     setAutoCalcResult(result);
@@ -307,6 +323,31 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
       console.error('Could not auto-save nutrition data:', saveErr);
       setAutoCalcResult(prev => prev ? { ...prev, saveError: true } : null);
     }
+  };
+
+  const handleAbortCalculation = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    try {
+      await onSave({
+        ...(recipe?.naehrwerte || {}),
+        calcPending: false,
+        calcError: 'Berechnung abgebrochen',
+      });
+    } catch (err) {
+      console.error('Error clearing calcPending on abort:', err);
+    }
+
+    setCalcProgress(null);
+    setAutoCalcLoading(false);
+    setAutoCalcResult({
+      info: 'Berechnung abgebrochen. Bereits gefundene Werte wurden übernommen.',
+      foundCount: 0,
+      totalCount: 0,
+      notIncluded: [],
+    });
   };
 
   const hasValues =
@@ -482,7 +523,19 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [] }) {
                 )}
               </div>
             )}
-            {autoCalcResult && !autoCalcResult.error && (
+            {calcProgress && (currentUser?.isAdmin || currentUser?.role === 'moderator') && (
+              <button
+                className="nutrition-abort-button"
+                onClick={handleAbortCalculation}
+                title="Berechnung abbrechen"
+              >
+                ❌ Abbrechen
+              </button>
+            )}
+            {autoCalcResult && autoCalcResult.info && (
+              <p className="nutrition-autocalc-info">{autoCalcResult.info}</p>
+            )}
+            {autoCalcResult && !autoCalcResult.error && !autoCalcResult.info && (
               <>
                 <p className="nutrition-autocalc-info">
                   {autoCalcResult.foundCount} von {autoCalcResult.totalCount} Zutaten gefunden.

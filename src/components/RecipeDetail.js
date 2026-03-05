@@ -1410,6 +1410,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           allRecipes={allRecipes}
           onClose={() => setShowNutritionModal(false)}
           onSave={handleSaveNutrition}
+          currentUser={currentUser}
         />
       )}
       {showShoppingListModal && (
