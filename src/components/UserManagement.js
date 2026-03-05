@@ -507,7 +507,7 @@ function UserManagement({ onBack, currentUser, allUsers = [] }) {
                 type="password"
                 value={tempPassword}
                 onChange={(e) => setTempPassword(e.target.value)}
-                placeholder="Mindestens 6 Zeichen"
+                placeholder="Mindestens 12 Zeichen, Zahl oder Sonderzeichen"
                 autoComplete="new-password"
               />
               {passwordError && (

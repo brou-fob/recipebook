@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Register.css';
+import { validatePassword } from '../utils/userManagement';
 
 function Register({ onRegister, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -38,9 +39,10 @@ function Register({ onRegister, onSwitchToLogin }) {
         return;
       }
       
-      // Validate password length
-      if (trimmedPassword.length < 6) {
-        setError('Passwort muss mindestens 6 Zeichen lang sein.');
+      // Validate password strength
+      const passwordValidation = validatePassword(trimmedPassword);
+      if (!passwordValidation.valid) {
+        setError(passwordValidation.message);
         setIsLoading(false);
         return;
       }
@@ -123,7 +125,7 @@ function Register({ onRegister, onSwitchToLogin }) {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password">Passwort * (mind. 6 Zeichen)</label>
+            <label htmlFor="password">Passwort * (mind. 12 Zeichen, Zahl oder Sonderzeichen)</label>
             <input
               type="password"
               id="password"
@@ -132,7 +134,7 @@ function Register({ onRegister, onSwitchToLogin }) {
               onChange={handleChange}
               autoComplete="new-password"
               required
-              minLength="6"
+              minLength="12"
               disabled={isLoading}
             />
           </div>
@@ -146,7 +148,7 @@ function Register({ onRegister, onSwitchToLogin }) {
               onChange={handleChange}
               autoComplete="new-password"
               required
-              minLength="6"
+              minLength="12"
               disabled={isLoading}
             />
           </div>
