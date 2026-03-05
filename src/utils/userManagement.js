@@ -135,7 +135,7 @@ export const registerUser = async (userData) => {
     } else if (error.code === 'auth/invalid-email') {
       return { success: false, message: 'Ungültige E-Mail-Adresse.' };
     } else if (error.code === 'auth/weak-password') {
-      return { success: false, message: 'Das Passwort ist zu schwach. Mindestens 6 Zeichen erforderlich.' };
+      return { success: false, message: 'Das Passwort ist zu schwach. Mindestens 12 Zeichen erforderlich.' };
     }
     
     return { success: false, message: 'Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.' };
@@ -701,16 +701,38 @@ export const getRoleDisplayName = (role) => {
   return roleNames[role] || role;
 };
 
+// Blacklist of commonly used weak passwords (all lowercase for case-insensitive comparison).
+const COMMON_PASSWORDS = [
+  '123456', 'password', '12345678', 'qwerty', 'abc123', '111111',
+  '123456789', '1234567890', 'iloveyou', 'admin123', 'letmein',
+  'welcome', 'monkey', 'dragon', 'master', 'sunshine', 'princess',
+  'qwerty123', 'superman', 'shadow', 'baseball', 'football',
+  'charlie', 'donald', 'starwars', 'passw0rd', 'trustno1',
+  'password123', 'password1234', 'password12345'
+];
+
 /**
  * Validate password strength
  * @param {string} password - Password to validate
  * @returns {Object} { valid: boolean, message: string }
  */
 export const validatePassword = (password) => {
-  if (!password || password.length < 6) {
+  if (!password || password.length < 12) {
     return { 
       valid: false, 
-      message: 'Das Passwort muss mindestens 6 Zeichen lang sein.' 
+      message: 'Das Passwort muss mindestens 12 Zeichen lang sein.' 
+    };
+  }
+  if (!/[0-9]/.test(password) && !/[^a-zA-Z0-9]/.test(password)) {
+    return {
+      valid: false,
+      message: 'Das Passwort muss mindestens eine Zahl oder ein Sonderzeichen enthalten.'
+    };
+  }
+  if (COMMON_PASSWORDS.includes(password.toLowerCase())) {
+    return {
+      valid: false,
+      message: 'Dieses Passwort ist zu häufig verwendet. Bitte wählen Sie ein sichereres Passwort.'
     };
   }
   return { valid: true, message: '' };

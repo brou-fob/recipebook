@@ -652,26 +652,43 @@ describe('User Management Utilities', () => {
   });
 
   describe('validatePassword', () => {
-    test('should accept valid password', () => {
-      const result = validatePassword('password123');
+    test('should accept valid password with digit', () => {
+      const result = validatePassword('SecurePassw0rd');
       expect(result.valid).toBe(true);
       expect(result.message).toBe('');
     });
 
-    test('should reject password shorter than 6 characters', () => {
-      const result = validatePassword('12345');
+    test('should accept valid password with special character', () => {
+      const result = validatePassword('SecurePassword!');
+      expect(result.valid).toBe(true);
+      expect(result.message).toBe('');
+    });
+
+    test('should reject password shorter than 12 characters', () => {
+      const result = validatePassword('Short1!');
       expect(result.valid).toBe(false);
-      expect(result.message).toContain('mindestens 6 Zeichen');
+      expect(result.message).toContain('mindestens 12 Zeichen');
+    });
+
+    test('should reject password without digit or special character', () => {
+      const result = validatePassword('OnlyLettersHere');
+      expect(result.valid).toBe(false);
+      expect(result.message).toContain('Zahl oder ein Sonderzeichen');
     });
 
     test('should reject empty password', () => {
       const result = validatePassword('');
       expect(result.valid).toBe(false);
-      expect(result.message).toContain('mindestens 6 Zeichen');
+      expect(result.message).toContain('mindestens 12 Zeichen');
     });
 
     test('should reject null password', () => {
       const result = validatePassword(null);
+      expect(result.valid).toBe(false);
+    });
+
+    test('should reject common passwords', () => {
+      const result = validatePassword('password123');
       expect(result.valid).toBe(false);
     });
   });
@@ -770,7 +787,7 @@ describe('User Management Utilities', () => {
       const result = setTemporaryPassword(testUser.id, '12345');
       
       expect(result.success).toBe(false);
-      expect(result.message).toContain('mindestens 6 Zeichen');
+      expect(result.message).toContain('mindestens 12 Zeichen');
     });
 
     test('should handle non-existent user', () => {
@@ -831,7 +848,7 @@ describe('User Management Utilities', () => {
       const result = changePassword(testUser.id, '12345');
       
       expect(result.success).toBe(false);
-      expect(result.message).toContain('mindestens 6 Zeichen');
+      expect(result.message).toContain('mindestens 12 Zeichen');
     });
 
     test('should handle non-existent user', () => {

@@ -60,6 +60,18 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 /**
+ * Blacklist of commonly used weak passwords (all lowercase for case-insensitive comparison).
+ */
+const COMMON_PASSWORDS = [
+  '123456', 'password', '12345678', 'qwerty', 'abc123', '111111',
+  '123456789', '1234567890', 'iloveyou', 'admin123', 'letmein',
+  'welcome', 'monkey', 'dragon', 'master', 'sunshine', 'princess',
+  'qwerty123', 'superman', 'shadow', 'baseball', 'football',
+  'charlie', 'donald', 'starwars', 'passw0rd', 'trustno1',
+  'password123', 'password1234', 'password12345',
+];
+
+/**
  * Default AI recipe extraction prompt (must stay in sync with src/utils/customLists.js)
  */
 const DEFAULT_AI_RECIPE_PROMPT = `Analysiere dieses Rezeptbild und extrahiere alle Informationen als strukturiertes JSON.
@@ -1363,10 +1375,22 @@ exports.setUserPassword = onCall(
       if (!targetUserId || typeof targetUserId !== 'string') {
         throw new HttpsError('invalid-argument', 'Ungültige Benutzer-ID.');
       }
-      if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 12) {
         throw new HttpsError(
             'invalid-argument',
-            'Das Passwort muss mindestens 6 Zeichen lang sein.'
+            'Das Passwort muss mindestens 12 Zeichen lang sein.'
+        );
+      }
+      if (!/[0-9]/.test(newPassword) && !/[^a-zA-Z0-9]/.test(newPassword)) {
+        throw new HttpsError(
+            'invalid-argument',
+            'Das Passwort muss mindestens eine Zahl oder ein Sonderzeichen enthalten.'
+        );
+      }
+      if (COMMON_PASSWORDS.includes(newPassword.toLowerCase())) {
+        throw new HttpsError(
+            'invalid-argument',
+            'Dieses Passwort ist zu häufig verwendet. Bitte wählen Sie ein sichereres Passwort.'
         );
       }
 
