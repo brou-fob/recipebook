@@ -2154,3 +2154,114 @@ exports.recipeImportPage = onRequest(
     },
 );
 
+/**
+ * Atomically create a user profile in Firestore after Firebase Auth registration.
+ *
+ * The caller must already be authenticated (Firebase Auth) as the new user.
+ * The function uses a Firestore transaction to detect whether this is the very
+ * first user and grants admin rights only in that case, eliminating the
+ * client-side race condition.
+ *
+ * Expected request.data: { vorname, nachname, email }
+ */
+exports.createUserProfile = onCall(
+    {
+      maxInstances: 10,
+    },
+    async (request) => {
+      // Must be called by an authenticated user
+      if (!request.auth) {
+        throw new HttpsError(
+            'unauthenticated',
+            'Sie müssen angemeldet sein, um diese Aktion durchzuführen.',
+        );
+      }
+
+      const {vorname, nachname, email} = request.data || {};
+      const uid = request.auth.uid;
+
+      // Basic input validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (
+        !vorname || typeof vorname !== 'string' || vorname.trim().length === 0 ||
+        !nachname || typeof nachname !== 'string' || nachname.trim().length === 0 ||
+        !email || typeof email !== 'string' || !emailRegex.test(email)
+      ) {
+        throw new HttpsError(
+            'invalid-argument',
+            'Ungültige Benutzerdaten. Vor- und Nachname sowie E-Mail sind erforderlich.',
+        );
+      }
+
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(uid);
+      // Sentinel document used to atomically mark that the first user has been
+      // registered. Stored in 'settings' because the Admin SDK bypasses rules.
+      const sentinelRef = db.collection('settings').doc('_adminBootstrap');
+
+      try {
+        // Non-transactional pre-check: protects against migration edge case where
+        // users already exist but the sentinel has not been set yet.
+        const existingUsersSnap = await db.collection('users').limit(1).get();
+        const usersAlreadyExist = !existingUsersSnap.empty;
+
+        const isFirstUser = await db.runTransaction(async (transaction) => {
+          // Check whether the profile already exists (idempotency)
+          const existingDoc = await transaction.get(userRef);
+          if (existingDoc.exists) {
+            return null; // Signal: document already present, skip creation
+          }
+
+          // Read sentinel document to detect the first-user case atomically.
+          // Firestore transactions guarantee that if two concurrent transactions
+          // both attempt to write the sentinel, only one commits; the other
+          // retries and sees the sentinel already set.
+          const sentinelDoc = await transaction.get(sentinelRef);
+
+          // A user is the "first" only if no users existed before AND no
+          // sentinel has been written yet.
+          const first = !usersAlreadyExist && !sentinelDoc.exists;
+
+          const userProfile = {
+            vorname: vorname.trim(),
+            nachname: nachname.trim(),
+            email: email.toLowerCase().trim(),
+            isAdmin: first,
+            role: first ? 'admin' : 'read',
+            fotoscan: false,
+            createdAt: new Date().toISOString(),
+          };
+
+          transaction.set(userRef, userProfile);
+          if (first) {
+            // Mark that the first admin has been registered
+            transaction.set(sentinelRef, {createdAt: new Date().toISOString()});
+          }
+          // Return the profile so the caller can use it without an extra read
+          return {first, userProfile};
+        });
+
+        if (isFirstUser === null) {
+          // Profile already existed – return it without modification
+          const existingDoc = await userRef.get();
+          return {success: true, user: {id: uid, ...existingDoc.data()}};
+        }
+
+        console.log(
+            `[${new Date().toISOString()}] createUserProfile: created profile for ${uid}` +
+            ` (isFirstUser=${isFirstUser.first})`,
+        );
+        return {success: true, user: {id: uid, ...isFirstUser.userProfile}};
+      } catch (err) {
+        console.error(
+            `[${new Date().toISOString()}] createUserProfile error for uid ${uid}:`,
+            err,
+        );
+        throw new HttpsError(
+            'internal',
+            'Fehler beim Erstellen des Benutzerprofils. Bitte versuchen Sie es erneut.',
+        );
+      }
+    },
+);
+

@@ -276,7 +276,9 @@ enableIndexedDbPersistence(db).catch((err) => {
 **Symptom:** Fehler beim Lesen/Schreiben von Daten  
 **Ursache:** Firestore Security Rules zu restriktiv oder falsch konfiguriert
 
-**Erforderliche Rules (Minimum):**
+> 🚨 **SICHERHEITSWARNUNG:** Verwenden Sie in Konfigurationsbeispielen **niemals** Regeln wie `allow create: if true`, `allow read, write: if true` oder `allow create: if !exists(...)` ohne vollständige Authentifizierungs- und Feldprüfung. Solche Regeln erlauben es jedem, beliebige Dokumente anzulegen – einschließlich Fake-Admin-Accounts.
+
+**Sichere Minimal-Rules für RecipeBook:**
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -289,23 +291,23 @@ service cloud.firestore {
     // Rezepte
     match /recipes/{recipeId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
     
-    // Benutzer
+    // Benutzer – nur eigenes Dokument, kein Admin-Flag client-seitig setzbar
     match /users/{userId} {
       allow read: if isSignedIn();
-      // Erster Benutzer oder self-write
-      allow create: if !exists(/databases/$(database)/documents/users/$(userId)) || (isSignedIn() && request.auth.uid == userId);
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && !('isAdmin' in request.resource.data)
+                    && request.resource.data.role == 'read';
       allow update: if isSignedIn() && request.auth.uid == userId;
     }
     
     // Menüs
     match /menus/{menuId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
     
     // User-spezifische Daten
@@ -324,11 +326,6 @@ service cloud.firestore {
 }
 ```
 
-**Hinweis:** RecipeBook nutzt ein **Custom Authentication System** mit Firestore, nicht Firebase Authentication direkt. Das bedeutet:
-- `request.auth` ist beim Login zunächst `null`
-- Session wird in `sessionStorage` gespeichert
-- Firestore Rules müssen angepasst werden für erste Registrierung
-
 **Sichere Rules für RecipeBook:**
 
 > 🚨 **SICHERHEITSWARNUNG:** Verwenden Sie **NIEMALS** Regeln wie `allow read: if true`, `allow create: if true` oder `allow read, write: if true`.
@@ -337,12 +334,15 @@ service cloud.firestore {
 >
 > Nutzen Sie ausschließlich die authentifizierungsbasierten Rules aus der Datei [`firestore.rules`](firestore.rules) im Repository.
 
-Die sichere Konfiguration für die `users`-Collection verwendet Firebase Authentication:
+Die sichere Konfiguration für die `users`-Collection verhindert, dass Clients das `isAdmin`-Feld oder eine privilegierte Rolle selbst setzen können. Die Erkennung des ersten Administrators erfolgt atomisch durch die `createUserProfile` Cloud Function:
 ```javascript
-// Sichere Rules – nur authentifizierte Nutzer dürfen eigene Dokumente erstellen
+// Sichere Rules – Feldwerte auf client-seitig erstellten Dokumenten einschränken
 match /users/{userId} {
   allow read: if request.auth != null;
-  allow create: if request.auth != null && request.auth.uid == userId;
+  allow create: if request.auth != null
+                && request.auth.uid == userId
+                && !('isAdmin' in request.resource.data)
+                && request.resource.data.role == 'read';
   allow update: if request.auth != null && request.auth.uid == userId;
   allow delete: if false; // Nur Admins via Admin SDK
 }
@@ -353,13 +353,12 @@ Die vollständigen, produktionsreifen Regeln befinden sich in [`firestore.rules`
 **Symptom:** Registrierung schlägt fehl mit Permission Error  
 **Ursache:** Security Rules erlauben kein CREATE ohne Authentication
 
-**Lösung:** Stellen Sie sicher, dass Firebase Authentication (Email/Password) aktiviert ist und verwenden Sie die sicheren Rules aus [`firestore.rules`](firestore.rules). Die dort hinterlegte Regel erlaubt es authentifizierten Nutzern, ihr eigenes Dokument anzulegen:
-```javascript
-// Aus firestore.rules – Bootstrap: authentifizierter Nutzer darf eigenes Dokument erstellen
-allow create: if isAuthenticated() && request.auth.uid == userId;
-```
+**Lösung:** Stellen Sie sicher, dass Firebase Authentication (Email/Password) aktiviert ist. Die App erstellt zunächst einen Firebase Auth-Account (client-seitig) und delegiert dann die Firestore-Profilerstellung an die `createUserProfile` Cloud Function:
+- Die Cloud Function prüft atomar, ob bereits Benutzer existieren
+- Der erste Benutzer erhält automatisch Admin-Rechte (serverseitig, ohne Race Condition)
+- Alle weiteren Benutzer erhalten die Rolle `read`
 
-> ⚠️ **Wichtig:** `allow create: if true` darf **nicht** verwendet werden, da dies es jedem (ohne Anmeldung) erlaubt, beliebige Nutzer-Dokumente anzulegen – einschließlich Admin-Accounts.
+> ⚠️ **Wichtig:** `allow create: if true` und die client-seitige `isFirstUser()`-Prüfung dürfen **nicht** verwendet werden – ersteres ermöglicht die Anlage beliebiger Admin-Accounts ohne Anmeldung, letzteres ist anfällig für Race Conditions bei gleichzeitigen Registrierungen.
 
 ---
 
