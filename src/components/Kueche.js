@@ -74,7 +74,7 @@ function AppCallsBarChart({ appCalls }) {
         return (
           <div
             key={i}
-            className={`kueche-bar-chart__bar${isToday ? ' kueche-bar-chart__bar--current' : ''}`}
+            className={`kueche-bar-chart__bar${isToday ? ' kueche-bar-chart__bar--appaufrufe' : ''}`}
             style={{ height: `${heightPercent}%` }}
           />
         );
@@ -98,7 +98,7 @@ function RecipeBarChart({ recipes }) {
         return (
           <div
             key={i}
-            className={`kueche-bar-chart__bar${isCurrentMonth ? ' kueche-bar-chart__bar--current' : ''}`}
+            className={`kueche-bar-chart__bar${isCurrentMonth ? ' kueche-bar-chart__bar--meinkochbuch' : ''}`}
             style={{ height: `${heightPercent}%` }}
           />
         );

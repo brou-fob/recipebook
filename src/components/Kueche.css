@@ -147,6 +147,10 @@
   margin-bottom: 6px;
 }
 
-.kueche-bar-chart__bar--current {
+.kueche-bar-chart__bar--appaufrufe {
+  background-color: #7A2E2E;
+}
+
+.kueche-bar-chart__bar--meinkochbuch {
   background-color: #DF7A00;
 }
