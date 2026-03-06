@@ -209,6 +209,16 @@ export async function parseRecipeImportPage(url, onProgress = null) {
     rawText = doc.querySelector('pre')?.textContent?.trim() || '';
   }
 
+  // Detect raw HTML content (e.g. from Instagram or other non-recipe pages).
+  // This happens when the share extension captures page HTML instead of recipe data.
+  if (/^\s*<!DOCTYPE\s+html/i.test(rawText) || /^\s*<html[\s>]/i.test(rawText)) {
+    throw new Error(
+      'Die importierte Seite enthält kein gültiges Rezept. ' +
+      'Instagram und ähnliche Seiten werden nicht unterstützt – ' +
+      'bitte importieren Sie eine Rezept-Website.',
+    );
+  }
+
   if (onProgress) onProgress(50);
 
   // Render the raw text onto a canvas image and analyze with Gemini AI.

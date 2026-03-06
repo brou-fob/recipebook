@@ -323,6 +323,59 @@ ${withJsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
     ).rejects.toThrow('AI error');
   });
 
+  test('throws a user-friendly error when rawText is raw HTML (e.g. Instagram page)', async () => {
+    const rawHtmlContent = `<!DOCTYPE html><html class="_9dls" lang="de"><head></head><body>Instagram content</body></html>`;
+    // HTML-escape the raw HTML so DOMParser stores it as text inside <pre>
+    const escapedRawHtml = rawHtmlContent
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    // The import page wraps the captured content inside a <pre> tag
+    const importPageHtml = `<!DOCTYPE html>
+<html lang="de">
+<head><title>Import</title></head>
+<body>
+<h1>Import</h1>
+<pre>${escapedRawHtml}</pre>
+</body>
+</html>`;
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(importPageHtml),
+    });
+
+    await expect(
+      parseRecipeImportPage('https://example.com/recipeImportPage?token=abc'),
+    ).rejects.toThrow(/kein gültiges Rezept/i);
+
+    // AI should NOT have been called – we bail out early
+    expect(recognizeRecipeWithAI).not.toHaveBeenCalled();
+  });
+
+  test('throws a user-friendly error when JSON-LD description is raw HTML', async () => {
+    const rawHtmlContent = '<html lang="de"><body>Non-recipe page</body></html>';
+    const jsonLd = JSON.stringify({ name: 'Test', description: rawHtmlContent });
+    const importPageHtml = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<script type="application/ld+json">${jsonLd}</script>
+</head>
+<body></body>
+</html>`;
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(importPageHtml),
+    });
+
+    await expect(
+      parseRecipeImportPage('https://example.com/recipeImportPage?token=abc'),
+    ).rejects.toThrow(/kein gültiges Rezept/i);
+
+    expect(recognizeRecipeWithAI).not.toHaveBeenCalled();
+  });
+
   test('re-throws AI error when text parsing also fails', async () => {
     const aiError = new Error('AI error');
     recognizeRecipeWithAI.mockRejectedValue(aiError);
