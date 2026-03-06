@@ -9,13 +9,6 @@ import { httpsCallable } from 'firebase/functions';
 import { getAIRecipePrompt, getCustomLists, clearSettingsCache } from './customLists';
 
 /**
- * Configuration for AI OCR providers
- * 
- * Note: With Cloud Functions, the API key is stored securely server-side.
- * The frontend no longer needs REACT_APP_GEMINI_API_KEY.
- */
-
-/**
  * Retry configuration for transient errors
  */
 const MAX_RETRIES = 3;
@@ -28,26 +21,6 @@ const RETRYABLE_CODES = ['unavailable', 'deadline-exceeded'];
  */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Get configuration for AI OCR providers
- * Reads from environment variables dynamically
- */
-function getAiOcrConfig() {
-  return {
-    gemini: {
-      apiKey: process.env.REACT_APP_GEMINI_API_KEY || '',
-      model: 'gemini-1.5-flash', // Free tier model
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
-    },
-    // Future providers can be added here
-    openai: {
-      apiKey: process.env.REACT_APP_OPENAI_API_KEY || '',
-      model: 'gpt-4o',
-      endpoint: 'https://api.openai.com/v1/chat/completions',
-    }
-  };
 }
 
 /**
@@ -369,7 +342,7 @@ export async function recognizeRecipeWithAI(imageBase64, options = {}) {
     } else if (isAiOcrAvailable('openai')) {
       selectedProvider = 'openai';
     } else {
-      throw new Error('No AI OCR provider is configured. Please add API keys to .env.local');
+      throw new Error('No AI OCR provider is configured. Please contact the administrator.');
     }
   }
 
@@ -483,6 +456,5 @@ export async function compareOcrMethods(imageBase64, language = 'de') {
 
 // Export configuration for testing purposes
 export const __testing__ = {
-  getAiOcrConfig,
   getRecipeExtractionPrompt
 };
