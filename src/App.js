@@ -38,6 +38,7 @@ import {
 import { toggleMenuFavorite } from './utils/menuFavorites';
 import { applyFaviconSettings } from './utils/faviconUtils';
 import { applyTileSizePreference } from './utils/customLists';
+import { logRecipeCall } from './utils/recipeCallsFirestore';
 import {
   subscribeToRecipes,
   addRecipe as addRecipeToFirestore,
@@ -472,6 +473,9 @@ function App() {
 
   const handleSelectRecipe = (recipe) => {
     setSelectedRecipe(recipe);
+    if (recipe && currentUser) {
+      logRecipeCall(currentUser, recipe);
+    }
   };
 
   const handleBackFromRecipeDetail = () => {
