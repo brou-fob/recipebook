@@ -29,9 +29,10 @@ HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue({
 });
 HTMLCanvasElement.prototype.toDataURL = jest.fn().mockReturnValue('data:image/png;base64,mockcanvas');
 
-import { isRecipeImportPageUrl, parseRecipeImportPage, extractTextFromHtml } from './webImportService';
+import { isRecipeImportPageUrl, parseRecipeImportPage, extractTextFromHtml, isInstagramReelUrl, importInstagramReel } from './webImportService';
 import { recognizeRecipeWithAI, processHtmlWithGemini } from './aiOcrService';
 import { parseOcrText } from './ocrParser';
+import { httpsCallable } from 'firebase/functions';
 
 // --------------------------------------------------------------------------
 // isRecipeImportPageUrl
@@ -487,5 +488,169 @@ ${withJsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
     await expect(
       parseRecipeImportPage('https://example.com/recipeImportPage?token=abc'),
     ).rejects.toThrow('AI error');
+  });
+});
+
+// --------------------------------------------------------------------------
+// isInstagramReelUrl
+// --------------------------------------------------------------------------
+
+describe('isInstagramReelUrl', () => {
+  test('returns true for a standard www.instagram.com reel URL', () => {
+    expect(isInstagramReelUrl('https://www.instagram.com/reel/DTXPDu9DHHb/')).toBe(true);
+  });
+
+  test('returns true for instagram.com (without www) reel URL', () => {
+    expect(isInstagramReelUrl('https://instagram.com/reel/ABC123/')).toBe(true);
+  });
+
+  test('returns true for a reel URL without trailing slash', () => {
+    expect(isInstagramReelUrl('https://www.instagram.com/reel/DTXPDu9DHHb')).toBe(true);
+  });
+
+  test('returns true for reel IDs containing underscores and hyphens', () => {
+    expect(isInstagramReelUrl('https://www.instagram.com/reel/abc-def_123/')).toBe(true);
+  });
+
+  test('returns false for an Instagram post (non-reel) URL', () => {
+    expect(isInstagramReelUrl('https://www.instagram.com/p/DTXPDu9DHHb/')).toBe(false);
+  });
+
+  test('returns false for an Instagram profile URL', () => {
+    expect(isInstagramReelUrl('https://www.instagram.com/username/')).toBe(false);
+  });
+
+  test('returns false for an unrelated URL', () => {
+    expect(isInstagramReelUrl('https://www.chefkoch.de/rezepte/123456')).toBe(false);
+  });
+
+  test('returns false for an empty string', () => {
+    expect(isInstagramReelUrl('')).toBe(false);
+  });
+
+  test('returns false for an invalid URL string', () => {
+    expect(isInstagramReelUrl('not-a-url')).toBe(false);
+  });
+
+  test('returns false for a URL with no reel ID', () => {
+    expect(isInstagramReelUrl('https://www.instagram.com/reel/')).toBe(false);
+  });
+});
+
+// --------------------------------------------------------------------------
+// importInstagramReel
+// --------------------------------------------------------------------------
+
+describe('importInstagramReel', () => {
+  const mockReelResult = {
+    title: 'Pasta Rezept',
+    ingredients: ['400g Spaghetti', '200g Speck'],
+    steps: ['Nudeln kochen', 'Speck braten'],
+    servings: 2,
+    prepTime: '10 min',
+    cookTime: '20 min',
+    difficulty: 2,
+    cuisine: 'Italienisch',
+    category: 'Hauptgericht',
+    tags: [],
+    sourceUrl: 'https://www.instagram.com/reel/DTXPDu9DHHb/',
+  };
+
+  const validReelUrl = 'https://www.instagram.com/reel/DTXPDu9DHHb/';
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  test('throws immediately for an invalid Instagram Reel URL', async () => {
+    await expect(
+      importInstagramReel('https://www.chefkoch.de/rezepte/123'),
+    ).rejects.toThrow(/ungültige/i);
+  });
+
+  test('calls the scrapeInstagramReel Cloud Function with the correct arguments', async () => {
+    const mockCallable = jest.fn().mockResolvedValue({ data: mockReelResult });
+    httpsCallable.mockReturnValue(mockCallable);
+
+    await importInstagramReel(validReelUrl);
+
+    expect(httpsCallable).toHaveBeenCalledWith({}, 'scrapeInstagramReel');
+    expect(mockCallable).toHaveBeenCalledWith(
+      expect.objectContaining({ url: validReelUrl, language: 'de' }),
+    );
+  });
+
+  test('returns structured recipe data from a successful Cloud Function call', async () => {
+    const mockCallable = jest.fn().mockResolvedValue({ data: mockReelResult });
+    httpsCallable.mockReturnValue(mockCallable);
+
+    const result = await importInstagramReel(validReelUrl);
+
+    expect(result.title).toBe('Pasta Rezept');
+    expect(result.ingredients).toEqual(['400g Spaghetti', '200g Speck']);
+    expect(result.steps).toEqual(['Nudeln kochen', 'Speck braten']);
+    expect(result.servings).toBe(2);
+    expect(result.cuisine).toBe('Italienisch');
+    expect(result.category).toBe('Hauptgericht');
+  });
+
+  test('maps prepTime to cookTime in the result', async () => {
+    const mockCallable = jest.fn().mockResolvedValue({ data: { ...mockReelResult, cookTime: null } });
+    httpsCallable.mockReturnValue(mockCallable);
+
+    const result = await importInstagramReel(validReelUrl);
+
+    expect(result.cookTime).toBe('10 min');
+  });
+
+  test('reports progress during the Cloud Function call', async () => {
+    const mockCallable = jest.fn().mockResolvedValue({ data: mockReelResult });
+    httpsCallable.mockReturnValue(mockCallable);
+
+    const progressValues = [];
+    await importInstagramReel(validReelUrl, (p) => progressValues.push(p));
+
+    expect(progressValues.length).toBeGreaterThanOrEqual(2);
+    expect(progressValues[0]).toBeGreaterThan(0);
+    expect(progressValues[progressValues.length - 1]).toBe(100);
+  });
+
+  test('throws a user-friendly error when the Cloud Function returns unauthenticated', async () => {
+    const error = Object.assign(new Error('not logged in'), { code: 'unauthenticated' });
+    const mockCallable = jest.fn().mockRejectedValue(error);
+    httpsCallable.mockReturnValue(mockCallable);
+
+    await expect(importInstagramReel(validReelUrl)).rejects.toThrow(/melde dich an/i);
+  });
+
+  test('throws a user-friendly error when rate limit is exceeded', async () => {
+    const error = Object.assign(new Error('limit reached'), { code: 'resource-exhausted' });
+    const mockCallable = jest.fn().mockRejectedValue(error);
+    httpsCallable.mockReturnValue(mockCallable);
+
+    await expect(importInstagramReel(validReelUrl)).rejects.toThrow(/limit reached/i);
+  });
+
+  test('throws a user-friendly error when the page has no recipe content', async () => {
+    const error = Object.assign(new Error('Kein Rezeptinhalt'), { code: 'not-found' });
+    const mockCallable = jest.fn().mockRejectedValue(error);
+    httpsCallable.mockReturnValue(mockCallable);
+
+    await expect(importInstagramReel(validReelUrl)).rejects.toThrow(/Kein Rezeptinhalt/i);
+  });
+
+  test('throws a user-friendly error on deadline exceeded', async () => {
+    const error = Object.assign(new Error('timeout'), { code: 'deadline-exceeded' });
+    const mockCallable = jest.fn().mockRejectedValue(error);
+    httpsCallable.mockReturnValue(mockCallable);
+
+    await expect(importInstagramReel(validReelUrl)).rejects.toThrow(/zu lange gebraucht/i);
+  });
+
+  test('throws a fallback error when Cloud Function returns null data', async () => {
+    const mockCallable = jest.fn().mockResolvedValue({ data: null });
+    httpsCallable.mockReturnValue(mockCallable);
+
+    await expect(importInstagramReel(validReelUrl)).rejects.toThrow(/kein ergebnis/i);
   });
 });

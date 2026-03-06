@@ -103,6 +103,122 @@ export function isRecipeImportPageUrl(url) {
 }
 
 /**
+ * Check whether a URL points to an Instagram Reel.
+ * Accepts both www.instagram.com/reel/… and instagram.com/reel/…
+ *
+ * @param {string} url - URL to test
+ * @returns {boolean}
+ */
+export function isInstagramReelUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    return (
+      (urlObj.hostname === 'www.instagram.com' || urlObj.hostname === 'instagram.com') &&
+      /^\/reel\/[A-Za-z0-9_-]+\/?$/.test(urlObj.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Import a recipe from an Instagram Reel.
+ * Calls the scrapeInstagramReel Cloud Function which uses Puppeteer to extract
+ * the caption and visible page text, then processes it with Gemini AI to
+ * produce structured recipe data.
+ *
+ * @param {string} url - Instagram Reel URL
+ * @param {Function} [onProgress] - Optional progress callback (0–100)
+ * @returns {Promise<Object>} Structured recipe data
+ */
+export async function importInstagramReel(url, onProgress = null) {
+  if (!isInstagramReelUrl(url)) {
+    throw new Error('Ungültige Instagram-Reel-URL');
+  }
+
+  if (onProgress) onProgress(10);
+
+  // Load configured cuisine types and meal categories
+  let cuisineTypes;
+  let mealCategories;
+  try {
+    const { getCustomLists } = await import('./customLists');
+    const lists = await getCustomLists();
+    cuisineTypes = lists.cuisineTypes;
+    mealCategories = lists.mealCategories;
+  } catch (e) {
+    console.warn('Failed to load custom lists for Instagram Reel import:', e);
+  }
+
+  if (onProgress) onProgress(20);
+
+  let progressInterval = null;
+  try {
+    const scrapeInstagramReel = httpsCallable(functions, 'scrapeInstagramReel');
+
+    let simulatedProgress = 30;
+    if (onProgress) {
+      onProgress(30);
+      progressInterval = setInterval(() => {
+        simulatedProgress = Math.min(85, simulatedProgress + 1);
+        onProgress(simulatedProgress);
+      }, 600);
+    }
+
+    const result = await scrapeInstagramReel({
+      url,
+      language: 'de',
+      cuisineTypes,
+      mealCategories,
+    });
+
+    clearInterval(progressInterval);
+    progressInterval = null;
+    if (onProgress) onProgress(100);
+
+    const recipeData = result.data;
+    if (!recipeData) {
+      throw new Error('Kein Ergebnis vom Instagram-Import-Service');
+    }
+
+    return {
+      title: recipeData.title || '',
+      ingredients: recipeData.ingredients || [],
+      steps: recipeData.steps || [],
+      servings: recipeData.servings || null,
+      cookTime: recipeData.prepTime || recipeData.cookTime || null,
+      difficulty: recipeData.difficulty || null,
+      cuisine: recipeData.cuisine || null,
+      category: recipeData.category || null,
+      tags: recipeData.tags || [],
+    };
+  } catch (error) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+    if (onProgress) onProgress(0);
+
+    const errorCode = error.code;
+    if (errorCode === 'unauthenticated') {
+      throw new Error('Bitte melde dich an, um den Instagram-Import zu nutzen.');
+    } else if (errorCode === 'resource-exhausted') {
+      throw new Error(error.message || 'Tageslimit erreicht. Versuche es morgen erneut.');
+    } else if (errorCode === 'not-found') {
+      throw new Error(
+        error.message ||
+        'Kein Rezept auf der Instagram-Seite gefunden. Das Reel ist möglicherweise privat.',
+      );
+    } else if (errorCode === 'invalid-argument') {
+      throw new Error(error.message || 'Ungültige Instagram-Reel-URL.');
+    } else if (errorCode === 'deadline-exceeded') {
+      throw new Error('Die Instagram-Seite hat zu lange gebraucht. Bitte versuche es erneut.');
+    } else if (error.message) {
+      throw new Error(error.message);
+    }
+    throw new Error('Instagram-Import fehlgeschlagen. Bitte versuche es erneut.');
+  }
+}
+
+/**
  * Render text onto an HTML canvas and return a base64-encoded PNG data URL.
  * Used to convert plain recipe text into an image for AI processing.
  *

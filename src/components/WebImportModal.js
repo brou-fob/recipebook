@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './WebImportModal.css';
-import { captureWebsiteScreenshot, isRecipeImportPageUrl, parseRecipeImportPage } from '../utils/webImportService';
+import {
+  captureWebsiteScreenshot,
+  isRecipeImportPageUrl,
+  parseRecipeImportPage,
+  isInstagramReelUrl,
+  importInstagramReel,
+} from '../utils/webImportService';
 import { recognizeRecipeWithAI } from '../utils/aiOcrService';
 import { extractKulinarikFromTags } from '../utils/ocrParser';
 
@@ -41,7 +47,10 @@ function WebImportModal({ onImport, onCancel, initialUrl = '', authorId = '' }) 
     try {
       let result;
 
-      if (isRecipeImportPageUrl(urlToSubmit.trim())) {
+      if (isInstagramReelUrl(urlToSubmit.trim())) {
+        // Instagram Reel path – extract caption and page text with Puppeteer + Gemini
+        result = await importInstagramReel(urlToSubmit.trim(), setProgress);
+      } else if (isRecipeImportPageUrl(urlToSubmit.trim())) {
         // Direct HTML parsing path – no screenshot or AI needed
         result = await parseRecipeImportPage(urlToSubmit.trim(), setProgress);
       } else {
@@ -166,6 +175,7 @@ function WebImportModal({ onImport, onCancel, initialUrl = '', authorId = '' }) 
 
               <div className="url-input-hint">
                 <p>💡 Tipp: Die Website wird automatisch erfasst und das Rezept extrahiert.</p>
+                <p>📸 Instagram Reels werden direkt unterstützt – die Caption wird automatisch ausgelesen.</p>
               </div>
             </div>
           )}
@@ -174,9 +184,13 @@ function WebImportModal({ onImport, onCancel, initialUrl = '', authorId = '' }) 
           {step === 'loading' && (
             <div className="loading-section">
               <p className="web-import-instructions">
-                {progress < 50 
-                  ? 'Analysiere Website...' 
-                  : 'Analysiere Rezept...'}
+                {isInstagramReelUrl(url)
+                  ? (progress < 70
+                      ? '📸 Extrahiere Caption und Kommentare...'
+                      : '🤖 Analysiere Rezept...')
+                  : (progress < 50
+                      ? 'Analysiere Website...'
+                      : 'Analysiere Rezept...')}
               </p>
               <div className="progress-container">
                 <div className="progress-bar">
