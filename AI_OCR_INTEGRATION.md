@@ -89,23 +89,6 @@ npm start
 
 Die App erkennt automatisch den lokalen Emulator.
 
-## Legacy Setup (Frontend API-Key)
-
-⚠️ **Nicht empfohlen für Produktion!** Der API-Key ist im Browser sichtbar.
-
-Falls du trotzdem den direkten Frontend-Zugriff nutzen möchtest:
-
-```bash
-cp .env.example .env.local
-```
-
-Bearbeite `.env.local`:
-```env
-REACT_APP_GEMINI_API_KEY=dein_gemini_api_key_hier
-```
-
-**Hinweis**: Dies wird in Zukunft nicht mehr unterstützt.
-
 ## Übersicht
 
 ```javascript
@@ -458,10 +441,11 @@ function showOcrModeSelector() {
 ## Troubleshooting
 
 ### Problem: "API key not configured"
-**Lösung:** Stelle sicher, dass `.env.local` korrekt konfiguriert ist und die App neu gestartet wurde.
+**Lösung:** Stelle sicher, dass der Gemini API-Key als Firebase Functions Secret konfiguriert ist:
 
 ```bash
-npm start
+firebase functions:secrets:set GEMINI_API_KEY
+firebase deploy --only functions
 ```
 
 ### Problem: "Quota exceeded"
