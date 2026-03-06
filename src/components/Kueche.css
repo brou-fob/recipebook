@@ -168,3 +168,10 @@
 .kueche-bar-chart__bar--meine-kuechenstars {
   background-color: #2F5D50;
 }
+
+.kueche-tile--meine-kuechenstars .kueche-tile-meta .meta-text span {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
