@@ -76,15 +76,6 @@ export const getUserProfile = async (userId) => {
 };
 
 /**
- * Check if this is the first user (determines admin status)
- * @returns {Promise<boolean>} True if no users exist yet
- */
-const isFirstUser = async () => {
-  const users = await getUsers();
-  return users.length === 0;
-};
-
-/**
  * Register a new user
  * @param {Object} userData - User data {vorname, nachname, email, password}
  * @returns {Promise<Object>} Promise resolving to { success: boolean, message: string, user?: Object }
@@ -98,33 +89,27 @@ export const registerUser = async (userData) => {
   }
   
   try {
-    // Create Firebase Auth user
-    const userCredential = await createUserWithEmailAndPassword(
+    // Create Firebase Auth user (the new user is now signed in after this call)
+    await createUserWithEmailAndPassword(
       auth,
       email.toLowerCase().trim(),
       password
     );
-    
-    const userId = userCredential.user.uid;
-    const firstUser = await isFirstUser();
-    
-    // Create user profile in Firestore
-    const userProfile = {
+
+    // Delegate Firestore profile creation to the Cloud Function so that
+    // first-user / admin detection is handled atomically server-side,
+    // eliminating the client-side race condition.
+    const createUserProfileFn = httpsCallable(functions, 'createUserProfile');
+    const result = await createUserProfileFn({
       vorname,
       nachname,
-      email: email.toLowerCase().trim(),
-      isAdmin: firstUser,
-      role: firstUser ? ROLES.ADMIN : ROLES.READ,
-      fotoscan: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    await setDoc(doc(db, 'users', userId), userProfile);
-    
+      email: email.toLowerCase().trim()
+    });
+
     return {
       success: true,
       message: 'Registrierung erfolgreich!',
-      user: { id: userId, ...userProfile }
+      user: result.data.user
     };
   } catch (error) {
     console.error('Registration error:', error);

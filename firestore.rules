@@ -97,8 +97,14 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       allow read: if isAnyUser();
-      // Bootstrap: any authenticated user may create their own document.
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Authenticated users may create only their own document and may not
+      // self-assign elevated privileges (isAdmin or any role above 'read').
+      // The first-user / admin-bootstrap is handled atomically by the
+      // createUserProfile Cloud Function (Admin SDK bypasses these rules).
+      allow create: if isAuthenticated()
+                    && request.auth.uid == userId
+                    && !('isAdmin' in request.resource.data)
+                    && request.resource.data.role == 'read';
       // Any authenticated user may update their own document; admin may update any.
       allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
