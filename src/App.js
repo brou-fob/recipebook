@@ -18,6 +18,7 @@ import MenuSharePage from './components/MenuSharePage';
 import GroupList from './components/GroupList';
 import GroupDetail from './components/GroupDetail';
 import AppCallsPage from './components/AppCallsPage';
+import MeineKuechenstarsPage from './components/MeineKuechenstarsPage';
 import UniversalImportModal from './components/UniversalImportModal';
 import { 
   loginUser, 
@@ -1070,6 +1071,12 @@ function App() {
         <AppCallsPage
           onBack={() => handleViewChange('recipes')}
           currentUser={currentUser}
+        />
+      ) : currentView === 'meineKuechenstars' ? (
+        <MeineKuechenstarsPage
+          onBack={() => handleViewChange('kueche')}
+          currentUser={currentUser}
+          recipes={recipes}
         />
       ) : currentView === 'kueche' ? (
         <Kueche
