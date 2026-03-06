@@ -7,6 +7,7 @@
 import { functions } from '../firebase';
 import { httpsCallable } from 'firebase/functions';
 import { recognizeRecipeWithAI } from './aiOcrService';
+import { parseOcrText } from './ocrParser';
 
 /**
  * Capture a screenshot of a website
@@ -214,11 +215,39 @@ export async function parseRecipeImportPage(url, onProgress = null) {
   // This produces properly structured ingredients, steps and metadata –
   // much more reliably than a keyword-based text parser.
   const imageBase64 = textToCanvasBase64(rawText);
-  const aiResult = await recognizeRecipeWithAI(imageBase64, {
-    language: 'de',
-    provider: 'gemini',
-    onProgress: onProgress ? (p) => onProgress(50 + Math.round(p * 0.5)) : null,
-  });
+
+  let aiResult;
+  try {
+    aiResult = await recognizeRecipeWithAI(imageBase64, {
+      language: 'de',
+      provider: 'gemini',
+      onProgress: onProgress ? (p) => onProgress(50 + Math.round(p * 0.5)) : null,
+    });
+  } catch (aiError) {
+    // When AI processing fails, fall back to keyword-based text parsing so that
+    // the import does not fail completely for well-structured recipe texts.
+    if (rawText) {
+      try {
+        const parsed = parseOcrText(rawText, 'de');
+        aiResult = {
+          title: parsed.title || '',
+          ingredients: parsed.ingredients || [],
+          steps: parsed.steps || [],
+          servings: parsed.portionen || null,
+          cookTime: parsed.kochdauer ? `${parsed.kochdauer} min` : null,
+          difficulty: parsed.schwierigkeit || null,
+          cuisine: Array.isArray(parsed.kulinarik) && parsed.kulinarik.length ? parsed.kulinarik[0] : null,
+          category: parsed.speisekategorie || null,
+          tags: [],
+        };
+      } catch {
+        // If text parsing also fails, re-throw the original AI error
+        throw aiError;
+      }
+    } else {
+      throw aiError;
+    }
+  }
 
   if (onProgress) onProgress(100);
 
