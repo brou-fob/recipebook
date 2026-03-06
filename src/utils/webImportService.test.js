@@ -12,6 +12,12 @@ jest.mock('./aiOcrService', () => ({
   recognizeRecipeWithAI: jest.fn(),
 }));
 
+// Mock ocrParser to allow testing the fallback path
+jest.mock('./ocrParser', () => ({
+  parseOcrText: jest.fn(),
+  extractKulinarikFromTags: jest.fn().mockReturnValue([]),
+}));
+
 // Mock canvas API since jsdom does not implement it
 HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue({
   fillStyle: '',
@@ -24,6 +30,7 @@ HTMLCanvasElement.prototype.toDataURL = jest.fn().mockReturnValue('data:image/pn
 
 import { isRecipeImportPageUrl, parseRecipeImportPage } from './webImportService';
 import { recognizeRecipeWithAI } from './aiOcrService';
+import { parseOcrText } from './ocrParser';
 
 // --------------------------------------------------------------------------
 // isRecipeImportPageUrl
@@ -89,6 +96,16 @@ describe('parseRecipeImportPage', () => {
     });
     HTMLCanvasElement.prototype.toDataURL.mockReturnValue('data:image/png;base64,mockcanvas');
     recognizeRecipeWithAI.mockResolvedValue(mockAiResult);
+    parseOcrText.mockReturnValue({
+      title: 'Fallback Rezept',
+      ingredients: ['500g Mehl', '2 Eier'],
+      steps: ['Mehl sieben', 'Eier hinzufügen'],
+      portionen: 4,
+      kochdauer: 30,
+      schwierigkeit: 2,
+      kulinarik: ['Deutsch'],
+      speisekategorie: 'Hauptgericht',
+    });
   });
 
   function buildHtml({ title = 'Spaghetti Carbonara', rawText = 'Spaghetti Carbonara\nZutaten\n400g Spaghetti', withJsonLd = true } = {}) {
@@ -246,5 +263,78 @@ ${withJsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
     const result = await parseRecipeImportPage('https://example.com/recipeImportPage?token=abc');
 
     expect(result.tags).toEqual(['vegetarisch', 'glutenfrei']);
+  });
+
+  test('falls back to text parsing when AI throws an error', async () => {
+    recognizeRecipeWithAI.mockRejectedValue(new Error('AI parsing failed'));
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(buildHtml({ rawText: 'Fallback Rezept\nZutaten\n500g Mehl' })),
+    });
+
+    const result = await parseRecipeImportPage('https://example.com/recipeImportPage?token=abc');
+
+    expect(parseOcrText).toHaveBeenCalled();
+    expect(result.ingredients).toEqual(['500g Mehl', '2 Eier']);
+    expect(result.steps).toEqual(['Mehl sieben', 'Eier hinzufügen']);
+    expect(result.servings).toBe(4);
+    expect(result.cookTime).toBe('30 min');
+    expect(result.cuisine).toBe('Deutsch');
+    expect(result.category).toBe('Hauptgericht');
+  });
+
+  test('fallback uses JSON-LD title when parsed title is absent', async () => {
+    recognizeRecipeWithAI.mockRejectedValue(new Error('AI error'));
+    parseOcrText.mockReturnValue({
+      title: '',
+      ingredients: ['Zutat 1'],
+      steps: ['Schritt 1'],
+      portionen: null,
+      kochdauer: null,
+      schwierigkeit: null,
+      kulinarik: [],
+      speisekategorie: '',
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(buildHtml({ title: 'Toller Titel' })),
+    });
+
+    const result = await parseRecipeImportPage('https://example.com/recipeImportPage?token=abc');
+
+    expect(result.title).toBe('Toller Titel');
+  });
+
+  test('re-throws AI error when rawText is empty and AI fails', async () => {
+    const aiError = new Error('AI error');
+    recognizeRecipeWithAI.mockRejectedValue(aiError);
+
+    // Build HTML without any rawText (empty description and pre)
+    const emptyHtml = `<!DOCTYPE html><html><head></head><body><h1>Test</h1><pre></pre></body></html>`;
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(emptyHtml),
+    });
+
+    await expect(
+      parseRecipeImportPage('https://example.com/recipeImportPage?token=abc'),
+    ).rejects.toThrow('AI error');
+  });
+
+  test('re-throws AI error when text parsing also fails', async () => {
+    const aiError = new Error('AI error');
+    recognizeRecipeWithAI.mockRejectedValue(aiError);
+    parseOcrText.mockImplementation(() => { throw new Error('parse error'); });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(buildHtml({ rawText: 'Spaghetti\nZutaten\n400g Spaghetti' })),
+    });
+
+    await expect(
+      parseRecipeImportPage('https://example.com/recipeImportPage?token=abc'),
+    ).rejects.toThrow('AI error');
   });
 });

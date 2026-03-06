@@ -418,18 +418,22 @@ async function callGeminiAPI(base64Data, mimeType, lang, apiKey, cuisineTypes, m
       throw new HttpsError('internal', 'No response from Gemini API');
     }
 
-    // Parse JSON response (handle markdown code blocks if present)
+    // Parse JSON response (handle markdown code blocks and extra text)
     let jsonText = textResponse.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/^```json\n/, '').replace(/\n```$/, '');
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```\n/, '').replace(/\n```$/, '');
+
+    // Strip markdown code fences (```json ... ``` or ``` ... ```), handling \n and \r\n
+    const codeBlockMatch = jsonText.match(/```(?:json)?\r?\n([\s\S]*?)\r?\n```/);
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1].trim();
+    } else if (!jsonText.startsWith('{')) {
+      // If the response begins with preamble text, extract the first JSON object
+      const jsonObjectMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonObjectMatch) {
+        jsonText = jsonObjectMatch[0];
+      }
     }
 
     const recipeData = JSON.parse(jsonText);
-    // DEBUG - kann danach wieder entfernt werden
-    console.log('DEBUG zubereitung:', JSON.stringify(recipeData.zubereitung));
-    console.log('DEBUG alle Keys:', Object.keys(recipeData));
     
     // Normalize the data structure based on language
     if (lang === 'de') {
