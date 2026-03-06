@@ -437,9 +437,9 @@ describe('Kueche', () => {
 
     const chart = screen.getByTestId('recipe-bar-chart');
     const bars = Array.from(chart.children);
-    expect(bars[5]).toHaveClass('kueche-bar-chart__bar--current');
+    expect(bars[5]).toHaveClass('kueche-bar-chart__bar--meinkochbuch');
     bars.slice(0, 5).forEach(bar => {
-      expect(bar).not.toHaveClass('kueche-bar-chart__bar--current');
+      expect(bar).not.toHaveClass('kueche-bar-chart__bar--meinkochbuch');
     });
   });
 
