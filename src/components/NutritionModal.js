@@ -63,7 +63,8 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser 
   const [reformulations, setReformulations] = useState(() => {
     const stored = loadStoredCalcResult(recipe?.id);
     const notIncluded = stored?.notIncluded || recipe?.naehrwerte?.calcNotIncluded || [];
-    const map = {};
+    const persistedReformulations = stored?.calcReformulations || recipe?.naehrwerte?.calcReformulations || {};
+    const map = { ...persistedReformulations };
     for (const item of notIncluded) {
       if (item.reformulation) {
         map[item.ingredient] = { text: item.reformulation, changeLog: item.changeLog || [] };
@@ -122,12 +123,13 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser 
       salz: parsePositiveNumber(salz),
     };
     // Preserve calc metadata so the error log remains visible after manual save
-    const { calcFoundCount, calcTotalCount, calcNotIncluded } = recipe?.naehrwerte || {};
+    const { calcFoundCount, calcTotalCount, calcNotIncluded, calcReformulations } = recipe?.naehrwerte || {};
     const naehrwerte = {
       ...naehrwerteToTotals(perPortion, portionen),
       ...(calcFoundCount !== undefined && { calcFoundCount }),
       ...(calcTotalCount !== undefined && { calcTotalCount }),
       ...(calcNotIncluded !== undefined && { calcNotIncluded }),
+      ...(calcReformulations !== undefined && { calcReformulations }),
     };
 
     setSaving(true);
@@ -213,6 +215,7 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser 
     const calculateNutrition = httpsCallable(functions, 'calculateNutritionFromOpenFoodFacts');
     const totals = { kalorien: 0, protein: 0, fett: 0, kohlenhydrate: 0, zucker: 0, ballaststoffe: 0, salz: 0 };
     const notIncluded = [];
+    const successfulReformulations = {};
     let foundCount = 0;
 
     // Process regular ingredients via OpenFoodFacts
@@ -233,6 +236,9 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser 
             totals[key] += n[key] || 0;
           });
           foundCount++;
+          if (reformulations[ingredient]) {
+            successfulReformulations[ingredient] = reformulations[ingredient];
+          }
         } else {
           const reform = reformulations[ingredient];
           notIncluded.push({
@@ -304,7 +310,12 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser 
     }
 
     const totalCount = ingredients.length + recipeLinkItems.length;
-    const result = { foundCount, totalCount, notIncluded };
+    const result = {
+      foundCount,
+      totalCount,
+      notIncluded,
+      ...(Object.keys(successfulReformulations).length > 0 && { calcReformulations: successfulReformulations }),
+    };
     setAutoCalcResult(result);
     saveStoredCalcResult(recipe?.id, result);
 
@@ -316,6 +327,7 @@ function NutritionModal({ recipe, onClose, onSave, allRecipes = [], currentUser 
       calcNotIncluded: notIncluded.length > 0 ? notIncluded : null,
       calcFoundCount: foundCount,
       calcTotalCount: totalCount,
+      calcReformulations: Object.keys(successfulReformulations).length > 0 ? successfulReformulations : null,
     };
     try {
       await onSave(finalNaehrwerte);
