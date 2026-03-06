@@ -851,6 +851,250 @@ exports.processHtmlWithAI = onCall(
 );
 
 /**
+ * Validate that a URL points to an Instagram Reel.
+ * Accepts both www.instagram.com/reel/… and instagram.com/reel/…
+ * @param {string} url - URL to check
+ * @returns {boolean}
+ */
+function isInstagramReelUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    return (
+      (urlObj.hostname === 'www.instagram.com' || urlObj.hostname === 'instagram.com') &&
+      /^\/reel\/[A-Za-z0-9_-]+\/?$/.test(urlObj.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Cloud Function: Scrape Instagram Reel and extract recipe data.
+ *
+ * Uses Puppeteer to navigate to the Instagram Reel page, extracts the caption
+ * text from Open Graph meta tags (og:description, og:title), and any visible
+ * text content from the page. The combined text is then processed by Gemini AI
+ * to extract structured recipe data.
+ *
+ * Input data:
+ * - url: Instagram Reel URL (e.g. https://www.instagram.com/reel/DTXPDu9DHHb/)
+ * - language: Language code ('de' or 'en'), defaults to 'de'
+ * - cuisineTypes: optional array of cuisine type strings
+ * - mealCategories: optional array of meal category strings
+ *
+ * Returns: Structured recipe data (same shape as scanRecipeWithAI)
+ */
+exports.scrapeInstagramReel = onCall(
+    {
+      secrets: [geminiApiKey],
+      maxInstances: 5,
+      memory: '2GiB',
+      timeoutSeconds: 120,
+    },
+    async (request) => {
+      const {url, language = 'de', cuisineTypes, mealCategories} = request.data;
+
+      // Authentication check
+      const auth = request.auth;
+      if (!auth) {
+        throw new HttpsError(
+            'unauthenticated',
+            'You must be logged in to use Instagram Reel import',
+        );
+      }
+
+      const userId = auth.uid;
+      const isAuthenticated = auth.token.firebase?.sign_in_provider !== 'anonymous';
+      const isAdmin = auth.token.admin === true;
+
+      console.log(`Instagram Reel scrape request from user ${userId} for URL: ${url}`);
+
+      // Validate URL
+      if (!url || typeof url !== 'string') {
+        throw new HttpsError('invalid-argument', 'URL must be a non-empty string');
+      }
+      if (!isInstagramReelUrl(url)) {
+        throw new HttpsError(
+            'invalid-argument',
+            'URL must be a valid Instagram Reel URL (e.g. https://www.instagram.com/reel/...)',
+        );
+      }
+
+      // Validate language
+      if (!['de', 'en'].includes(language)) {
+        throw new HttpsError('invalid-argument', 'Language must be "de" or "en"');
+      }
+
+      // Rate limiting (shared with image scanning)
+      const rateLimitResult = await checkRateLimit(userId, isAuthenticated, isAdmin);
+      if (!rateLimitResult.allowed) {
+        const limit = getRateLimit(isAdmin, isAuthenticated);
+        throw new HttpsError(
+            'resource-exhausted',
+            `Tageslimit erreicht (${limit}/${limit} Scans). Versuche es morgen erneut.`,
+        );
+      }
+
+      // Get API key from secret
+      const apiKey = geminiApiKey.value();
+      if (!apiKey) {
+        console.error('GEMINI_API_KEY secret not configured');
+        throw new HttpsError(
+            'failed-precondition',
+            'AI service not configured. Please contact administrator.',
+        );
+      }
+
+      const puppeteer = require('puppeteer');
+      const chromium = require('@sparticuz/chromium');
+
+      let browser = null;
+      try {
+        browser = await puppeteer.launch({
+          args: chromium.args.concat([
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+          ]),
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless,
+        });
+
+        const page = await browser.newPage();
+        await page.setViewport({width: 1280, height: 800});
+
+        // Use a mobile user-agent as Instagram serves more content to mobile browsers
+        await page.setUserAgent(
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) ' +
+            'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+        );
+        await page.setExtraHTTPHeaders({
+          'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+        });
+
+        // Navigate to the Instagram Reel page
+        try {
+          await page.goto(url, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000,
+          });
+        } catch (navError) {
+          // Continue even if navigation times out – we may still have partial content
+          console.warn(`Navigation warning for ${url}:`, navError.message);
+        }
+
+        // Short pause to let meta tags and initial content render
+        await new Promise((r) => setTimeout(r, 2000));
+
+        // Extract content from the page
+        const extractedData = await page.evaluate(() => {
+          const getMeta = (name) => {
+            const el = document.querySelector(
+                `meta[property="${name}"], meta[name="${name}"]`,
+            );
+            return el ? (el.getAttribute('content') || '') : '';
+          };
+
+          const title = getMeta('og:title') || document.title || '';
+          const description = getMeta('og:description') || '';
+
+          // Try to get visible text from the page body (caption + comments)
+          const textParts = [];
+
+          // Try article elements (Instagram uses <article> for posts)
+          document.querySelectorAll('article').forEach((a) => {
+            const text = (a.innerText || a.textContent || '').trim();
+            if (text) textParts.push(text);
+          });
+
+          // Try the main content area as a fallback
+          const main = document.querySelector('main');
+          if (main && textParts.length === 0) {
+            const text = (main.innerText || main.textContent || '').trim();
+            if (text.length > 50) textParts.push(text);
+          }
+
+          const bodyText = textParts
+              .join('\n\n')
+              .replace(/[ \t]{2,}/g, ' ')
+              .replace(/\n{3,}/g, '\n\n')
+              .slice(0, 10000);
+
+          return {title, description, bodyText};
+        });
+
+        await browser.close();
+        browser = null;
+
+        // Build combined text from all available sources
+        const parts = [];
+        if (extractedData.title) parts.push(`Titel: ${extractedData.title}`);
+        if (extractedData.description) {
+          parts.push(`Caption:\n${extractedData.description}`);
+        }
+        if (extractedData.bodyText && extractedData.bodyText.length > 100) {
+          parts.push(`Seiteninhalt:\n${extractedData.bodyText}`);
+        }
+        const combinedText = parts.join('\n\n');
+
+        if (!combinedText.trim() || combinedText.length < 30) {
+          throw new HttpsError(
+              'not-found',
+              'Kein Rezeptinhalt auf der Instagram-Seite gefunden. ' +
+              'Das Reel ist möglicherweise privat oder enthält kein Rezept in der Bildunterschrift.',
+          );
+        }
+
+        console.log(
+            `Instagram Reel content extracted for user ${userId}, ` +
+            `length: ${combinedText.length}`,
+        );
+
+        // Process the combined text with Gemini AI
+        const result = await callGeminiTextAPI(
+            combinedText, language, apiKey, cuisineTypes, mealCategories,
+        );
+
+        console.log(`Instagram Reel import successful for user ${userId}`);
+        return {
+          ...result,
+          remainingScans: rateLimitResult.remaining,
+          dailyLimit: rateLimitResult.limit,
+          sourceUrl: url,
+        };
+      } catch (error) {
+        if (browser) {
+          try {
+            await browser.close();
+          } catch (closeErr) {
+            console.error('Error closing browser after failure:', closeErr);
+          }
+        }
+
+        if (error instanceof HttpsError) {
+          throw error;
+        }
+
+        console.error(`Instagram Reel scrape failed for user ${userId}:`, error);
+
+        if (error.message && error.message.includes('timeout')) {
+          throw new HttpsError(
+              'deadline-exceeded',
+              'Die Instagram-Seite hat zu lange gebraucht. Bitte versuche es erneut.',
+          );
+        }
+
+        throw new HttpsError(
+            'internal',
+            'Instagram-Import fehlgeschlagen: ' + error.message,
+        );
+      }
+    },
+);
+
+/**
  * Cloud Function: Capture Website Screenshot
  * This is a callable function that captures a screenshot of a website
  *
