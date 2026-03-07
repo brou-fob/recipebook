@@ -1,6 +1,17 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import GroupList from './GroupList';
+
+// Mock customLists so icon loading resolves immediately
+jest.mock('../utils/customLists', () => ({
+  getButtonIcons: () => Promise.resolve({ privateListBack: '✕' }),
+  DEFAULT_BUTTON_ICONS: { privateListBack: '✕' },
+}));
+
+// Mock imageUtils
+jest.mock('../utils/imageUtils', () => ({
+  isBase64Image: jest.fn().mockReturnValue(false),
+}));
 
 const mockCurrentUser = { id: 'user1', vorname: 'Anna', nachname: 'Müller', isAdmin: false };
 const mockAdminUser = { id: 'admin1', vorname: 'Admin', nachname: 'User', isAdmin: true };
@@ -24,7 +35,7 @@ const mockPrivateGroup = {
 };
 
 describe('GroupList', () => {
-  it('renders the heading', () => {
+  it('renders the heading "Meine Mise en Place"', () => {
     render(
       <GroupList
         groups={[]}
@@ -34,7 +45,7 @@ describe('GroupList', () => {
         onCreateGroup={jest.fn()}
       />
     );
-    expect(screen.getByText('Meine Listen')).toBeInTheDocument();
+    expect(screen.getByText('Meine Mise en Place')).toBeInTheDocument();
   });
 
   it('shows empty state when there are no private groups', () => {
@@ -121,5 +132,48 @@ describe('GroupList', () => {
     );
     fireEvent.click(screen.getByText('+ Liste erstellen'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('renders a close button when onBack is provided', () => {
+    render(
+      <GroupList
+        groups={[]}
+        allUsers={mockAllUsers}
+        currentUser={mockCurrentUser}
+        onSelectGroup={jest.fn()}
+        onCreateGroup={jest.fn()}
+        onBack={jest.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: /schließen/i })).toBeInTheDocument();
+  });
+
+  it('calls onBack when the close button is clicked', () => {
+    const onBack = jest.fn();
+    render(
+      <GroupList
+        groups={[]}
+        allUsers={mockAllUsers}
+        currentUser={mockCurrentUser}
+        onSelectGroup={jest.fn()}
+        onCreateGroup={jest.fn()}
+        onBack={onBack}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /schließen/i }));
+    expect(onBack).toHaveBeenCalled();
+  });
+
+  it('does not render a close button when onBack is not provided', () => {
+    render(
+      <GroupList
+        groups={[]}
+        allUsers={mockAllUsers}
+        currentUser={mockCurrentUser}
+        onSelectGroup={jest.fn()}
+        onCreateGroup={jest.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: /schließen/i })).not.toBeInTheDocument();
   });
 });
