@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './GroupList.css';
 import GroupCreateDialog from './GroupCreateDialog';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { isBase64Image } from '../utils/imageUtils';
 
 /**
  * Lists the groups the current user belongs to.
@@ -12,9 +14,17 @@ import GroupCreateDialog from './GroupCreateDialog';
  * @param {Object} props.currentUser - The current authenticated user
  * @param {Function} props.onSelectGroup - Called when a group card is clicked
  * @param {Function} props.onCreateGroup - Called with group data to create a new group
+ * @param {Function} [props.onBack] - Called when the close button is clicked (navigate to Küche)
  */
-function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup }) {
+function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup, onBack }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [closeIcon, setCloseIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
+
+  useEffect(() => {
+    getButtonIcons().then((icons) => {
+      setCloseIcon(icons.privateListBack || DEFAULT_BUTTON_ICONS.privateListBack);
+    });
+  }, []);
 
   const getOwnerName = (group) => {
     if (!group.ownerId || !allUsers || allUsers.length === 0) return null;
@@ -34,10 +44,26 @@ function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup
   return (
     <div className="group-list-container">
       <div className="group-list-header">
-        <h2>Meine Listen</h2>
-        <button className="add-group-button" onClick={() => setIsDialogOpen(true)}>
-          + Liste erstellen
-        </button>
+        <h2>Meine Mise en Place</h2>
+        <div className="group-list-header-actions">
+          <button className="add-group-button" onClick={() => setIsDialogOpen(true)}>
+            + Liste erstellen
+          </button>
+          {onBack && (
+            <button
+              className="group-list-close-btn"
+              onClick={onBack}
+              aria-label="Schließen"
+              title="Schließen"
+            >
+              {isBase64Image(closeIcon) ? (
+                <img src={closeIcon} alt="Schließen" className="group-list-close-icon-img" />
+              ) : (
+                <span>{closeIcon}</span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {publicGroup && currentUser?.isAdmin && (

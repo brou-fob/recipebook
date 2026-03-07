@@ -1110,6 +1110,7 @@ function App() {
             currentUser={currentUser}
             onSelectGroup={handleSelectGroup}
             onCreateGroup={handleCreateGroup}
+            onBack={() => handleViewChange('kueche')}
           />
         )
       ) : currentView === 'menus' ? (
