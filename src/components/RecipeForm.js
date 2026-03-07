@@ -819,6 +819,25 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
       })()}
 
       <form className="recipe-form" onSubmit={handleSubmit}>
+        {/* Private list selector - only shown when creating a new recipe */}
+        {!recipe && !isCreatingVersion && privateLists.length > 0 && (
+          <div className="form-group private-list-selector">
+            <label htmlFor="private-list-select">Private Liste:</label>
+            <select
+              id="private-list-select"
+              value={selectedPrivateListId}
+              onChange={(e) => setSelectedPrivateListId(e.target.value)}
+            >
+              <option value="">– Keine (öffentlich) –</option>
+              {privateLists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  {list.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="form-group">
           <div className="form-group-header">
             <label htmlFor="title">Rezepttitel *</label>
@@ -1090,25 +1109,6 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
             + Schritt hinzufügen
           </button>
         </div>
-
-        {/* Private list selector - only shown when creating a new recipe */}
-        {!recipe && !isCreatingVersion && privateLists.length > 0 && (
-          <div className="form-group private-list-selector">
-            <label htmlFor="private-list-select">Private Liste:</label>
-            <select
-              id="private-list-select"
-              value={selectedPrivateListId}
-              onChange={(e) => setSelectedPrivateListId(e.target.value)}
-            >
-              <option value="">– Keine (öffentlich) –</option>
-              {privateLists.map((list) => (
-                <option key={list.id} value={list.id}>
-                  {list.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* Draft checkbox - only visible to admins */}
         {isCurrentUserAdmin() && (
