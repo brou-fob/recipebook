@@ -37,7 +37,7 @@ function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, r
   const getUserName = (userId) => {
     if (!userId) return 'Unbekannter Benutzer';
     const user = allUsers.find((u) => u.id === userId);
-    return user?.name || 'Unbekannter Benutzer';
+    return user?.vorname || 'Unbekannter Benutzer';
   };
 
   const formatDate = (date) => {
