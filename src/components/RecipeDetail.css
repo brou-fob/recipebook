@@ -1180,7 +1180,6 @@ difficulty-stars .star {
 
 .step-timer-time.finished {
   color: #4CAF50;
-  font-size: 1em;
 }
 
 /* Stop button inside .step-timer-top-area */
