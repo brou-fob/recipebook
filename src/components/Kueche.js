@@ -243,6 +243,7 @@ function Kueche({ recipes, menus = [], groups = [], onSelectRecipe, onSelectMenu
     steps: [],
     authorId: menu.authorId || menu.createdBy,
     itemType: 'menu',
+    image: menu.image || null,
   }));
 
   // Transform cookDates into the shape expected by RecipeTimeline

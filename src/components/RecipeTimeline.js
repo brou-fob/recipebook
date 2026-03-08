@@ -79,7 +79,7 @@ function RecipeTimeline({ recipes, onSelectRecipe, allUsers = [], timelineBubble
 
   const getDisplayImage = (recipe) => {
     const type = recipe.itemType || itemType;
-    if (type === 'menu') return defaultImage;
+    if (type === 'menu') return recipe.image || defaultImage;
     if (type === 'cookEvent') {
       return recipe.originalRecipe?.image || timelineCookEventDefaultImage || defaultImage;
     }

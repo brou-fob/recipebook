@@ -3,6 +3,7 @@ import './MenuForm.css';
 import { getUserFavorites } from '../utils/userFavorites';
 import { getSavedSections, saveSectionNames, createMenuSection } from '../utils/menuSections';
 import { fuzzyFilter } from '../utils/fuzzySearch';
+import { fileToBase64, compressImage } from '../utils/imageUtils';
 import {
   DndContext,
   closestCenter,
@@ -79,6 +80,8 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
   const [showSectionInput, setShowSectionInput] = useState(false);
   const [searchQueries, setSearchQueries] = useState({});
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [menuImage, setMenuImage] = useState('');
+  const [uploadingMenuImage, setUploadingMenuImage] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -108,6 +111,7 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
     if (menu) {
       setName(menu.name || '');
       setDescription(menu.description || '');
+      setMenuImage(menu.image || '');
       // Initialize menuDate: use existing menuDate, or fall back to createdAt, or today
       if (menu.menuDate) {
         setMenuDate(menu.menuDate);
@@ -221,6 +225,25 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
     setSections(newSections);
   };
 
+  const handleMenuImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingMenuImage(true);
+    try {
+      const base64 = await fileToBase64(file);
+      const compressed = await compressImage(base64);
+      setMenuImage(compressed);
+    } catch (error) {
+      alert('Fehler beim Hochladen des Bildes. Bitte versuchen Sie es erneut.');
+    } finally {
+      setUploadingMenuImage(false);
+    }
+  };
+
+  const handleRemoveMenuImage = () => {
+    setMenuImage('');
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -244,6 +267,7 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
       name: name.trim(),
       description: description.trim(),
       menuDate: menuDate,
+      image: menuImage,
       createdBy: menu?.createdBy || currentUser?.id,
       sections: sections,
       recipeIds: allRecipeIds // Keep for backward compatibility
@@ -341,6 +365,40 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
             id="menuDate"
             value={menuDate}
             onChange={(e) => setMenuDate(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Menüfoto (optional)</label>
+          {menuImage ? (
+            <div className="menu-image-preview">
+              <img src={menuImage} alt="Menüfoto" />
+              <div className="menu-image-actions">
+                <label htmlFor="menuImageFile" className="menu-image-change-btn">
+                  {uploadingMenuImage ? 'Hochladen...' : '🔄 Ändern'}
+                </label>
+                <button
+                  type="button"
+                  className="menu-image-remove-btn"
+                  onClick={handleRemoveMenuImage}
+                  disabled={uploadingMenuImage}
+                >
+                  ✕ Entfernen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label htmlFor="menuImageFile" className="menu-image-upload-label">
+              {uploadingMenuImage ? 'Hochladen...' : '📷 Foto hochladen'}
+            </label>
+          )}
+          <input
+            type="file"
+            id="menuImageFile"
+            accept="image/*"
+            onChange={handleMenuImageUpload}
+            style={{ display: 'none' }}
+            disabled={uploadingMenuImage}
           />
         </div>
 
