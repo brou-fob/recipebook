@@ -10,7 +10,7 @@
  */
 
 import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
 
 /**
  * Set the cook date for a recipe for a user.
@@ -46,20 +46,21 @@ export const getAllCookDates = async (recipeId) => {
   try {
     const q = query(
       collection(db, 'cookDates'),
-      where('recipeId', '==', recipeId),
-      orderBy('date', 'desc')
+      where('recipeId', '==', recipeId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((docSnap) => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        userId: data.userId,
-        recipeId: data.recipeId,
-        date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
-      };
-    });
+    return snapshot.docs
+      .map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          userId: data.userId,
+          recipeId: data.recipeId,
+          date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+        };
+      })
+      .sort((a, b) => b.date - a.date);
   } catch (error) {
     console.error('Error getting all cook dates:', error);
     return [];
