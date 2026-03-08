@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://broubook.web.app", "https://broubook.firebaseapp.com", "http://localhost:3000"],
+    "method": ["GET", "HEAD"],
+    "maxAgeSeconds": 3600
+  }
+]
