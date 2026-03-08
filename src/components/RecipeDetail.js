@@ -1229,7 +1229,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                             >
                               {isBase64Image(timerStartIcon)
                                 ? <img src={timerStartIcon} alt="Timer starten" className="timer-start-icon-img" />
-                                : timerStartIcon} {timerLabel}
+                                : timerStartIcon}
                             </button>
                           )}
                         </div>
