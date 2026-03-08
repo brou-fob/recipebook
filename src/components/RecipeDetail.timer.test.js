@@ -92,7 +92,7 @@ describe('RecipeDetail - Step Timer', () => {
     // The first step card should contain a timer start button at the top right
     const timerBtn = document.querySelector('.step-timer-start-btn');
     expect(timerBtn).toBeInTheDocument();
-    expect(timerBtn.textContent).toContain('10 Minuten');
+    // The button now shows only an icon; the label text is no longer rendered
   });
 
   test('step with no time mention has no timer button', () => {
