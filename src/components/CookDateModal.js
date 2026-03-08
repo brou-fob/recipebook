@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './CookDateModal.css';
 import { setCookDate, getAllCookDates } from '../utils/recipeCookDates';
 import { isBase64Image } from '../utils/imageUtils';
@@ -28,6 +28,13 @@ function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, r
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [cookDates, setCookDates] = useState([]);
+  const resetTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!recipeId) return;
@@ -64,7 +71,11 @@ function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, r
       setCookDates(updated);
       setSaved(true);
       if (onSaved) onSaved(date);
-      setTimeout(onClose, 600);
+      resetTimerRef.current = setTimeout(() => {
+        setSaved(false);
+        setIsSubmitting(false);
+        setSelectedDate('');
+      }, 1500);
     } catch (error) {
       console.error('Error saving cook date:', error);
       setIsSubmitting(false);
