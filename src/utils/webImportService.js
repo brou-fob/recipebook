@@ -566,6 +566,127 @@ export function parseJsonLdRecipe(html) {
 }
 
 /**
+ * Find and return the first raw Schema.org Recipe JSON-LD candidate object from an HTML string.
+ * Unlike parseJsonLdRecipe, this returns the unprocessed JSON-LD object so that
+ * all original fields (including description, ISO 8601 durations, etc.) are preserved.
+ *
+ * @param {string} html - Raw HTML string
+ * @returns {Object|null} The first matching Recipe JSON-LD object, or null if not found
+ */
+function findJsonLdRecipeCandidate(html) {
+  let doc;
+  try {
+    const parser = new DOMParser();
+    doc = parser.parseFromString(html, 'text/html');
+  } catch {
+    return null;
+  }
+
+  const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+  for (const script of scripts) {
+    let json;
+    try {
+      json = JSON.parse(script.textContent);
+    } catch {
+      continue;
+    }
+
+    const candidates = [];
+    if (Array.isArray(json)) {
+      candidates.push(...json);
+    } else if (json['@graph'] && Array.isArray(json['@graph'])) {
+      candidates.push(...json['@graph']);
+    } else {
+      candidates.push(json);
+    }
+
+    for (const candidate of candidates) {
+      const type = candidate['@type'];
+      const isRecipe =
+        type === 'Recipe' ||
+        (Array.isArray(type) && type.includes('Recipe'));
+      if (!isRecipe) continue;
+
+      // Only return candidates that have at least ingredients or instructions
+      const hasIngredients = Array.isArray(candidate.recipeIngredient) && candidate.recipeIngredient.length > 0;
+      const hasInstructions = Array.isArray(candidate.recipeInstructions) && candidate.recipeInstructions.length > 0;
+      if (!hasIngredients && !hasInstructions) continue;
+
+      return candidate;
+    }
+  }
+  return null;
+}
+
+/**
+ * Convert a raw Schema.org Recipe JSON-LD object to a human-readable text representation.
+ * This text is then suitable for processing by the Gemini Text API so that all
+ * AI-prompt formatting rules (unit standardisation, fraction→decimal conversion,
+ * cuisine/category selection, vegetarian/vegan tagging, etc.) are applied.
+ *
+ * Handles recipeInstructions as an array of strings, HowToStep objects, or
+ * HowToSection objects with nested itemListElement.
+ *
+ * @param {Object} candidate - Raw Schema.org Recipe JSON-LD object
+ * @returns {string} Human-readable recipe text
+ */
+export function jsonLdToText(candidate) {
+  let text = '';
+  text += `Rezept: ${candidate.name || ''}\n\n`;
+
+  if (candidate.recipeYield) {
+    const yieldVal = Array.isArray(candidate.recipeYield)
+      ? candidate.recipeYield[0]
+      : candidate.recipeYield;
+    text += `Portionen: ${yieldVal}\n`;
+  }
+  if (candidate.prepTime) text += `Zubereitungszeit: ${candidate.prepTime}\n`;
+  if (candidate.cookTime) text += `Kochzeit: ${candidate.cookTime}\n`;
+  if (candidate.totalTime) text += `Gesamtzeit: ${candidate.totalTime}\n`;
+  if (candidate.recipeCuisine) {
+    const cuisine = Array.isArray(candidate.recipeCuisine)
+      ? candidate.recipeCuisine.join(', ')
+      : candidate.recipeCuisine;
+    text += `Küche: ${cuisine}\n`;
+  }
+  if (candidate.recipeCategory) {
+    const category = Array.isArray(candidate.recipeCategory)
+      ? candidate.recipeCategory.join(', ')
+      : candidate.recipeCategory;
+    text += `Kategorie: ${category}\n`;
+  }
+
+  text += '\nZutaten:\n';
+  for (const ingredient of candidate.recipeIngredient || []) {
+    text += `- ${ingredient}\n`;
+  }
+
+  text += '\nZubereitung:\n';
+  const instructions = Array.isArray(candidate.recipeInstructions)
+    ? candidate.recipeInstructions
+    : [];
+  for (const step of instructions) {
+    if (typeof step === 'string') {
+      text += `- ${step}\n`;
+    } else if (step['@type'] === 'HowToSection' && Array.isArray(step.itemListElement)) {
+      for (const s of step.itemListElement) {
+        const sText = s['@type'] === 'HowToStep' ? (s.text || s.name || '') : '';
+        if (sText) text += `- ${sText}\n`;
+      }
+    } else {
+      const stepText = step.text || step.name || '';
+      if (stepText) text += `- ${stepText}\n`;
+    }
+  }
+
+  if (candidate.description) {
+    text += `\nBeschreibung: ${candidate.description}\n`;
+  }
+
+  return text;
+}
+
+/**
  * Fetch the raw HTML of a URL via the `fetchRecipeHtml` Cloud Function.
  * This bypasses CORS restrictions by performing the request server-side.
  *
@@ -581,7 +702,8 @@ async function fetchRecipeHtml(url) {
 /**
  * Import a recipe from any regular URL using a multi-step fallback chain:
  *
- *  1. Fetch page HTML and parse Schema.org Recipe JSON-LD → direct mapping, no AI
+ *  1. Fetch page HTML and parse Schema.org Recipe JSON-LD → convert to text → Gemini Text API
+ *     (Fallback: return JSON-LD mapped directly if Gemini fails)
  *  2. If no JSON-LD → extract plain text and send to Gemini Text API
  *  3. If both fail → capture screenshot and run Gemini Vision API (existing flow)
  *
@@ -602,16 +724,42 @@ export async function importRecipeFromUrl(url, onProgress = null) {
   }
 
   if (html) {
-    // Step 1: JSON-LD
+    // Step 1: JSON-LD → convert to readable text → Gemini Text API
     if (onProgress) onProgress(30);
     try {
-      const jsonLdResult = parseJsonLdRecipe(html);
-      if (jsonLdResult) {
-        if (onProgress) onProgress(100);
-        return jsonLdResult;
+      const jsonLdCandidate = findJsonLdRecipeCandidate(html);
+      if (jsonLdCandidate) {
+        const jsonLdText = jsonLdToText(jsonLdCandidate);
+        try {
+          const aiResult = await processHtmlWithGemini(
+            jsonLdText,
+            'de',
+            onProgress ? (p) => onProgress(30 + Math.round(p * 0.65)) : null,
+          );
+          if (onProgress) onProgress(100);
+          return {
+            title: aiResult.title || '',
+            ingredients: aiResult.ingredients || [],
+            steps: aiResult.steps || [],
+            servings: aiResult.servings || null,
+            cookTime: aiResult.prepTime || aiResult.cookTime || null,
+            difficulty: aiResult.difficulty || null,
+            cuisine: aiResult.cuisine || null,
+            category: aiResult.category || null,
+            tags: aiResult.tags || [],
+          };
+        } catch (jsonLdAiErr) {
+          console.warn('JSON-LD+Gemini failed, falling back to direct JSON-LD mapping:', jsonLdAiErr.message);
+          // Fallback: return JSON-LD parsed directly without AI formatting
+          const jsonLdResult = parseJsonLdRecipe(html);
+          if (jsonLdResult) {
+            if (onProgress) onProgress(100);
+            return jsonLdResult;
+          }
+        }
       }
     } catch (jsonLdErr) {
-      console.warn('JSON-LD parsing error:', jsonLdErr.message);
+      console.warn('JSON-LD extraction error:', jsonLdErr.message);
     }
 
     // Step 2: Text + Gemini Text API
