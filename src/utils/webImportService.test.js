@@ -29,7 +29,7 @@ HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue({
 });
 HTMLCanvasElement.prototype.toDataURL = jest.fn().mockReturnValue('data:image/png;base64,mockcanvas');
 
-import { isRecipeImportPageUrl, parseRecipeImportPage, extractTextFromHtml, isInstagramReelUrl, importInstagramReel, parseJsonLdRecipe, importRecipeFromUrl } from './webImportService';
+import { isRecipeImportPageUrl, parseRecipeImportPage, extractTextFromHtml, isInstagramReelUrl, importInstagramReel, parseJsonLdRecipe, importRecipeFromUrl, jsonLdToText } from './webImportService';
 import { recognizeRecipeWithAI, processHtmlWithGemini } from './aiOcrService';
 import { parseOcrText } from './ocrParser';
 import { httpsCallable } from 'firebase/functions';
@@ -858,6 +858,98 @@ describe('parseJsonLdRecipe', () => {
 });
 
 // --------------------------------------------------------------------------
+// jsonLdToText
+// --------------------------------------------------------------------------
+
+describe('jsonLdToText', () => {
+  test('converts a basic JSON-LD recipe to readable text', () => {
+    const candidate = {
+      name: 'Veganes Naan',
+      recipeIngredient: ['300 g Mehl', '200 ml Kokosjoghurt'],
+      recipeInstructions: ['Teig kneten.', 'In der Pfanne backen.'],
+      recipeYield: '4',
+      prepTime: 'PT15M',
+    };
+
+    const text = jsonLdToText(candidate);
+
+    expect(text).toContain('Rezept: Veganes Naan');
+    expect(text).toContain('Portionen: 4');
+    expect(text).toContain('Zubereitungszeit: PT15M');
+    expect(text).toContain('- 300 g Mehl');
+    expect(text).toContain('- 200 ml Kokosjoghurt');
+    expect(text).toContain('- Teig kneten.');
+    expect(text).toContain('- In der Pfanne backen.');
+  });
+
+  test('handles HowToStep instructions', () => {
+    const candidate = {
+      name: 'Test',
+      recipeIngredient: ['1 Ei'],
+      recipeInstructions: [
+        { '@type': 'HowToStep', text: 'Ei kochen.' },
+        { '@type': 'HowToStep', text: 'Servieren.' },
+      ],
+    };
+
+    const text = jsonLdToText(candidate);
+
+    expect(text).toContain('- Ei kochen.');
+    expect(text).toContain('- Servieren.');
+  });
+
+  test('handles HowToSection instructions with nested steps', () => {
+    const candidate = {
+      name: 'Test',
+      recipeIngredient: ['1 Ei'],
+      recipeInstructions: [
+        {
+          '@type': 'HowToSection',
+          name: 'Vorbereitung',
+          itemListElement: [
+            { '@type': 'HowToStep', text: 'Ei vorbereiten.' },
+            { '@type': 'HowToStep', text: 'Pfanne erhitzen.' },
+          ],
+        },
+      ],
+    };
+
+    const text = jsonLdToText(candidate);
+
+    expect(text).toContain('- Ei vorbereiten.');
+    expect(text).toContain('- Pfanne erhitzen.');
+  });
+
+  test('includes description when present', () => {
+    const candidate = {
+      name: 'Test',
+      recipeIngredient: ['1 Ei'],
+      recipeInstructions: ['Kochen.'],
+      description: 'Ein leckeres Rezept.',
+    };
+
+    const text = jsonLdToText(candidate);
+
+    expect(text).toContain('Beschreibung: Ein leckeres Rezept.');
+  });
+
+  test('includes cuisine and category', () => {
+    const candidate = {
+      name: 'Test',
+      recipeIngredient: ['1 Ei'],
+      recipeInstructions: ['Kochen.'],
+      recipeCuisine: 'Indisch',
+      recipeCategory: ['Brot', 'Beilage'],
+    };
+
+    const text = jsonLdToText(candidate);
+
+    expect(text).toContain('Küche: Indisch');
+    expect(text).toContain('Kategorie: Brot, Beilage');
+  });
+});
+
+// --------------------------------------------------------------------------
 // importRecipeFromUrl
 // --------------------------------------------------------------------------
 
@@ -910,21 +1002,53 @@ describe('importRecipeFromUrl', () => {
     HTMLCanvasElement.prototype.toDataURL.mockReturnValue('data:image/png;base64,mockcanvas');
   });
 
-  test('returns JSON-LD data directly when a Schema.org Recipe is found', async () => {
+  test('sends JSON-LD data through Gemini AI for formatting when a Schema.org Recipe is found', async () => {
     const mockFetchCallable = jest.fn().mockResolvedValue({ data: { html: htmlWithJsonLd } });
     httpsCallable.mockReturnValue(mockFetchCallable);
+    processHtmlWithGemini.mockResolvedValue({
+      title: 'Veganes Naan',
+      ingredients: ['300 g Mehl', '200 ml Kokosjoghurt'],
+      steps: ['Teig kneten.', 'In der Pfanne backen.'],
+      servings: 4,
+      prepTime: '15 min',
+      cookTime: null,
+      difficulty: 1,
+      cuisine: 'Indisch',
+      category: 'Brot',
+      tags: ['vegan'],
+    });
 
     const result = await importRecipeFromUrl('https://example.com/rezept');
 
     expect(httpsCallable).toHaveBeenCalledWith({}, 'fetchRecipeHtml');
+    // JSON-LD text should be passed to Gemini for AI-prompt formatting
+    expect(processHtmlWithGemini).toHaveBeenCalledWith(
+      expect.stringContaining('Veganes Naan'),
+      'de',
+      null,
+    );
+    expect(result.title).toBe('Veganes Naan');
+    expect(result.cuisine).toBe('Indisch');
+    expect(result.tags).toEqual(['vegan']);
+    // prepTime is used as cookTime fallback (consistent with text+Gemini path)
+    expect(result.cookTime).toBe('15 min');
+    // Should NOT fall back to screenshot when JSON-LD+Gemini succeeds
+    expect(recognizeRecipeWithAI).not.toHaveBeenCalled();
+  });
+
+  test('falls back to direct JSON-LD mapping when JSON-LD+Gemini fails', async () => {
+    const mockFetchCallable = jest.fn().mockResolvedValue({ data: { html: htmlWithJsonLd } });
+    httpsCallable.mockReturnValue(mockFetchCallable);
+    processHtmlWithGemini.mockRejectedValue(new Error('AI unavailable'));
+
+    const result = await importRecipeFromUrl('https://example.com/rezept');
+
+    // Should have tried Gemini
+    expect(processHtmlWithGemini).toHaveBeenCalled();
+    // Should fall back to direct JSON-LD mapping (not screenshot)
+    expect(recognizeRecipeWithAI).not.toHaveBeenCalled();
     expect(result.title).toBe('Veganes Naan');
     expect(result.ingredients).toEqual(['300 g Mehl', '200 ml Kokosjoghurt']);
-    expect(result.steps).toEqual(['Teig kneten.', 'In der Pfanne backen.']);
-    expect(result.servings).toBe(4);
-    expect(result.prepTime).toBe('15 min');
-    // Should NOT call Gemini when JSON-LD is found
-    expect(processHtmlWithGemini).not.toHaveBeenCalled();
-    expect(recognizeRecipeWithAI).not.toHaveBeenCalled();
   });
 
   test('falls back to text+Gemini when no JSON-LD Recipe is present', async () => {
