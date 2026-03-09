@@ -1168,6 +1168,8 @@ exports.captureWebsiteScreenshot = onCall(
       const chromium = require('@sparticuz/chromium');
 
       let browser;
+      let hasFragment = false;
+      let fragmentHash = '';
       try {
         browser = await puppeteer.launch({
           args: chromium.args.concat([
@@ -1195,7 +1197,7 @@ exports.captureWebsiteScreenshot = onCall(
         try {
           await page.goto(url, { 
             waitUntil: 'domcontentloaded',
-            timeout: 30000 
+            timeout: 20000 
           });
         } catch (navError) {
           // Continue even if navigation times out – page is likely usable
@@ -1203,7 +1205,7 @@ exports.captureWebsiteScreenshot = onCall(
         }
 
         // Wait a bit for dynamic content to render
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Dismiss cookie/DSGVO consent banner if present (supports multiple CMPs)
         const cookieSelectors = [
@@ -1229,11 +1231,23 @@ exports.captureWebsiteScreenshot = onCall(
         try {
           const urlObj = new URL(url);
           if (urlObj.hash) {
+            hasFragment = true;
+            fragmentHash = urlObj.hash;
             const elementId = urlObj.hash.substring(1);
-            await page.evaluate((id) => {
+            const scrollSuccess = await page.evaluate((id) => {
               const el = document.getElementById(id) || document.querySelector(`[name="${id}"]`);
-              if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+              if (el) {
+                el.scrollIntoView({ behavior: 'auto', block: 'start' });
+                return true;
+              }
+              return false;
             }, elementId);
+
+            if (!scrollSuccess) {
+              console.warn(`Fragment element #${elementId} not found, falling back to full-page`);
+              hasFragment = false;
+            }
+
             await new Promise((resolve) => setTimeout(resolve, 500));
           }
         } catch (_) {
@@ -1242,7 +1256,7 @@ exports.captureWebsiteScreenshot = onCall(
 
         // Wait for main content to be visible
         try {
-          await page.waitForSelector('h1', { timeout: 5000 });
+          await page.waitForSelector('h1', { timeout: 3000 });
           // Short pause to allow dynamic content to finish loading
           await new Promise((resolve) => setTimeout(resolve, 1000));
         } catch (e) {
@@ -1252,7 +1266,7 @@ exports.captureWebsiteScreenshot = onCall(
         // Take screenshot
         const screenshot = await page.screenshot({ 
           encoding: 'base64',
-          fullPage: true,
+          fullPage: !hasFragment,
           type: 'jpeg',
           quality: 80,
         });
@@ -1273,7 +1287,10 @@ exports.captureWebsiteScreenshot = onCall(
         console.error(`Screenshot capture failed for user ${userId}:`, error);
         
         if (error.message.includes('timeout')) {
-          throw new HttpsError('deadline-exceeded', 'Website took too long to load');
+          const errorMsg = hasFragment 
+            ? `Website took too long to load. Fragment: ${fragmentHash}`
+            : 'Website took too long to load';
+          throw new HttpsError('deadline-exceeded', errorMsg);
         }
         
         throw new HttpsError('internal', 'Failed to capture screenshot: ' + error.message);
