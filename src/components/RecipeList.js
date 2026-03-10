@@ -212,11 +212,14 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   // Group recipes by parent first, memoized so the reference is stable between renders
   const allRecipeGroups = useMemo(() => groupRecipesByParent(recipes), [recipes]);
 
-  // Build a map of recipeId -> total call count from all users
-  const viewCountMap = useMemo(() => {
+  // Build a map of recipeId -> call count from the last 30 days only
+  const recentViewCountMap = useMemo(() => {
     const map = {};
+    const cutoff = Date.now() - ONE_MONTH_MS;
     recipeCalls.forEach(call => {
-      if (call.recipeId) {
+      if (!call.recipeId) return;
+      const ts = getTimestampMs(call.timestamp);
+      if (ts > 0 && ts >= cutoff) {
         map[call.recipeId] = (map[call.recipeId] || 0) + 1;
       }
     });
@@ -234,6 +237,13 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     if (sortMode === 'new') {
       filteredGroups = filteredGroups.filter(group =>
         group.allRecipes.some(r => isNewRecipe(r))
+      );
+    }
+
+    // Filter to only recipes with at least one call in the last 30 days in "trending" mode
+    if (sortMode === 'trending') {
+      filteredGroups = filteredGroups.filter(group =>
+        group.allRecipes.some(r => (recentViewCountMap[r.id] || 0) > 0)
       );
     }
 
@@ -277,9 +287,9 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       const recipeB = b.primaryRecipe;
 
       if (sortMode === 'trending') {
-        // 1. View count descending (sum across all recipes in each group)
-        const groupViewCountA = a.allRecipes.reduce((sum, r) => sum + (viewCountMap[r.id] || 0), 0);
-        const groupViewCountB = b.allRecipes.reduce((sum, r) => sum + (viewCountMap[r.id] || 0), 0);
+        // 1. View count descending (sum across all recipes in each group, last 30 days only)
+        const groupViewCountA = a.allRecipes.reduce((sum, r) => sum + (recentViewCountMap[r.id] || 0), 0);
+        const groupViewCountB = b.allRecipes.reduce((sum, r) => sum + (recentViewCountMap[r.id] || 0), 0);
         if (groupViewCountA !== groupViewCountB) return groupViewCountB - groupViewCountA;
         // 2+3. Title alphabetical A–Z, then newest first
         return compareTitleAndDate(recipeA, recipeB);
@@ -305,7 +315,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
         return compareTitleAndDate(recipeA, recipeB);
       }
     });
-  }, [allRecipeGroups, showFavoritesOnly, favoriteIds, searchTerm, sortMode, viewCountMap]);
+  }, [allRecipeGroups, showFavoritesOnly, favoriteIds, searchTerm, sortMode, recentViewCountMap]);
 
   const handleRecipeClick = (group) => {
     // Select the recipe that is at the top according to current sorting order
@@ -452,12 +462,14 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       
       {recipeGroups.length === 0 ? (
         <div className="empty-state">
-          <p>{showFavoritesOnly ? 'Keine favorisierten Rezepte!' : sortMode === 'new' ? 'Keine neuen Rezepte!' : 'Noch keine Rezepte!'}</p>
+          <p>{showFavoritesOnly ? 'Keine favorisierten Rezepte!' : sortMode === 'new' ? 'Keine neuen Rezepte!' : sortMode === 'trending' ? 'Keine Trend-Rezepte!' : 'Noch keine Rezepte!'}</p>
           <p className="empty-hint">
             {showFavoritesOnly 
               ? 'Markieren Sie Rezepte als Favoriten, um sie schnell zu finden'
               : sortMode === 'new'
               ? 'Im letzten Monat wurden keine neuen Rezepte hinzugefügt.'
+              : sortMode === 'trending'
+              ? 'In den letzten 30 Tagen wurden keine Rezepte aufgerufen.'
               : 'Das kannst du ändern, lege direkt ein Rezept an.'}
           </p>
         </div>
