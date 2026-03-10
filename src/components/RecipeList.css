@@ -314,11 +314,12 @@
     width: 100%;
   }
 
-  /* Mobile: Show filter button as fixed circular button at bottom left */
+  /* Mobile: Show filter button as fixed circular button at vertical center left */
   .filter-button {
     position: fixed;
-    bottom: 20px;
+    top: 50%;
     left: 20px;
+    transform: translateY(-50%);
     z-index: 1000;
     background: #DF7A00;
     color: white;
@@ -332,12 +333,19 @@
 
   .filter-button:hover {
     background: #c46900;
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.1);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
   }
 
   .filter-button:active {
-    transform: scale(1);
+    transform: translateY(-50%) scale(1);
+  }
+
+  /* Mobile: Center sort-swiper vertically, shifted slightly upward */
+  .sort-swiper {
+    bottom: unset;
+    top: 50%;
+    transform: translate(-50%, -60%);
   }
 }
 
