@@ -3,6 +3,8 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RecipeList from './RecipeList';
 
+const THIRTY_ONE_DAYS_MS = 31 * 24 * 60 * 60 * 1000;
+
 jest.mock('../utils/userManagement', () => ({
   canEditRecipes: jest.fn(() => false),
   getUsers: () => Promise.resolve([]),
@@ -270,7 +272,7 @@ describe('RecipeList - Sort Swiper', () => {
   });
 
   test('trending mode hides recipes with no calls in the last 30 days', async () => {
-    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+    const oldDate = new Date(Date.now() - THIRTY_ONE_DAYS_MS).toISOString();
     mockGetRecipeCalls.mockResolvedValueOnce([
       { id: 'call-1', recipeId: '1', timestamp: oldDate }, // Banana Bread – only an old call
     ]);
@@ -293,7 +295,7 @@ describe('RecipeList - Sort Swiper', () => {
 
   test('trending mode only counts calls from the last 30 days for sorting', async () => {
     const now = new Date().toISOString();
-    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+    const oldDate = new Date(Date.now() - THIRTY_ONE_DAYS_MS).toISOString();
     mockGetRecipeCalls.mockResolvedValueOnce([
       { id: 'call-1', recipeId: '1', timestamp: now },    // Banana Bread – 1 recent call
       { id: 'call-2', recipeId: '2', timestamp: oldDate }, // Apple Pie – only old call (hidden)

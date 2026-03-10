@@ -34,6 +34,20 @@ function getTimestampMs(ts) {
   return new Date(ts).getTime();
 }
 
+function getEmptyStateMessage(showFavoritesOnly, sortMode) {
+  if (showFavoritesOnly) return 'Keine favorisierten Rezepte!';
+  if (sortMode === 'new') return 'Keine neuen Rezepte!';
+  if (sortMode === 'trending') return 'Keine Trend-Rezepte!';
+  return 'Noch keine Rezepte!';
+}
+
+function getEmptyStateHint(showFavoritesOnly, sortMode) {
+  if (showFavoritesOnly) return 'Markieren Sie Rezepte als Favoriten, um sie schnell zu finden';
+  if (sortMode === 'new') return 'Im letzten Monat wurden keine neuen Rezepte hinzugefügt.';
+  if (sortMode === 'trending') return 'In den letzten 30 Tagen wurden keine Rezepte aufgerufen.';
+  return 'Das kannst du ändern, lege direkt ein Rezept an.';
+}
+
 function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, currentUser, onCategoryFilterChange, searchTerm, onOpenFilterPage, activePrivateListName, activePrivateListId }) {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortMode, setSortMode] = useState('trending');
@@ -462,15 +476,9 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       
       {recipeGroups.length === 0 ? (
         <div className="empty-state">
-          <p>{showFavoritesOnly ? 'Keine favorisierten Rezepte!' : sortMode === 'new' ? 'Keine neuen Rezepte!' : sortMode === 'trending' ? 'Keine Trend-Rezepte!' : 'Noch keine Rezepte!'}</p>
+          <p>{getEmptyStateMessage(showFavoritesOnly, sortMode)}</p>
           <p className="empty-hint">
-            {showFavoritesOnly 
-              ? 'Markieren Sie Rezepte als Favoriten, um sie schnell zu finden'
-              : sortMode === 'new'
-              ? 'Im letzten Monat wurden keine neuen Rezepte hinzugefügt.'
-              : sortMode === 'trending'
-              ? 'In den letzten 30 Tagen wurden keine Rezepte aufgerufen.'
-              : 'Das kannst du ändern, lege direkt ein Rezept an.'}
+            {getEmptyStateHint(showFavoritesOnly, sortMode)}
           </p>
         </div>
       ) : (
