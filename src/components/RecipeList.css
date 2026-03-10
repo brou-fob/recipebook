@@ -364,7 +364,7 @@
 /* Sort Swiper – collapsed by default, shows only active option */
 .sort-swiper {
   position: fixed;
-  bottom: 20px;
+  bottom: 25px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
