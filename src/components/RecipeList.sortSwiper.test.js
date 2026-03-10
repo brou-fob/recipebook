@@ -56,9 +56,8 @@ const mockRecipes = [
   },
 ];
 
-// Helper: expand the swiper, then click an option to select it
+// Helper: click an option to select it
 function selectSortMode(label) {
-  fireEvent.click(document.querySelector('.sort-swiper'));
   fireEvent.click(screen.getByText(label));
 }
 
@@ -329,64 +328,7 @@ describe('RecipeList - Sort Swiper', () => {
     expect(titles).not.toContain('Apple Pie');
   });
 
-  test('swiper is compact (no expanded class) by default', async () => {
-    render(
-      <RecipeList
-        recipes={mockRecipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        categoryFilter=""
-        currentUser={{ id: 'user-1' }}
-        searchTerm=""
-      />
-    );
-
-    await screen.findByText('Im Trend');
-    const swiper = document.querySelector('.sort-swiper');
-    expect(swiper).not.toHaveClass('expanded');
-  });
-
-  test('clicking the swiper expands it (adds expanded class)', async () => {
-    render(
-      <RecipeList
-        recipes={mockRecipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        categoryFilter=""
-        currentUser={{ id: 'user-1' }}
-        searchTerm=""
-      />
-    );
-
-    await screen.findByText('Im Trend');
-    const swiper = document.querySelector('.sort-swiper');
-    fireEvent.click(swiper);
-    expect(swiper).toHaveClass('expanded');
-  });
-
-  test('selecting an option collapses the swiper', async () => {
-    render(
-      <RecipeList
-        recipes={mockRecipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        categoryFilter=""
-        currentUser={{ id: 'user-1' }}
-        searchTerm=""
-      />
-    );
-
-    await screen.findByText('Im Trend');
-    const swiper = document.querySelector('.sort-swiper');
-    // Expand
-    fireEvent.click(swiper);
-    expect(swiper).toHaveClass('expanded');
-    // Select an option
-    fireEvent.click(screen.getByText('Alphabetisch'));
-    expect(swiper).not.toHaveClass('expanded');
-  });
-
-  test('swipe left changes to next sort mode and collapses', async () => {
+  test('swipe left changes to next sort mode', async () => {
     render(
       <RecipeList
         recipes={mockRecipes}
@@ -406,10 +348,9 @@ describe('RecipeList - Sort Swiper', () => {
     fireEvent.touchStart(swiper, { touches: [{ clientX: 200 }] });
     fireEvent.touchEnd(swiper, { changedTouches: [{ clientX: 100 }] }); // delta -100 → left
     expect(screen.getByText('Neue Rezepte')).toHaveClass('active');
-    expect(swiper).not.toHaveClass('expanded');
   });
 
-  test('swipe right changes to previous sort mode and collapses', async () => {
+  test('swipe right changes to previous sort mode', async () => {
     render(
       <RecipeList
         recipes={mockRecipes}
@@ -427,7 +368,6 @@ describe('RecipeList - Sort Swiper', () => {
     fireEvent.touchStart(swiper, { touches: [{ clientX: 100 }] });
     fireEvent.touchEnd(swiper, { changedTouches: [{ clientX: 200 }] }); // delta +100 → right
     expect(screen.getByText('Alphabetisch')).toHaveClass('active');
-    expect(swiper).not.toHaveClass('expanded');
   });
 
   test('small touch movement (< 50px) does not trigger swipe', async () => {
@@ -450,7 +390,7 @@ describe('RecipeList - Sort Swiper', () => {
     expect(screen.getByText('Im Trend')).toHaveClass('active');
   });
 
-  test('touchMove > 10px expands the swiper automatically', async () => {
+  test('touch + swipe >= 50px changes sort mode in one gesture', async () => {
     render(
       <RecipeList
         recipes={mockRecipes}
@@ -464,57 +404,14 @@ describe('RecipeList - Sort Swiper', () => {
 
     await screen.findByText('Im Trend');
     const swiper = document.querySelector('.sort-swiper');
-    expect(swiper).not.toHaveClass('expanded');
-    fireEvent.touchStart(swiper, { touches: [{ clientX: 100 }] });
-    fireEvent.touchMove(swiper, { touches: [{ clientX: 115 }] }); // delta +15 > 10px threshold
-    expect(swiper).toHaveClass('expanded');
-  });
-
-  test('touchMove <= 10px does not expand the swiper', async () => {
-    render(
-      <RecipeList
-        recipes={mockRecipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        categoryFilter=""
-        currentUser={{ id: 'user-1' }}
-        searchTerm=""
-      />
-    );
-
-    await screen.findByText('Im Trend');
-    const swiper = document.querySelector('.sort-swiper');
-    expect(swiper).not.toHaveClass('expanded');
-    fireEvent.touchStart(swiper, { touches: [{ clientX: 100 }] });
-    fireEvent.touchMove(swiper, { touches: [{ clientX: 108 }] }); // delta +8 ≤ 10px threshold
-    expect(swiper).not.toHaveClass('expanded');
-  });
-
-  test('touch + move + swipe >= 50px changes sort mode and collapses in one gesture', async () => {
-    render(
-      <RecipeList
-        recipes={mockRecipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        categoryFilter=""
-        currentUser={{ id: 'user-1' }}
-        searchTerm=""
-      />
-    );
-
-    await screen.findByText('Im Trend');
-    const swiper = document.querySelector('.sort-swiper');
-    expect(swiper).not.toHaveClass('expanded');
-    // Start touch, move to expand, then swipe left >= 50px to change mode
+    // Start touch, move, then swipe left >= 50px to change mode
     fireEvent.touchStart(swiper, { touches: [{ clientX: 200 }] });
-    fireEvent.touchMove(swiper, { touches: [{ clientX: 185 }] }); // expand
-    expect(swiper).toHaveClass('expanded');
+    fireEvent.touchMove(swiper, { touches: [{ clientX: 185 }] });
     fireEvent.touchEnd(swiper, { changedTouches: [{ clientX: 100 }] }); // delta -100 → swipe left → Neue Rezepte
     expect(screen.getByText('Neue Rezepte')).toHaveClass('active');
-    expect(swiper).not.toHaveClass('expanded');
   });
 
-  test('only the active option is visible by default; all options appear in the DOM', async () => {
+  test('all options are always visible in the carousel', async () => {
     render(
       <RecipeList
         recipes={mockRecipes}
@@ -528,8 +425,6 @@ describe('RecipeList - Sort Swiper', () => {
 
     await screen.findByText('Im Trend');
     const swiper = document.querySelector('.sort-swiper');
-    expect(swiper).not.toHaveClass('expanded');
-    // All option buttons are present in the DOM (non-active ones hidden via CSS)
     expect(swiper).toContainElement(screen.getByText('Alphabetisch'));
     expect(swiper).toContainElement(screen.getByText('Im Trend'));
     expect(swiper).toContainElement(screen.getByText('Neue Rezepte'));
@@ -845,118 +740,23 @@ describe('RecipeList - Sort Swiper', () => {
     });
   });
 
-  describe('previewMode during touchMove', () => {
-    test('touchMove over a button sets that button as active (preview)', async () => {
-      render(
-        <RecipeList
-          recipes={mockRecipes}
-          onSelectRecipe={() => {}}
-          onAddRecipe={() => {}}
-          categoryFilter=""
-          currentUser={{ id: 'user-1' }}
-          searchTerm=""
-        />
-      );
+  test('each button has a data-mode-id attribute matching its sort mode id', async () => {
+    render(
+      <RecipeList
+        recipes={mockRecipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        categoryFilter=""
+        currentUser={{ id: 'user-1' }}
+        searchTerm=""
+      />
+    );
 
-      await screen.findByText('Im Trend');
-      const swiper = document.querySelector('.sort-swiper');
-
-      // Mock getBoundingClientRect so button for 'Alphabetisch' (data-mode-id="alphabetical")
-      // covers x: 0-100, y: 0-50
-      const alphabeticalBtn = swiper.querySelector('[data-mode-id="alphabetical"]');
-      jest.spyOn(alphabeticalBtn, 'getBoundingClientRect').mockReturnValue({
-        left: 0, right: 100, top: 0, bottom: 50,
-      });
-
-      fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
-      // Move enough to expand swiper
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] });
-      expect(swiper).toHaveClass('expanded');
-
-      // Move finger over the 'Alphabetisch' button area
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
-
-      // 'Alphabetisch' should be shown as active (preview), 'Im Trend' should not be active
-      expect(screen.getByText('Alphabetisch')).toHaveClass('active');
-      expect(screen.getByText('Im Trend')).not.toHaveClass('active');
-    });
-
-    test('touchEnd commits previewMode and collapses swiper', async () => {
-      render(
-        <RecipeList
-          recipes={mockRecipes}
-          onSelectRecipe={() => {}}
-          onAddRecipe={() => {}}
-          categoryFilter=""
-          currentUser={{ id: 'user-1' }}
-          searchTerm=""
-        />
-      );
-
-      await screen.findByText('Im Trend');
-      const swiper = document.querySelector('.sort-swiper');
-
-      const alphabeticalBtn = swiper.querySelector('[data-mode-id="alphabetical"]');
-      jest.spyOn(alphabeticalBtn, 'getBoundingClientRect').mockReturnValue({
-        left: 0, right: 100, top: 0, bottom: 50,
-      });
-
-      fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] });
-      // Move over 'Alphabetisch' button
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
-
-      // Release finger — previewMode ('alphabetical') should be committed
-      fireEvent.touchEnd(swiper, { changedTouches: [{ clientX: 50, clientY: 25 }] });
-
-      expect(screen.getByText('Alphabetisch')).toHaveClass('active');
-      expect(swiper).not.toHaveClass('expanded');
-    });
-
-    test('touchStart resets previewMode', async () => {
-      render(
-        <RecipeList
-          recipes={mockRecipes}
-          onSelectRecipe={() => {}}
-          onAddRecipe={() => {}}
-          categoryFilter=""
-          currentUser={{ id: 'user-1' }}
-          searchTerm=""
-        />
-      );
-
-      await screen.findByText('Im Trend');
-      const swiper = document.querySelector('.sort-swiper');
-
-      // Expand swiper first
-      fireEvent.click(swiper);
-      expect(swiper).toHaveClass('expanded');
-
-      // New touch should reset any previous state
-      fireEvent.touchStart(swiper, { touches: [{ clientX: 100, clientY: 25 }] });
-      // 'Im Trend' (sortMode) should be the only active item — no previewMode
-      expect(screen.getByText('Im Trend')).toHaveClass('active');
-      expect(screen.getByText('Alphabetisch')).not.toHaveClass('active');
-    });
-
-    test('each button has a data-mode-id attribute matching its sort mode id', async () => {
-      render(
-        <RecipeList
-          recipes={mockRecipes}
-          onSelectRecipe={() => {}}
-          onAddRecipe={() => {}}
-          categoryFilter=""
-          currentUser={{ id: 'user-1' }}
-          searchTerm=""
-        />
-      );
-
-      await screen.findByText('Im Trend');
-      const swiper = document.querySelector('.sort-swiper');
-      expect(swiper.querySelector('[data-mode-id="alphabetical"]')).toBeInTheDocument();
-      expect(swiper.querySelector('[data-mode-id="trending"]')).toBeInTheDocument();
-      expect(swiper.querySelector('[data-mode-id="new"]')).toBeInTheDocument();
-      expect(swiper.querySelector('[data-mode-id="score"]')).toBeInTheDocument();
-    });
+    await screen.findByText('Im Trend');
+    const swiper = document.querySelector('.sort-swiper');
+    expect(swiper.querySelector('[data-mode-id="alphabetical"]')).toBeInTheDocument();
+    expect(swiper.querySelector('[data-mode-id="trending"]')).toBeInTheDocument();
+    expect(swiper.querySelector('[data-mode-id="new"]')).toBeInTheDocument();
+    expect(swiper.querySelector('[data-mode-id="score"]')).toBeInTheDocument();
   });
 });
