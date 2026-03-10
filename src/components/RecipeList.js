@@ -17,6 +17,9 @@ const SORT_MODES = [
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
+// Must match the CSS `gap` on `.sort-swiper-track` in RecipeList.css (in pixels)
+const SWIPER_ITEM_GAP = 2;
+
 function isNewRecipe(recipe) {
   const ts = getTimestampMs(recipe?.createdAt);
   return ts > 0 && Date.now() - ts <= ONE_MONTH_MS;
@@ -60,7 +63,8 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const touchStartXRef = useRef(null);
   const didSwipeRef = useRef(false);
   const hasMovedRef = useRef(false);
-  const trackStartOffsetRef = useRef(0);
+  const trackOffsetRef = useRef(0);   // current translateX (px) applied to the swiper track
+  const trackStartOffsetRef = useRef(0); // snapshot of trackOffsetRef (px) at each touchStart
   const isTouchingRef = useRef(false);
 
   // Collapse swiper when user clicks/touches outside of it
@@ -90,11 +94,12 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     const swiperWidth = swiperRef.current.offsetWidth;
     let offsetLeft = 0;
     for (let i = 0; i < activeIndex; i++) {
-      offsetLeft += items[i].offsetWidth + 2; // +2 for the gap between items
+      offsetLeft += items[i].offsetWidth + SWIPER_ITEM_GAP;
     }
     offsetLeft += items[activeIndex].offsetWidth / 2;
     const translateX = swiperWidth / 2 - offsetLeft;
-    track.style.transition = 'transform 0.3s ease';
+    trackOffsetRef.current = translateX;
+    track.style.transition = ''; // restore CSS-defined transition after drag was disabled
     track.style.transform = `translateX(${translateX}px)`;
   }, []);
 
@@ -111,14 +116,8 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     hasMovedRef.current = false;
     isTouchingRef.current = true;
     setPreviewMode(null);
-    // Capture the current track translate offset so we can move it incrementally
-    if (swiperRef.current) {
-      const track = swiperRef.current.querySelector('.sort-swiper-track');
-      if (track) {
-        const match = track.style.transform.match(/translateX\(([^)]+)px\)/);
-        trackStartOffsetRef.current = match ? parseFloat(match[1]) : 0;
-      }
-    }
+    // Snapshot the current track offset so we can move it incrementally
+    trackStartOffsetRef.current = trackOffsetRef.current;
   }, []);
 
   const handleSwiperTouchMove = useCallback((e) => {
@@ -133,6 +132,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       const track = swiperRef.current.querySelector('.sort-swiper-track');
       // Move the track with the finger (no transition while dragging)
       const newOffset = trackStartOffsetRef.current + deltaX;
+      trackOffsetRef.current = newOffset;
       track.style.transition = 'none';
       track.style.transform = `translateX(${newOffset}px)`;
 
