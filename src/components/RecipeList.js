@@ -55,6 +55,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   });
   const [recipeCalls, setRecipeCalls] = useState([]);
   const [swiperExpanded, setSwiperExpanded] = useState(false);
+  const [previewMode, setPreviewMode] = useState(null);
   const swiperRef = useRef(null);
   const touchStartXRef = useRef(null);
   const didSwipeRef = useRef(false);
@@ -80,6 +81,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     touchStartXRef.current = e.touches[0].clientX;
     didSwipeRef.current = false;
     hasMovedRef.current = false;
+    setPreviewMode(null);
   }, []);
 
   const handleSwiperTouchMove = useCallback((e) => {
@@ -89,12 +91,35 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       setSwiperExpanded(true);
       hasMovedRef.current = true;
     }
+
+    if (swiperRef.current) {
+      const touch = e.touches[0];
+      const buttons = swiperRef.current.querySelectorAll('.sort-swiper-item');
+      let hoveredMode = null;
+      buttons.forEach(button => {
+        const rect = button.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          hoveredMode = button.getAttribute('data-mode-id');
+        }
+      });
+      setPreviewMode(hoveredMode);
+    }
   }, []);
 
   const handleSwiperTouchEnd = useCallback((e) => {
     if (touchStartXRef.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
     touchStartXRef.current = null;
+
+    if (previewMode) {
+      didSwipeRef.current = true;
+      setSortMode(previewMode);
+      setPreviewMode(null);
+      setSwiperExpanded(false);
+      return;
+    }
+
     if (Math.abs(deltaX) >= 50) {
       didSwipeRef.current = true;
       setSortMode((prev) => {
@@ -107,7 +132,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       });
       setSwiperExpanded(false);
     }
-  }, []);
+  }, [previewMode]);
 
   const handleSwiperItemClick = useCallback((e, modeId) => {
     e.stopPropagation();
@@ -461,7 +486,10 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
           {SORT_MODES.map((mode) => (
             <button
               key={mode.id}
-              className={`sort-swiper-item${sortMode === mode.id ? ' active' : ''}`}
+              data-mode-id={mode.id}
+              className={`sort-swiper-item${
+                (previewMode === mode.id || (!previewMode && sortMode === mode.id)) ? ' active' : ''
+              }`}
               onClick={(e) => handleSwiperItemClick(e, mode.id)}
               aria-pressed={sortMode === mode.id}
               tabIndex={swiperExpanded || mode.id === sortMode ? 0 : -1}
