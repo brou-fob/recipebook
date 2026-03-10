@@ -961,7 +961,7 @@ describe('RecipeList - Sort Swiper', () => {
   });
 
   describe('active pill centering', () => {
-    test('swiper transform centers the active pill when expanded', async () => {
+    test('track transform centers the active pill when expanded', async () => {
       render(
         <RecipeList
           recipes={mockRecipes}
@@ -975,6 +975,7 @@ describe('RecipeList - Sort Swiper', () => {
 
       await screen.findByText('Im Trend');
       const swiper = document.querySelector('.sort-swiper');
+      const track = swiper.querySelector('.sort-swiper-track');
       const trendingBtn = swiper.querySelector('[data-mode-id="trending"]');
 
       // Mock layout measurements: swiper width=300, trending button at left=70 with width=80
@@ -985,10 +986,12 @@ describe('RecipeList - Sort Swiper', () => {
 
       fireEvent.click(swiper);
 
-      expect(swiper.style.transform).toBe('translateX(calc(-50% + 40px))');
+      // The track (not the container) is translated; container stays at its CSS position
+      expect(track.style.transform).toBe('translateX(40px)');
+      expect(swiper.style.transform).toBe('');
     });
 
-    test('swiper transform resets to default when swiper collapses', async () => {
+    test('track transform resets to default when swiper collapses', async () => {
       render(
         <RecipeList
           recipes={mockRecipes}
@@ -1002,6 +1005,7 @@ describe('RecipeList - Sort Swiper', () => {
 
       await screen.findByText('Im Trend');
       const swiper = document.querySelector('.sort-swiper');
+      const track = swiper.querySelector('.sort-swiper-track');
 
       // Expand the swiper
       fireEvent.click(swiper);
@@ -1011,11 +1015,12 @@ describe('RecipeList - Sort Swiper', () => {
       fireEvent.click(screen.getByText('Im Trend'));
       expect(swiper).not.toHaveClass('expanded');
 
-      // Inline transform style should be cleared so CSS rule takes over
+      // Track transform should be cleared; container transform should remain at CSS default
+      expect(track.style.transform).toBe('');
       expect(swiper.style.transform).toBe('');
     });
 
-    test('swiper transform updates to center previewMode pill during touchMove', async () => {
+    test('track translates with finger during touchMove (carousel drag)', async () => {
       render(
         <RecipeList
           recipes={mockRecipes}
@@ -1029,27 +1034,19 @@ describe('RecipeList - Sort Swiper', () => {
 
       await screen.findByText('Im Trend');
       const swiper = document.querySelector('.sort-swiper');
-      const alphabeticalBtn = swiper.querySelector('[data-mode-id="alphabetical"]');
+      const track = swiper.querySelector('.sort-swiper-track');
 
-      // Mock getBoundingClientRect so touchMove can detect the 'Alphabetisch' button
-      jest.spyOn(alphabeticalBtn, 'getBoundingClientRect').mockReturnValue({
-        left: 0, right: 100, top: 0, bottom: 50,
-      });
-
-      // Mock layout measurements for the centering calculation
-      // swiper width=300, alphabetical button at left=0 with width=80
-      // Expected offset = 300/2 - (0 + 80/2) = 150 - 40 = 110
-      Object.defineProperty(swiper, 'offsetWidth', { configurable: true, get: () => 300 });
-      Object.defineProperty(alphabeticalBtn, 'offsetLeft', { configurable: true, get: () => 0 });
-      Object.defineProperty(alphabeticalBtn, 'offsetWidth', { configurable: true, get: () => 80 });
-
+      // Start drag at x=200
       fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] }); // expand
-      // Move over 'Alphabetisch' button to set previewMode
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
 
-      expect(screen.getByText('Alphabetisch')).toHaveClass('active');
-      expect(swiper.style.transform).toBe('translateX(calc(-50% + 110px))');
+      // Move left 15px – crosses the >10px threshold, expands, and translates track
+      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] });
+      expect(swiper).toHaveClass('expanded');
+      expect(track.style.transform).toBe('translateX(-15px)');
+
+      // Move further left to x=100 (total delta -100)
+      fireEvent.touchMove(swiper, { touches: [{ clientX: 100, clientY: 25 }] });
+      expect(track.style.transform).toBe('translateX(-100px)');
     });
   });
 });
