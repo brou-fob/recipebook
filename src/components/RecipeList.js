@@ -49,6 +49,8 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
 
   const [longPressMenuVisible, setLongPressMenuVisible] = useState(false);
   const [highlightedMode, setHighlightedMode] = useState(null);
+  const [swiperExpanded, setSwiperExpanded] = useState(false);
+  const collapseTimerRef = useRef(null);
   
   // Load all recipe calls once on mount for trending sort
   useEffect(() => {
@@ -162,6 +164,11 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     return () => swiper.removeEventListener('touchmove', handleTouchMoveDirect);
   }, []);
 
+  // Clean up collapse timer on unmount to prevent state updates on unmounted component
+  useEffect(() => {
+    return () => clearTimeout(collapseTimerRef.current);
+  }, []);
+
   // Mouse drag support for desktop
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -170,6 +177,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     };
     const handleMouseUp = () => {
       isDragging.current = false;
+      collapseTimerRef.current = setTimeout(() => setSwiperExpanded(false), 500);
     };
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
@@ -295,8 +303,10 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     }, 100);
   };
 
-  // Touch start: begin long-press timer
+  // Touch start: expand swiper and begin long-press timer
   const handleSwiperTouchStart = () => {
+    clearTimeout(collapseTimerRef.current);
+    setSwiperExpanded(true);
     touchMoved.current = false;
     clearTimeout(longPressTimer.current);
     longPressTimer.current = setTimeout(() => {
@@ -318,7 +328,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     }
   };
 
-  // Touch end: commit long-press selection
+  // Touch end: commit long-press selection and schedule swiper collapse
   const handleSwiperTouchEnd = () => {
     clearTimeout(longPressTimer.current);
     if (longPressMenuOpenRef.current) {
@@ -330,10 +340,13 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       setHighlightedMode(null);
       highlightedModeRef.current = null;
     }
+    collapseTimerRef.current = setTimeout(() => setSwiperExpanded(false), 500);
   };
 
-  // Mouse down: start drag for desktop
+  // Mouse down: start drag for desktop and expand swiper
   const handleTrackMouseDown = (e) => {
+    clearTimeout(collapseTimerRef.current);
+    setSwiperExpanded(true);
     isDragging.current = true;
     dragStartX.current = e.clientX;
     dragStartScrollLeft.current = trackRef.current?.scrollLeft ?? 0;
@@ -459,7 +472,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       )}
 
       <div
-        className="sort-swiper"
+        className={`sort-swiper${swiperExpanded ? ' expanded' : ''}`}
         ref={swiperRef}
         onTouchStart={handleSwiperTouchStart}
         onTouchMove={handleSwiperTouchMoveReact}
