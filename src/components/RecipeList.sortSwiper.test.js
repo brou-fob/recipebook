@@ -68,7 +68,7 @@ describe('RecipeList - Sort Swiper', () => {
     mockGetRecipeCalls.mockResolvedValue([]);
   });
 
-  test('renders sort swiper with "Im Trend", "Alphabetisch", "Nach Score" and "Neue Rezepte" options', async () => {
+  test('renders sort swiper with "Im Trend", "Alphabetisch", "Nach Bewertung" and "Neue Rezepte" options', async () => {
     render(
       <RecipeList
         recipes={mockRecipes}
@@ -82,7 +82,7 @@ describe('RecipeList - Sort Swiper', () => {
 
     expect(await screen.findByText('Im Trend')).toBeInTheDocument();
     expect(screen.getByText('Alphabetisch')).toBeInTheDocument();
-    expect(screen.getByText('Nach Score')).toBeInTheDocument();
+    expect(screen.getByText('Nach Bewertung')).toBeInTheDocument();
     expect(screen.getByText('Neue Rezepte')).toBeInTheDocument();
   });
 
@@ -400,7 +400,7 @@ describe('RecipeList - Sort Swiper', () => {
 
     await screen.findByText('Im Trend');
     const swiper = document.querySelector('.sort-swiper');
-    // Default active is "trending" (index 1 in SORT_MODES: Alphabetisch, Im Trend, Neue Rezepte, Nach Score)
+    // Default active is "trending" (index 1 in SORT_MODES: Alphabetisch, Im Trend, Neue Rezepte, Nach Bewertung)
     expect(screen.getByText('Im Trend')).toHaveClass('active');
     // Swipe left (next mode: Neue Rezepte)
     fireEvent.touchStart(swiper, { touches: [{ clientX: 200 }] });
@@ -533,10 +533,10 @@ describe('RecipeList - Sort Swiper', () => {
     expect(swiper).toContainElement(screen.getByText('Alphabetisch'));
     expect(swiper).toContainElement(screen.getByText('Im Trend'));
     expect(swiper).toContainElement(screen.getByText('Neue Rezepte'));
-    expect(swiper).toContainElement(screen.getByText('Nach Score'));
+    expect(swiper).toContainElement(screen.getByText('Nach Bewertung'));
   });
 
-  test('options appear in correct order: Alphabetisch, Im Trend, Neue Rezepte, Nach Score', async () => {
+  test('options appear in correct order: Alphabetisch, Im Trend, Neue Rezepte, Nach Bewertung', async () => {
     render(
       <RecipeList
         recipes={mockRecipes}
@@ -551,7 +551,7 @@ describe('RecipeList - Sort Swiper', () => {
     await screen.findByText('Im Trend');
     const buttons = document.querySelectorAll('.sort-swiper-item');
     const labels = Array.from(buttons).map(b => b.textContent);
-    expect(labels).toEqual(['Alphabetisch', 'Im Trend', 'Neue Rezepte', 'Nach Score']);
+    expect(labels).toEqual(['Alphabetisch', 'Im Trend', 'Neue Rezepte', 'Nach Bewertung']);
   });
 
   test('clicking "Nach Score" switches to score sort and shows it active', async () => {
@@ -566,10 +566,10 @@ describe('RecipeList - Sort Swiper', () => {
       />
     );
 
-    await screen.findByText('Nach Score');
-    selectSortMode('Nach Score');
+    await screen.findByText('Nach Bewertung');
+    selectSortMode('Nach Bewertung');
 
-    expect(screen.getByText('Nach Score')).toHaveClass('active');
+    expect(screen.getByText('Nach Bewertung')).toHaveClass('active');
     expect(screen.getByText('Im Trend')).not.toHaveClass('active');
     expect(screen.getByText('Alphabetisch')).not.toHaveClass('active');
   });
@@ -619,8 +619,8 @@ describe('RecipeList - Sort Swiper', () => {
       />
     );
 
-    await screen.findByText('Nach Score');
-    selectSortMode('Nach Score');
+    await screen.findByText('Nach Bewertung');
+    selectSortMode('Nach Bewertung');
 
     await screen.findByText('High Rated');
     const cards = document.querySelectorAll('.recipe-card h3');
@@ -663,8 +663,8 @@ describe('RecipeList - Sort Swiper', () => {
       />
     );
 
-    await screen.findByText('Nach Score');
-    selectSortMode('Nach Score');
+    await screen.findByText('Nach Bewertung');
+    selectSortMode('Nach Bewertung');
 
     await screen.findByText('Apple Strudel');
     const cards = document.querySelectorAll('.recipe-card h3');
@@ -709,8 +709,8 @@ describe('RecipeList - Sort Swiper', () => {
       />
     );
 
-    await screen.findByText('Nach Score');
-    selectSortMode('Nach Score');
+    await screen.findByText('Nach Bewertung');
+    selectSortMode('Nach Bewertung');
 
     // Both cards have the title 'Pasta'; use kulinarik tags to verify order.
     // The newer recipe (June, id '2', kulinarik 'Newer') must appear before
