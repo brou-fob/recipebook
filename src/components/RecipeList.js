@@ -12,7 +12,7 @@ const SORT_MODES = [
   { id: 'alphabetical', label: 'Alphabetisch' },
   { id: 'trending', label: 'Im Trend' },
   { id: 'new', label: 'Neue Rezepte' },
-  { id: 'score', label: 'Nach Score' },
+  { id: 'score', label: 'Nach Bewertung' },
 ];
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
