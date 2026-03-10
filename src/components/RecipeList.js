@@ -112,6 +112,10 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     }
   }, [swiperExpanded]);
 
+  const handleSwiperContainerClick = useCallback(() => {
+    if (!swiperExpanded) setSwiperExpanded(true);
+  }, [swiperExpanded]);
+
   // Load all recipe calls once on mount for trending sort
   useEffect(() => {
     const loadRecipeCalls = async () => {
@@ -439,7 +443,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
         ref={swiperRef}
         onTouchStart={handleSwiperTouchStart}
         onTouchEnd={handleSwiperTouchEnd}
-        onClick={() => { if (!swiperExpanded) setSwiperExpanded(true); }}
+        onClick={handleSwiperContainerClick}
       >
         <div className="sort-swiper-track">
           {SORT_MODES.map((mode) => (
