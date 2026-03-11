@@ -93,11 +93,9 @@ describe('SortCarousel', () => {
     const { container } = render(
       <SortCarousel activeSort="alphabetical" onSortChange={handleChange} />
     );
-    // Mock item width to 165px so a 400px swipe = ~2.4 items → Math.round = 2 steps
-    mockItemWidth(container, 165);
-    // swipe -400px: 400/165 ≈ 2.42 → rounds to 2 steps from 'alphabetical' → 'newest'
+    // swipe -400px: 400/120 ≈ 3.33 → rounds to 3 steps from 'alphabetical' → 'rating'
     simulateTouchSwipe(container.firstChild, 500, 100);
-    expect(handleChange).toHaveBeenCalledWith('newest');
+    expect(handleChange).toHaveBeenCalledWith('rating');
   });
 
   test('multi-step swipe right skips multiple options based on item width', () => {
@@ -105,11 +103,9 @@ describe('SortCarousel', () => {
     const { container } = render(
       <SortCarousel activeSort="rating" onSortChange={handleChange} />
     );
-    // Mock item width to 165px so a 400px swipe right = ~2.4 items → 2 steps back from 'rating'
-    mockItemWidth(container, 165);
-    // 'rating' is index 3; 2 steps back → index 1 → 'trending'
+    // 'rating' is index 3; 400/120 ≈ 3 steps back → index 0 → 'alphabetical'
     simulateTouchSwipe(container.firstChild, 100, 500);
-    expect(handleChange).toHaveBeenCalledWith('trending');
+    expect(handleChange).toHaveBeenCalledWith('alphabetical');
   });
 
   test('short swipe collapses without changing sort', () => {
@@ -117,7 +113,7 @@ describe('SortCarousel', () => {
     const { container } = render(
       <SortCarousel activeSort="alphabetical" onSortChange={handleChange} />
     );
-    // 20 px: expands (> 10 px) but below the 50 px sort threshold
+    // 20 px: expands (> 10 px) but below the 30 px sort threshold
     simulateTouchSwipe(container.firstChild, 200, 220);
     expect(handleChange).not.toHaveBeenCalled();
     expect(container.firstChild).not.toHaveClass('sort-carousel--expanded');
