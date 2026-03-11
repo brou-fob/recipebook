@@ -399,7 +399,7 @@
 
 .sort-swiper-item.active {
   background: rgba(255, 255, 255, 0.18);
-  color: #FFD60A;
+  color: white;
   font-weight: 700;
 }
 
