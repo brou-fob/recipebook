@@ -2,6 +2,15 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import SortCarousel, { SORT_OPTIONS } from './SortCarousel';
 
+// JSDOM does not implement ResizeObserver — provide a no-op mock so the component
+// can register/unregister observers without throwing.
+global.ResizeObserver = class ResizeObserver {
+  constructor(cb) { this.cb = cb; }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 // Helper: fire a complete touch gesture (touchStart → [expand step] → touchMove → touchEnd).
 // For swipes larger than 10 px, one intermediate touchMove is fired at startX ± 11 px to
 // trigger expansion and simultaneously start drag tracking (sets dragStartX).
