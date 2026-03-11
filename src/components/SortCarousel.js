@@ -96,6 +96,10 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
         }
         gestureRef.current.isExpanded = true;
         setExpanded(true);
+        // Start drag tracking immediately on expand to disable CSS transition
+        gestureRef.current.isDragging = true;
+        gestureRef.current.dragStartX = touch.clientX;
+        setIsDragging(true);
         setDragOffset(0);
       }
       return;
