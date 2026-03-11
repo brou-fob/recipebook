@@ -8,16 +8,17 @@ export const SORT_OPTIONS = [
   { id: 'rating',       label: 'Nach Bewertung' },
 ];
 
-const SWIPE_THRESHOLD = 50; // px — minimum swipe distance to trigger a sort change
+const SWIPE_THRESHOLD = 30; // px — minimum swipe distance to trigger a sort change (fallback)
 const LONG_PRESS_DELAY = 300; // ms — hold time required to expand via long press
 const HORIZONTAL_SWIPE_MIN = 10; // px — minimum horizontal movement to detect a swipe
-const ITEM_WIDTH_CSS = 'var(--sort-item-width, 165px)';
+const ITEM_WIDTH_CSS = 'var(--sort-item-width, 120px)';
 
 function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChange }) {
   const [expanded, setExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const trackRef = useRef(null);
+  const carouselRef = useRef(null);
 
   // Ref holds mutable gesture state for synchronous access inside event handlers
   const gestureRef = useRef({
@@ -121,31 +122,51 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     gestureRef.current.isDragging = false;
     gestureRef.current.isExpanded = false;
     setIsDragging(false);
-    setDragOffset(0);
 
     if (!wasExpanded) {
       // Tap without expansion (< 300 ms, no horizontal swipe) — do nothing
+      setDragOffset(0);
       return;
     }
 
-    // Try real item widths; fall back to threshold-based approach in JSDOM
-    let itemWidth = 0;
-    if (trackRef.current) {
-      const items = trackRef.current.querySelectorAll('.sort-carousel-item');
-      if (items.length > 0) {
-        itemWidth = items[0].getBoundingClientRect().width;
+    // Pill-based snap: find item whose center is closest to the carousel center.
+    // Items' getBoundingClientRect() still reflects the current visual position
+    // because dragOffset state has not been reset yet (React batches state updates).
+    if (carouselRef.current && trackRef.current) {
+      const carouselRect = carouselRef.current.getBoundingClientRect();
+      if (carouselRect.width > 0) {
+        const carouselCenter = carouselRect.left + carouselRect.width / 2;
+        const items = trackRef.current.querySelectorAll('.sort-carousel-item');
+        let closestIndex = -1;
+        let closestDist = Infinity;
+        items.forEach((item, idx) => {
+          const rect = item.getBoundingClientRect();
+          const itemCenter = rect.left + rect.width / 2;
+          const dist = Math.abs(itemCenter - carouselCenter);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestIndex = idx;
+          }
+        });
+        if (closestIndex >= 0) {
+          selectIndex(closestIndex);
+          return;
+        }
       }
     }
 
-    const threshold = itemWidth > 0 ? itemWidth / 2 : SWIPE_THRESHOLD;
-    if (delta < -threshold) {
-      const steps = itemWidth > 0 ? Math.max(1, Math.round(-delta / itemWidth)) : 1;
+    // Fallback for JSDOM (getBoundingClientRect returns zero-width rects):
+    // use drag delta with CSS variable fallback width of 120px
+    const FALLBACK_ITEM_WIDTH = 120;
+    if (delta < -SWIPE_THRESHOLD) {
+      const steps = Math.max(1, Math.round(-delta / FALLBACK_ITEM_WIDTH));
       selectIndex(safeIndex + steps);
-    } else if (delta > threshold) {
-      const steps = itemWidth > 0 ? Math.max(1, Math.round(delta / itemWidth)) : 1;
+    } else if (delta > SWIPE_THRESHOLD) {
+      const steps = Math.max(1, Math.round(delta / FALLBACK_ITEM_WIDTH));
       selectIndex(safeIndex - steps);
     } else {
       // No sort change — just collapse
+      setDragOffset(0);
       setExpanded(false);
     }
   }, [safeIndex, selectIndex]);
@@ -189,6 +210,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     <>
       <div
         className={`sort-carousel${expanded ? ' sort-carousel--expanded' : ''}${isDragging ? ' sort-carousel--dragging' : ''}`}
+        ref={carouselRef}
         role="listbox"
         aria-label="Sortierung"
         aria-expanded={expanded}
