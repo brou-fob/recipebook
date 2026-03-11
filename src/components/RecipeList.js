@@ -61,7 +61,6 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const touchStartXRef = useRef(null);
   const didSwipeRef = useRef(false);
   const hasMovedRef = useRef(false);
-  const expandedByThisTouchRef = useRef(false);
   const isInitialScrollRef = useRef(false);
 
   // Collapse swiper when user clicks/touches outside of it
@@ -148,20 +147,16 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     touchStartXRef.current = e.touches[0].clientX;
     didSwipeRef.current = false;
     hasMovedRef.current = false;
-    expandedByThisTouchRef.current = false;
     setPreviewMode(null);
   }, []);
 
   const handleSwiperTouchMove = useCallback((e) => {
     if (touchStartXRef.current === null) return;
-    // Only let scroll-snap own the gesture when the swiper was already expanded
-    // before this touch started. If WE expanded it during this touch, keep tracking.
-    if (swiperExpanded && !expandedByThisTouchRef.current) return;
+    if (swiperExpanded) return;
     const deltaX = e.touches[0].clientX - touchStartXRef.current;
     if (Math.abs(deltaX) > 10 && !hasMovedRef.current) {
       setSwiperExpanded(true);
       hasMovedRef.current = true;
-      expandedByThisTouchRef.current = true;
     }
 
     if (swiperRef.current) {
@@ -192,7 +187,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       return;
     }
 
-    if (swiperExpanded) {
+    if (swiperExpanded && hasMovedRef.current) {
       return;
     }
 

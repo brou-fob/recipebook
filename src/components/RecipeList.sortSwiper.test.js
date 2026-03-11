@@ -897,7 +897,7 @@ describe('RecipeList - Sort Swiper', () => {
   });
 
   describe('previewMode during touchMove', () => {
-    test('touchMove in already-expanded swiper does not set previewMode (native scroll-snap owns the gesture)', async () => {
+    test('touchMove in expanded state does not set previewMode (native scroll-snap owns the gesture)', async () => {
       render(
         <RecipeList
           recipes={mockRecipes}
@@ -912,10 +912,6 @@ describe('RecipeList - Sort Swiper', () => {
       await screen.findByText('Im Trend');
       const swiper = document.querySelector('.sort-swiper');
 
-      // Expand via click so the swiper is already expanded before any touch
-      fireEvent.click(swiper);
-      expect(swiper).toHaveClass('expanded');
-
       // Mock getBoundingClientRect so button for 'Alphabetisch' (data-mode-id="alphabetical")
       // covers x: 0-100, y: 0-50
       const alphabeticalBtn = swiper.querySelector('[data-mode-id="alphabetical"]');
@@ -923,51 +919,20 @@ describe('RecipeList - Sort Swiper', () => {
         left: 0, right: 100, top: 0, bottom: 50,
       });
 
-      // New touch on the already-expanded swiper — scroll-snap owns this gesture
       fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
+      // Move enough to expand swiper
+      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] });
+      expect(swiper).toHaveClass('expanded');
+
+      // Further touchMove while expanded: should early-return so previewMode is not set
       fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
 
-      // previewMode must NOT be set: Im Trend (sortMode) stays active
+      // 'Im Trend' (sortMode) should still be active — no previewMode was applied
       expect(screen.getByText('Im Trend')).toHaveClass('active');
       expect(screen.getByText('Alphabetisch')).not.toHaveClass('active');
     });
 
-    test('touchMove after swiper is expanded by this touch continues tracking previewMode', async () => {
-      render(
-        <RecipeList
-          recipes={mockRecipes}
-          onSelectRecipe={() => {}}
-          onAddRecipe={() => {}}
-          categoryFilter=""
-          currentUser={{ id: 'user-1' }}
-          searchTerm=""
-        />
-      );
-
-      await screen.findByText('Im Trend');
-      const swiper = document.querySelector('.sort-swiper');
-
-      // Mock getBoundingClientRect so button for 'Alphabetisch' (data-mode-id="alphabetical")
-      // covers x: 0-100, y: 0-50
-      const alphabeticalBtn = swiper.querySelector('[data-mode-id="alphabetical"]');
-      jest.spyOn(alphabeticalBtn, 'getBoundingClientRect').mockReturnValue({
-        left: 0, right: 100, top: 0, bottom: 50,
-      });
-
-      fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
-      // Move enough to expand swiper (finger at x=185 is NOT over Alphabetisch rect 0-100)
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] });
-      expect(swiper).toHaveClass('expanded');
-
-      // Continue dragging over Alphabetisch button: previewMode MUST be set
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
-
-      // Alphabetisch is now highlighted as the preview selection
-      expect(screen.getByText('Alphabetisch')).toHaveClass('active');
-      expect(screen.getByText('Im Trend')).not.toHaveClass('active');
-    });
-
-    test('touchEnd after swipe over a button selects that button and collapses swiper', async () => {
+    test('touchEnd in expanded state with movement does not collapse swiper (scroll-snap owns it)', async () => {
       render(
         <RecipeList
           recipes={mockRecipes}
@@ -988,46 +953,11 @@ describe('RecipeList - Sort Swiper', () => {
       });
 
       fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
-      // First move expands (finger at x=185, not yet over Alphabetisch)
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] });
-      // Second move lands on Alphabetisch → previewMode = 'alphabetical'
+      fireEvent.touchMove(swiper, { touches: [{ clientX: 185, clientY: 25 }] }); // expand
+      // Further touchMove while expanded (early-returns, no previewMode)
       fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
 
-      // Release over Alphabetisch: selects it and collapses
-      fireEvent.touchEnd(swiper, { changedTouches: [{ clientX: 50, clientY: 25 }] });
-
-      expect(screen.getByText('Alphabetisch')).toHaveClass('active');
-      expect(swiper).not.toHaveClass('expanded');
-    });
-
-    test('touchEnd in already-expanded swiper leaves it expanded (scroll-snap owns it)', async () => {
-      render(
-        <RecipeList
-          recipes={mockRecipes}
-          onSelectRecipe={() => {}}
-          onAddRecipe={() => {}}
-          categoryFilter=""
-          currentUser={{ id: 'user-1' }}
-          searchTerm=""
-        />
-      );
-
-      await screen.findByText('Im Trend');
-      const swiper = document.querySelector('.sort-swiper');
-
-      // Expand via click (no touch involved, so expandedByThisTouchRef stays false)
-      fireEvent.click(swiper);
-      expect(swiper).toHaveClass('expanded');
-
-      const alphabeticalBtn = swiper.querySelector('[data-mode-id="alphabetical"]');
-      jest.spyOn(alphabeticalBtn, 'getBoundingClientRect').mockReturnValue({
-        left: 0, right: 100, top: 0, bottom: 50,
-      });
-
-      // New touch on already-expanded swiper: touchMove early-returns (scroll-snap owns it)
-      fireEvent.touchStart(swiper, { touches: [{ clientX: 200, clientY: 25 }] });
-      fireEvent.touchMove(swiper, { touches: [{ clientX: 50, clientY: 25 }] });
-      // touchEnd: no previewMode, swiper still expanded → no delta logic, stays expanded
+      // Release — because swiper is expanded and hasMoved is true, the old delta logic is skipped
       fireEvent.touchEnd(swiper, { changedTouches: [{ clientX: 50, clientY: 25 }] });
 
       // Sort mode unchanged, swiper still expanded (waiting for scroll-snap to settle)
