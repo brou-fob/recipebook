@@ -24,6 +24,12 @@
     /* Allow vertical page-scroll while JS handles horizontal swipes */
     touch-action: pan-y;
     outline: none;
+    /* Transitions deaktiviert bis zur ersten Messung, um Flash zu vermeiden */
+    transition: none;
+  }
+
+  /* Transitions erst aktivieren, nachdem JS die Item-Breite gemessen hat */
+  .sort-carousel.sort-carousel--measured {
     transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow 0.25s ease;
   }
@@ -46,8 +52,14 @@
   display: flex;
   /* Items don't shrink; track can scroll freely */
   flex-wrap: nowrap;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
+  /* Transitions deaktiviert bis zur ersten Messung */
+  transition: none;
+}
+
+/* Smooth track transition nur nach Messung und wenn nicht gedraggt wird */
+.sort-carousel--measured .sort-carousel-track {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* While dragging, disable the CSS transition so the track follows the finger instantly */
