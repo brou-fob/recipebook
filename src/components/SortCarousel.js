@@ -28,12 +28,12 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   const trackRef = useRef(null);
   const itemRefs = useRef([]);
   const itemMetricsRef = useRef([]);
+  const gestureViewportWidthRef = useRef(null);
 
   const [expanded, setExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isMeasured, setIsMeasured] = useState(false);
-  const [layoutVersion, setLayoutVersion] = useState(0);
 
   const onExpandChangeRef = useRef(onExpandChange);
 
@@ -77,6 +77,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   const collapse = useCallback(() => {
     resetGesture();
     gestureRef.current.isExpanded = false;
+    gestureViewportWidthRef.current = null;
     setExpanded(false);
     setIsDragging(false);
     setDragOffset(0);
@@ -121,7 +122,6 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
 
     itemMetricsRef.current = metrics;
     setIsMeasured(true);
-    setLayoutVersion((v) => v + 1);
   }, []);
   
   useLayoutEffect(() => {
@@ -149,7 +149,10 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     gestureRef.current.isExpanded = true;
     gestureRef.current.isDragging = true;
     gestureRef.current.dragStartX = clientX;
-
+    
+    gestureViewportWidthRef.current =
+      carouselRef.current?.getBoundingClientRect().width || null;
+    
     setExpanded(true);
     setIsDragging(true);
     setDragOffset(0);
@@ -167,6 +170,10 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
         gestureRef.current.longPressTimer = setTimeout(() => {
           gestureRef.current.longPressTimer = null;
           gestureRef.current.isExpanded = true;
+        
+          gestureViewportWidthRef.current =
+            carouselRef.current?.getBoundingClientRect().width || null;
+        
           setExpanded(true);
         }, LONG_PRESS_DELAY);
       } else {
@@ -317,29 +324,6 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     [collapse, expanded, safeIndex, selectIndex]
   );
 
-  // --- Track-Positionierung: Hybrid CSS/Pixel ---
-  // Collapsed & expanded ohne Drag: CSS calc() — synchron mit dem Layout, kein Timing-Problem
-  // Beim aktiven Dragging: Pixel-basiert für exaktes Finger-Tracking
-  // Note: dragOffset=0 is used in both branches to ensure consistent transform string format
-  //const trackStyle = { transform: `translateX(calc(${-safeIndex} * ${ITEM_WIDTH_CSS} + ${dragOffset}px))` };
-
-  /*const activeMetric = itemMetricsRef.current?.[safeIndex];
-  
-  const activeWidth = activeMetric?.width ?? FALLBACK_ITEM_WIDTH;
-  
-  const viewportWidth = expanded
-    ? Math.min(window.innerWidth * 0.85, 320)
-    : activeWidth;
-  
-  const viewportCenter = viewportWidth / 2;
-  
-  const activeCenter =
-    activeMetric?.center ??
-    (safeIndex * activeWidth + activeWidth / 2);
-
-  const trackStyle = {
-    transform: `translateX(${viewportCenter - activeCenter + dragOffset}px)`,
-  }; */
   const activeMetric = itemMetricsRef.current?.[safeIndex];
   const activeWidth = activeMetric?.width ?? FALLBACK_ITEM_WIDTH;
   
@@ -348,9 +332,14 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     width: expanded ? `${targetExpandedWidth}px` : `${activeWidth}px`,
   };
   
-  const currentViewportWidth =
-    carouselRef.current?.getBoundingClientRect().width ||
-    (expanded ? targetExpandedWidth : activeWidth);
+const liveViewportWidth =
+  carouselRef.current?.getBoundingClientRect().width ||
+  (expanded ? targetExpandedWidth : activeWidth);
+
+const currentViewportWidth =
+  isDragging && gestureViewportWidthRef.current
+    ? gestureViewportWidthRef.current
+    : liveViewportWidth;
   
   const viewportCenter = currentViewportWidth / 2;
   
