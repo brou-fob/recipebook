@@ -30,8 +30,8 @@
 
   /* Transitions erst aktivieren, nachdem JS die Item-Breite gemessen hat */
   .sort-carousel.sort-carousel--measured {
-    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.25s ease;
+    transition: width 0.18s ease-out,
+              box-shadow 0.2s ease;
   }
 
   .sort-carousel:focus-visible {
@@ -61,7 +61,7 @@
 
 /* Smooth track transition nur nach Messung und wenn nicht gedraggt wird */
 .sort-carousel--measured .sort-carousel-track {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.18s ease-out;
 }
 
 /* While dragging, disable the CSS transition so the track follows the finger instantly */
