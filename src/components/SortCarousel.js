@@ -150,9 +150,6 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     gestureRef.current.isDragging = true;
     gestureRef.current.dragStartX = clientX;
     
-    gestureViewportWidthRef.current =
-      carouselRef.current?.getBoundingClientRect().width || null;
-    
     setExpanded(true);
     setIsDragging(true);
     setDragOffset(0);
@@ -170,10 +167,6 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
         gestureRef.current.longPressTimer = setTimeout(() => {
           gestureRef.current.longPressTimer = null;
           gestureRef.current.isExpanded = true;
-        
-          gestureViewportWidthRef.current =
-            carouselRef.current?.getBoundingClientRect().width || null;
-        
           setExpanded(true);
         }, LONG_PRESS_DELAY);
       } else {
@@ -211,11 +204,10 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
           carouselRef.current?.getBoundingClientRect().width || null;
         
         setIsDragging(true);
-        setDragOffset(0);
         return;
       }
 
-      setDragOffset(touch.clientX - gestureRef.current.dragStartX * 0.6);
+      setDragOffset((touch.clientX - gestureRef.current.dragStartX) * 0.6);
     },
     [beginExpandedDrag, clearLongPressTimer]
   );
@@ -233,7 +225,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
       const wasExpanded = gestureRef.current.isExpanded;
       const effectiveStartX =
         gestureRef.current.dragStartX ?? gestureRef.current.startX;
-      const delta = touch.clientX - effectiveStartX;
+      const delta = (touch.clientX - effectiveStartX) * 0.6;
 
       resetGesture();
       gestureRef.current.isExpanded = false;
