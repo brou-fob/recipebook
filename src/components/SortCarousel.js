@@ -16,7 +16,7 @@ export const SORT_OPTIONS = [
 
 const LONG_PRESS_DELAY = 300;
 const HORIZONTAL_SWIPE_MIN = 10;
-const SWIPE_THRESHOLD = 30;
+const SWIPE_THRESHOLD =18;
 const FALLBACK_ITEM_WIDTH = 160;
 
 function clampLoop(index, length) {
