@@ -16,7 +16,7 @@ export const SORT_OPTIONS = [
 
 const LONG_PRESS_DELAY = 300;
 const HORIZONTAL_SWIPE_MIN = 10;
-const SWIPE_THRESHOLD =18;
+const SWIPE_THRESHOLD = 16;
 const FALLBACK_ITEM_WIDTH = 160;
 
 function clampLoop(index, length) {
@@ -215,7 +215,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
         return;
       }
 
-      setDragOffset(touch.clientX - gestureRef.current.dragStartX);
+      setDragOffset(touch.clientX - gestureRef.current.dragStartX * 0.6);
     },
     [beginExpandedDrag, clearLongPressTimer]
   );
