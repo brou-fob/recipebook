@@ -361,10 +361,6 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   const trackStyle = {
     transform: `translateX(${viewportCenter - activeCenter + dragOffset}px)`,
   };
-    
-  const carouselStyle = {
-    width: expanded ? 'min(320px, 85vw)' : `${activeWidth}px`,
-  };
   
   return (
     <>
