@@ -58,7 +58,6 @@
   /* Items don't shrink; track can scroll freely */
   flex-wrap: nowrap;
   will-change: transform;
-  transform: translate3d(0,0,0);
   /* Transitions deaktiviert bis zur ersten Messung */
   transition: none;
 }
