@@ -18,9 +18,6 @@ const LONG_PRESS_DELAY = 300;
 const HORIZONTAL_SWIPE_MIN = 10;
 const SWIPE_THRESHOLD = 30;
 const FALLBACK_ITEM_WIDTH = 160;
-const ITEM_WIDTH_CSS = 'var(--sort-item-width, 160px)';
-// BROU
-const VIEWPORT_WIDTH_CSS = 'var(--sort-carousel-visible-width, var(--sort-item-width, 160px))';
 
 function clampLoop(index, length) {
   return ((index % length) + length) % length;
@@ -29,14 +26,14 @@ function clampLoop(index, length) {
 function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChange }) {
   const carouselRef = useRef(null);
   const trackRef = useRef(null);
+  const itemRefs = useRef([]);
+  const itemMetricsRef = useRef([]);
 
   const [expanded, setExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isMeasured, setIsMeasured] = useState(false);
-
-  // Layout-Werte bewusst als Refs, damit ResizeObserver keine Re-Render-Flut auslöst
-  const itemWidthRef = useRef(FALLBACK_ITEM_WIDTH);
+  const [layoutVersion, setLayoutVersion] = useState(0);
 
   const onExpandChangeRef = useRef(onExpandChange);
 
@@ -94,63 +91,33 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     [collapse, onSortChange]
   );
 
-  // --- Messung ---
-
-  /*const applyMeasurementsToDom = useCallback(() => {
-    const carouselEl = carouselRef.current;
-    const trackEl = trackRef.current;
-    if (!carouselEl || !trackEl) return;
-
-    const items = trackEl.querySelectorAll('.sort-carousel-item');
-    if (!items.length) return;
-
-    let maxWidth = 0;
-    items.forEach((item) => {
-      const width = Math.max(item.scrollWidth, item.offsetWidth);
-      if (width > maxWidth) maxWidth = width;
-    });
-
-    if (!maxWidth) maxWidth = FALLBACK_ITEM_WIDTH;
-
-    itemWidthRef.current = maxWidth;
-
-    carouselEl.style.setProperty('--sort-item-width', `${maxWidth}px`);
-
-    items.forEach((item) => {
-      item.style.width = `${maxWidth}px`;
-      item.style.minWidth = `${maxWidth}px`;
-      item.style.maxWidth = `${maxWidth}px`;
-    });
-
-    setIsMeasured(true);
-  }, []);*/
-  
+  // --- Messung ---  
   const applyMeasurementsToDom = useCallback(() => {
     const carouselEl = carouselRef.current;
     const trackEl = trackRef.current;
     if (!carouselEl || !trackEl) return;
 
-    const items = trackEl.querySelectorAll('.sort-carousel-item');
+    const items = itemRefs.current.filter(Boolean);
     if (!items.length) return;
 
-    let maxWidth = 0;
-    items.forEach((item) => {
-      const width = Math.max(item.scrollWidth, item.offsetWidth);
-      if (width > maxWidth) maxWidth = width;
+    const trackRect = trackEl.getBoundingClientRect();
+
+    const metrics = items.map((item) => {
+      const rect = item.getBoundingClientRect();
+      const width = rect.width || item.scrollWidth || FALLBACK_ITEM_WIDTH;
+      const left = rect.left - trackRect.left;
+      const center = left + width / 2;
+
+      return {
+        width,
+        left,
+        center,
+      };
     });
 
-    if (!maxWidth) maxWidth = FALLBACK_ITEM_WIDTH;
-
-    itemWidthRef.current = maxWidth;
-    carouselEl.style.setProperty('--sort-item-width', `${maxWidth}px`);
-
-    items.forEach((item) => {
-      item.style.width = `${maxWidth}px`;
-      item.style.minWidth = `${maxWidth}px`;
-      item.style.maxWidth = `${maxWidth}px`;
-    });
-
+    itemMetricsRef.current = metrics;
     setIsMeasured(true);
+    setLayoutVersion((v) => v + 1);
   }, []);
   
   useLayoutEffect(() => {
@@ -295,16 +262,18 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
       }
 
       // Fallback, falls Rects z. B. in Tests unbrauchbar sind
-      const itemWidth = itemWidthRef.current || FALLBACK_ITEM_WIDTH;
+      
+      const currentMetric = itemMetricsRef.current[safeIndex];
+      const referenceWidth = currentMetric?.width || FALLBACK_ITEM_WIDTH;
 
       if (delta < -SWIPE_THRESHOLD) {
-        const steps = Math.max(1, Math.round(-delta / itemWidth));
+        const steps = Math.max(1, Math.round(-delta / referenceWidth));
         selectIndex(safeIndex + steps);
         return;
       }
 
       if (delta > SWIPE_THRESHOLD) {
-        const steps = Math.max(1, Math.round(delta / itemWidth));
+        const steps = Math.max(1, Math.round(delta / referenceWidth));
         selectIndex(safeIndex - steps);
         return;
       }
@@ -350,14 +319,33 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   // Note: dragOffset=0 is used in both branches to ensure consistent transform string format
   //const trackStyle = { transform: `translateX(calc(${-safeIndex} * ${ITEM_WIDTH_CSS} + ${dragOffset}px))` };
 
+  const activeMetric = itemMetricsRef.current?.[safeIndex];
+  
+  const activeWidth = activeMetric?.width ?? FALLBACK_ITEM_WIDTH;
+  
+  const viewportWidth = expanded
+    ? Math.min(window.innerWidth * 0.85, 320)
+    : activeWidth;
+  
+  const viewportCenter = viewportWidth / 2;
+  
+  const activeCenter =
+    activeMetric?.center ??
+    (safeIndex * activeWidth + activeWidth / 2);
+
   const trackStyle = {
-    transform: `translateX(calc(((${VIEWPORT_WIDTH_CSS} - ${ITEM_WIDTH_CSS}) / 2) - (${safeIndex} * ${ITEM_WIDTH_CSS}) + ${dragOffset}px))`,
+    transform: `translateX(${viewportCenter - activeCenter + dragOffset}px)`,
+  };
+
+  const carouselStyle = {
+    width: expanded ? 'min(320px, 85vw)' : `${activeWidth}px`,
   };
   
   return (
     <>
       <div
         ref={carouselRef}
+        style={carouselStyle}
         className={[
           'sort-carousel',
           expanded && 'sort-carousel--expanded',
@@ -383,13 +371,16 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
           {SORT_OPTIONS.map((option, idx) => (
             <div
               key={option.id}
+              ref={(el) => {
+                itemRefs.current[idx] = el;
+              }}
               className={`sort-carousel-item${idx === safeIndex ? ' sort-carousel-item--active' : ''}`}
               role="option"
               aria-selected={idx === safeIndex}
-            >
+          >
               {option.label}
             </div>
-          ))}
+        ))}
         </div>
       </div>
 
