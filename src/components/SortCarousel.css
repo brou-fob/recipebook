@@ -30,8 +30,7 @@
 
   /* Transitions erst aktivieren, nachdem JS die Item-Breite gemessen hat */
   .sort-carousel.sort-carousel--measured {
-    transition: width 0.18s ease-out,
-  /*            box-shadow 0.2s ease; */
+    transition: box-shadow 0.25s ease;
   }
 
   .sort-carousel:focus-visible {
