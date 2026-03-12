@@ -206,6 +206,10 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
       if (!gestureRef.current.isDragging) {
         gestureRef.current.isDragging = true;
         gestureRef.current.dragStartX = touch.clientX;
+
+        gestureViewportWidthRef.current =
+          carouselRef.current?.getBoundingClientRect().width || null;
+        
         setIsDragging(true);
         setDragOffset(0);
         return;
