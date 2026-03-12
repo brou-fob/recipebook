@@ -34,6 +34,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isMeasured, setIsMeasured] = useState(false);
+  const [freezeViewportWidth, setFreezeViewportWidth] = useState(null);
 
   const onExpandChangeRef = useRef(onExpandChange);
 
@@ -78,6 +79,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     resetGesture();
     gestureRef.current.isExpanded = false;
     gestureViewportWidthRef.current = null;
+    setFreezeViewportWidth(null);
     setExpanded(false);
     setIsDragging(false);
     setDragOffset(0);
@@ -143,19 +145,70 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     }
   }, [applyMeasurementsToDom]);
 
+  // --- Keyboard ---
+
+  const onKeyDown = useCallback(
+    (e) => {
+      if (!expanded) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          gestureRef.current.isExpanded = true;
+          setExpanded(true);
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        selectIndex(safeIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        selectIndex(safeIndex + 1);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        collapse();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        collapse();
+      }
+    },
+    [collapse, expanded, safeIndex, selectIndex]
+  );
+
+  const activeMetric = itemMetricsRef.current?.[safeIndex];
+  const activeWidth = activeMetric?.width ?? FALLBACK_ITEM_WIDTH;
+
+  const expandWithFrozenViewport = useCallback(() => {
+    const currentWidth =
+      carouselRef.current?.getBoundingClientRect().width || activeWidth;
+  
+    setFreezeViewportWidth(currentWidth);
+    gestureViewportWidthRef.current = currentWidth;
+  
+    setExpanded(true);
+  
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setFreezeViewportWidth(null);
+        gestureViewportWidthRef.current = null;
+      });
+    });
+  }, [activeWidth]);
+
   // --- Touch-Gesten ---
 
   const beginExpandedDrag = useCallback((clientX) => {
-    gestureViewportWidthRef.current = null;
-    
     gestureRef.current.isExpanded = true;
     gestureRef.current.isDragging = true;
     gestureRef.current.dragStartX = clientX;
-    
-    setExpanded(true);
+  
+    if (!expanded) {
+      expandWithFrozenViewport();
+    }
+  
     setIsDragging(true);
     setDragOffset(0);
-  }, []);
+  }, [expanded, expandWithFrozenViewport]);
 
   const onTouchStart = useCallback(
     (e) => {
@@ -176,7 +229,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
       
           gestureViewportWidthRef.current = null;
       
-          setExpanded(true);
+          expandWithFrozenViewport();
           setIsDragging(true);
           setDragOffset(0);
         }, LONG_PRESS_DELAY);
@@ -184,7 +237,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
         beginExpandedDrag(touch.clientX);
       }
     },
-    [beginExpandedDrag]
+    [beginExpandedDrag, expandWithFrozenViewport]
   );
 
   const onTouchMove = useCallback(
@@ -300,53 +353,22 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     },
     [clearLongPressTimer, collapse, resetGesture, safeIndex, selectIndex]
   );
-
-  // --- Keyboard ---
-
-  const onKeyDown = useCallback(
-    (e) => {
-      if (!expanded) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          gestureRef.current.isExpanded = true;
-          setExpanded(true);
-        }
-        return;
-      }
-
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        selectIndex(safeIndex - 1);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        selectIndex(safeIndex + 1);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        collapse();
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        collapse();
-      }
-    },
-    [collapse, expanded, safeIndex, selectIndex]
-  );
-
-  const activeMetric = itemMetricsRef.current?.[safeIndex];
-  const activeWidth = activeMetric?.width ?? FALLBACK_ITEM_WIDTH;
   
   const targetExpandedWidth = Math.min(window.innerWidth * 0.85, 320);
+  const effectiveCarouselWidth =
+    freezeViewportWidth ?? (expanded ? targetExpandedWidth : activeWidth);
+  
   const carouselStyle = {
-    width: expanded ? `${targetExpandedWidth}px` : `${activeWidth}px`,
+    width: `${effectiveCarouselWidth}px`,
   };
   
-const liveViewportWidth =
-  carouselRef.current?.getBoundingClientRect().width ||
-  (expanded ? targetExpandedWidth : activeWidth);
-
-const currentViewportWidth =
-  isDragging && gestureViewportWidthRef.current
-    ? gestureViewportWidthRef.current
-    : liveViewportWidth;
+  const liveViewportWidth =
+    freezeViewportWidth ||
+    carouselRef.current?.getBoundingClientRect().width ||
+    effectiveCarouselWidth;
+  
+  const currentViewportWidth =
+    gestureViewportWidthRef.current || liveViewportWidth;
   
   const viewportCenter = currentViewportWidth / 2;
   
