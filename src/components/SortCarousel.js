@@ -102,18 +102,22 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
 
     const trackRect = trackEl.getBoundingClientRect();
 
-    const metrics = items.map((item) => {
-      const rect = item.getBoundingClientRect();
-      const width = rect.width || item.scrollWidth || FALLBACK_ITEM_WIDTH;
-      const left = rect.left - trackRect.left;
-      const center = left + width / 2;
-
-      return {
-        width,
-        left,
-        center,
-      };
-    });
+  const metrics = items.map((item) => {
+    const rect = item.getBoundingClientRect();
+    const width = rect.width || item.scrollWidth || FALLBACK_ITEM_WIDTH;
+    const left = rect.left - trackRect.left;
+    const center = left + width / 2;
+  
+    return {
+      width,
+      left,
+      center,
+    };
+  });
+  
+  const maxWidth = Math.max(...metrics.map(m => m.width));
+  
+  carouselEl.style.setProperty('--sort-max-item-width', `${maxWidth}px`);
 
     itemMetricsRef.current = metrics;
     setIsMeasured(true);
