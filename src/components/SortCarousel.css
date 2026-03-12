@@ -3,6 +3,7 @@
 /* Mobile-only: hidden on desktop, visible only at ≤ 480 px */
 .sort-carousel {
   display: none;
+  --sort-carousel-visible-width: var(--sort-item-width, 160px);
 }
 
 @media (max-width: 480px) {
@@ -16,7 +17,7 @@
     align-items: center;
     overflow: hidden;
     /* Collapsed: exactly as wide as one item (set dynamically by JS) */
-    max-width: var(--sort-item-width);
+    max-width: var(--sort-carousel-visible-width);
     border-radius: 25px;
     background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -40,7 +41,8 @@
 
   /* Expanded: reveal neighbours on both sides; take full touch control */
   .sort-carousel--expanded {
-    max-width: calc(var(--sort-item-width) * 3 + 2rem);
+    --sort-carousel-visible-width: calc(var(--sort-item-width, 160px) * 3 + 2rem);
+    max-width: var(--sort-carousel-visible-width);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     touch-action: none;
   }
@@ -53,6 +55,7 @@
   /* Items don't shrink; track can scroll freely */
   flex-wrap: nowrap;
   will-change: transform;
+  transform: translateZ(0);
   /* Transitions deaktiviert bis zur ersten Messung */
   transition: none;
 }
