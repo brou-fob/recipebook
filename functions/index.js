@@ -2781,10 +2781,20 @@ function generateRecipeShareHtml(recipe, shareId, functionUrl) {
         ? recipe.ingredients.slice(0, 5).map((i) => String(i)).join(', ')
         : 'Ein leckeres Rezept aus brouBook'),
   );
-  // Only use http(s) URLs for the image to prevent javascript: URI injection.
-  const rawImage = recipe.imageUrl || '';
+  // Try to use recipe image, imageUrl, or fall back to logo
+  let rawImage = recipe.imageUrl || '';
+
+  // If no imageUrl but base64 image exists, check if it's reasonably sized
+  if (!rawImage && recipe.image && recipe.image.startsWith('data:image/')) {
+    // Base64 images work in some social media platforms but not all
+    // Only use if less than 100KB to avoid issues
+    if (recipe.image.length < 100000) {
+      rawImage = recipe.image;
+    }
+  }
+
   const imageUrl = escapeHtml(
-      /^https?:\/\//i.test(rawImage)
+      rawImage && /^(https?:\/\/|data:image\/)/i.test(rawImage)
         ? rawImage
         : 'https://brou-cgn.github.io/recipebook/logo512.png',
   );
