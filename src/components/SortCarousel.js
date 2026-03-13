@@ -224,7 +224,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
           gestureRef.current.longPressTimer = setTimeout(() => {
             gestureRef.current.longPressTimer = null;
             gestureRef.current.isExpanded = true;
-            expandWithFrozenViewport();
+            setExpanded(true);
           }, LONG_PRESS_DELAY);
         
       } else {
