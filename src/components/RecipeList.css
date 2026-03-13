@@ -335,9 +335,9 @@
   }
 
   /* Slide the filter button off-screen to the left when the sort carousel expands */
-  .filter-button--carousel-expanded {
+  /*.filter-button--carousel-expanded {
     transform: translateX(calc(-100% - 25px));
-  }
+  }*/
 
   .filter-button:hover {
     background: #c46900;
