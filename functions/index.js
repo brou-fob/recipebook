@@ -9,6 +9,7 @@ const {defineSecret} = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const sharp = require('sharp');
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -2764,6 +2765,27 @@ function escapeHtml(text) {
 }
 
 /**
+ * Generates a thumbnail from a Base64 image using sharp.
+ * Resizes to at most 1200×630 px (preserving aspect ratio) and re-encodes as
+ * JPEG with reduced quality so the result stays well under 100 KB.
+ *
+ * @param {string} base64Image - Full data-URL, e.g. "data:image/jpeg;base64,…"
+ * @return {Promise<string>} data-URL of the generated JPEG thumbnail
+ */
+async function generateThumbnail(base64Image) {
+  const matches = base64Image.match(/^data:image\/\w+;base64,(.+)$/s);
+  if (!matches) {
+    throw new Error('generateThumbnail: invalid base64 image format');
+  }
+  const imageBuffer = Buffer.from(matches[1], 'base64');
+  const thumbnailBuffer = await sharp(imageBuffer)
+      .resize(1200, 630, {fit: 'inside', withoutEnlargement: true})
+      .jpeg({quality: 80})
+      .toBuffer();
+  return `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
+}
+
+/**
  * Generates an HTML page with dynamic Open Graph meta-tags for a recipe.
  * Regular browsers are redirected immediately to the React app via meta-refresh
  * and a script tag. Social media crawlers read the meta-tags and stop.
@@ -2781,17 +2803,12 @@ function generateRecipeShareHtml(recipe, shareId, functionUrl) {
         ? recipe.ingredients.slice(0, 5).map((i) => String(i)).join(', ')
         : 'Ein leckeres Rezept aus brouBook'),
   );
-  // Try to use recipe image, imageUrl, or fall back to logo
-  let rawImage = recipe.imageUrl || '';
 
-  // If no imageUrl but base64 image exists, check if it's reasonably sized
-  const MAX_BASE64_IMAGE_SIZE = 100000; // 100 KB – larger images cause issues with social media crawlers
+  // Priority: imageThumbnail (pre-generated) > imageUrl > image (base64) > logo
+  let rawImage = recipe.imageThumbnail || recipe.imageUrl || '';
+
   if (!rawImage && recipe.image && recipe.image.startsWith('data:image/')) {
-    // Base64 images work in some social media platforms but not all
-    // Only use if less than 100KB to avoid issues
-    if (recipe.image.length < MAX_BASE64_IMAGE_SIZE) {
-      rawImage = recipe.image;
-    }
+    rawImage = recipe.image;
   }
 
   const imageUrl = escapeHtml(
@@ -2879,7 +2896,23 @@ exports.shareRecipe = onRequest(
           return;
         }
 
-        const recipe = snapshot.docs[0].data();
+        const recipeDoc = snapshot.docs[0];
+        const recipe = recipeDoc.data();
+
+        // Lazy thumbnail generation: if no thumbnail exists yet but a base64
+        // image is stored, generate a small JPEG thumbnail (≤ 1200×630 px) and
+        // persist it so subsequent shares are instant.
+        if (!recipe.imageThumbnail && recipe.image &&
+            recipe.image.startsWith('data:image/')) {
+          try {
+            const thumbnail = await generateThumbnail(recipe.image);
+            await recipeDoc.ref.update({imageThumbnail: thumbnail});
+            recipe.imageThumbnail = thumbnail;
+          } catch (thumbErr) {
+            console.warn('shareRecipe: thumbnail generation failed:', thumbErr);
+          }
+        }
+
         const html = generateRecipeShareHtml(recipe, shareId, canonicalUrl);
         res.status(200).set('Content-Type', 'text/html; charset=utf-8').send(html);
       } catch (error) {
