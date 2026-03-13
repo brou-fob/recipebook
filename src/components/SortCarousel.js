@@ -356,10 +356,10 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
     width: `${effectiveCarouselWidth}px`,
   };
   
-  const liveViewportWidth =
+  /*const liveViewportWidth =
     freezeViewportWidth ||
     carouselRef.current?.getBoundingClientRect().width ||
-    effectiveCarouselWidth;
+    effectiveCarouselWidth; */
   
   const currentViewportWidth =
     isDragging && gestureViewportWidthRef.current
