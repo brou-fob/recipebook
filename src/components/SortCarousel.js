@@ -364,7 +364,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   const currentViewportWidth =
     isDragging && gestureViewportWidthRef.current
       ? gestureViewportWidthRef.current
-      : liveViewportWidth;
+      : effectiveCarouselWidth;
   
   const viewportCenter = currentViewportWidth / 2;
   
