@@ -504,6 +504,10 @@
     padding: 1rem;
   }
   
+  .form-group input[type="date"] {
+    max-width: 200px;
+  }
+
   .form-actions {
     flex-direction: column;
   }
