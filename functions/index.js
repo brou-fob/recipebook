@@ -2805,12 +2805,15 @@ function generateRecipeShareHtml(recipe, shareId, functionUrl) {
   );
 
   // ALWAYS use thumbnail for sharing - never send original image
-  const rawImage = recipe.imageThumbnail || '';
+  // Only use thumbnail if it's a valid HTTP(S) URL, not Base64
+  const rawImage = recipe.imageThumbnail &&
+                   (recipe.imageThumbnail.startsWith('http://') ||
+                    recipe.imageThumbnail.startsWith('https://'))
+                   ? recipe.imageThumbnail
+                   : '';
 
   const imageUrl = escapeHtml(
-      rawImage && /^(https?:\/\/|data:image\/)/i.test(rawImage)
-        ? rawImage
-        : 'https://brou-cgn.github.io/recipebook/logo512.png',
+      rawImage || 'https://brou-cgn.github.io/recipebook/logo512.png',
   );
   const canonicalUrl = escapeHtml(functionUrl);
   // shareId is a validated UUID so it is safe to interpolate directly.
@@ -2895,20 +2898,35 @@ exports.shareRecipe = onRequest(
         const recipeDoc = snapshot.docs[0];
         const recipe = recipeDoc.data();
 
-        // Lazy thumbnail generation: if no thumbnail exists yet but an image
-        // is stored (Base64 or Firebase Storage URL), generate a small JPEG
-        // thumbnail (≤ 1200×630 px) and persist it so subsequent shares are
-        // instant.
-        if (!recipe.imageThumbnail && recipe.image) {
+        // Lazy thumbnail generation: if no thumbnail exists, or if it's Base64
+        // (which doesn't work in Open Graph meta-tags for WhatsApp/Facebook),
+        // generate a new thumbnail and upload it to Firebase Storage as a
+        // public URL.
+        const needsThumbnailGeneration =
+          !recipe.imageThumbnail ||
+          recipe.imageThumbnail.startsWith('data:image/');
+
+        if (needsThumbnailGeneration && recipe.image) {
           try {
-            let thumbnail;
+            let thumbnailBuffer;
 
             if (recipe.image.startsWith('data:image/')) {
-              // Existing Base64 logic
-              thumbnail = await generateThumbnail(recipe.image);
-            } else if (recipe.image.startsWith(
-                'https://firebasestorage.googleapis.com/')) {
-              // New: Download from Storage and generate thumbnail
+              // Base64 image → convert to buffer and resize
+              const matches =
+                recipe.image.match(/^data:image\/\w+;base64,(.+)$/s);
+              if (matches) {
+                const imageBuffer = Buffer.from(matches[1], 'base64');
+                thumbnailBuffer = await sharp(imageBuffer)
+                    .resize(1200, 630, {fit: 'inside', withoutEnlargement: true})
+                    .jpeg({quality: 80})
+                    .toBuffer();
+              }
+            } else if (
+              recipe.image.startsWith(
+                  'https://firebasestorage.googleapis.com/') ||
+              recipe.image.startsWith('https://storage.googleapis.com/')
+            ) {
+              // Storage URL → download and resize
               const response = await fetch(recipe.image);
               if (!response.ok) {
                 throw new Error(
@@ -2917,18 +2935,39 @@ exports.shareRecipe = onRequest(
               const arrayBuffer = await response.arrayBuffer();
               const imageBuffer = Buffer.from(arrayBuffer);
 
-              const thumbnailBuffer = await sharp(imageBuffer)
+              thumbnailBuffer = await sharp(imageBuffer)
                   .resize(1200, 630, {fit: 'inside', withoutEnlargement: true})
                   .jpeg({quality: 80})
                   .toBuffer();
-
-              thumbnail =
-                  `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
             }
 
-            if (thumbnail) {
-              await recipeDoc.ref.update({imageThumbnail: thumbnail});
-              recipe.imageThumbnail = thumbnail;
+            // Upload thumbnail to Firebase Storage and get public URL
+            if (thumbnailBuffer) {
+              const bucket = admin.storage().bucket();
+              const fileName =
+                `thumbnails/${recipeDoc.id}_${crypto.randomUUID()}.jpg`;
+              const file = bucket.file(fileName);
+
+              await file.save(thumbnailBuffer, {
+                metadata: {
+                  contentType: 'image/jpeg',
+                  cacheControl: 'public, max-age=31536000',
+                },
+              });
+
+              // Make the file publicly accessible
+              await file.makePublic();
+
+              // Get the public URL
+              const publicUrl =
+                `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+              // Save the public URL to Firestore
+              await recipeDoc.ref.update({imageThumbnail: publicUrl});
+              recipe.imageThumbnail = publicUrl;
+
+              console.log(
+                  `Generated thumbnail for recipe ${recipeDoc.id}: ${publicUrl}`);
             }
           } catch (thumbErr) {
             console.warn('shareRecipe: thumbnail generation failed:', thumbErr);
