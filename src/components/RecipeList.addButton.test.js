@@ -86,7 +86,7 @@ describe('RecipeList - Add Button Visibility', () => {
 
     const privateAddButton = await screen.findByRole('button', { name: /Privates Rezept hinzufügen/i });
     expect(privateAddButton).toBeInTheDocument();
-    expect(screen.queryByText('+ Rezept hinzufügen')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Rezept hinzufügen$/i })).not.toBeInTheDocument();
   });
 
   test('"Privates Rezept hinzufügen" calls onAddRecipe with the group ID', async () => {
