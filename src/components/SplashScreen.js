@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './SplashScreen.css';
 
-function SplashScreen({ visible, logoUrl, appTitle, slogan }) {
+function SplashScreen({ visible, logoUrl, slogan }) {
   const [fadingOut, setFadingOut] = useState(false);
   const [gone, setGone] = useState(false);
 
