@@ -347,18 +347,20 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
             )}
             {userCanEdit && (
               <>
-                <button
-                  className="add-icon-button"
-                  onClick={() => onAddRecipe()}
-                  title="Rezept hinzufügen"
-                  aria-label="Rezept hinzufügen"
-                >
-                  {isBase64Image(buttonIcons.addRecipe) ? (
-                    <img src={buttonIcons.addRecipe} alt="Rezept hinzufügen" className="button-icon-image" />
-                  ) : (
-                    buttonIcons.addRecipe
-                  )}
-                </button>
+                {!activePrivateListId && (
+                  <button
+                    className="add-icon-button"
+                    onClick={() => onAddRecipe()}
+                    title="Rezept hinzufügen"
+                    aria-label="Rezept hinzufügen"
+                  >
+                    {isBase64Image(buttonIcons.addRecipe) ? (
+                      <img src={buttonIcons.addRecipe} alt="Rezept hinzufügen" className="button-icon-image" />
+                    ) : (
+                      buttonIcons.addRecipe
+                    )}
+                  </button>
+                )}
                 {activePrivateListId && (
                   <button
                     className="add-icon-button"
