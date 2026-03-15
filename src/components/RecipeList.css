@@ -62,37 +62,20 @@
   background: white;
   color: #1A1A1A;
   border: 1px solid #ddd;
-  border-color: #ddd;
   padding: 0.75rem 0.75rem;
   border-radius: 25px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);*/
 }
-
-/*.recipe-favorites-filter-button:hover,
-.view-mode-button:hover {
-  background: linear-gradient(135deg, #1a1a1a 0%, #402C1C 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}*/
 
 .recipe-favorites-filter-button.active,
 .view-mode-button.active {
   background: linear-gradient(135deg, #DF7A00 0%, #c46900 100%);
   color: white;
   border-color: #DF7A00;
-  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);*/
 }
-
-/*.recipe-favorites-filter-button.active:hover,
-.view-mode-button.active:hover {
-  background: linear-gradient(135deg, #c46900 0%, #DF7A00 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-}*/
 
 .filter-button {
   background: transparent;
@@ -119,11 +102,6 @@
   object-fit: contain;
 }
 
-.filter-button:hover {
-  color: #402C1C;
-  transform: scale(1.1);
-}
-
 .filter-button:active {
   transform: scale(1);
 }
@@ -138,16 +116,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)*/
 }
 
-/*.add-button:hover {
-  background: linear-gradient(135deg, #1a1a1a 0%, #402C1C 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}*/
-
 .add-button:active {
+  background: white;
   transform: translateY(0);
 }
 
@@ -160,7 +132,6 @@
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);*/
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,13 +140,8 @@
   flex-shrink: 0;
 }
 
-/*.add-icon-button:hover {
-  background: linear-gradient(135deg, #1a1a1a 0%, #402C1C 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}*/
-
 .add-icon-button:active {
+  background: white;
   transform: translateY(0);
 }
 
@@ -378,12 +344,6 @@
     transform: translateX(calc(-100% - 25px));
   }*/
 
-  /*.filter-button:hover {
-    background: #c46900;
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-  }*/
-
   .filter-button:active {
     transform: scale(1);
   }
@@ -414,11 +374,6 @@
   .recipe-favorites-filter-button .fav-label {
     display: none;
   }
-
-  /*.recipe-favorites-filter-button:hover,
-  .recipe-favorites-filter-button.active:hover {
-    transform: scale(1.1);
-  }*/
 
   /* Mobile: Add recipe button fixed at bottom right, mirrors fav button on the left */
   .add-icon-button {
