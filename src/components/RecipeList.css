@@ -81,7 +81,6 @@
   background: transparent;
   color: #666;
   border: 1px solid #ddd;
-  border-color: #DF7A00;
   padding: 0.75rem;
   border-radius: 25px;
   font-size: 1.1rem;
@@ -331,6 +330,7 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
+    border-color: #DF7A00;
     padding: 0;
     /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);*/
     min-width: auto;
