@@ -83,6 +83,7 @@
 .view-mode-button.active {
   background: linear-gradient(135deg, #DF7A00 0%, #c46900 100%);
   color: white;
+  border-color: #DF7A00;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
