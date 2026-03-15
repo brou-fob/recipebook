@@ -6,7 +6,6 @@ function SplashScreen({ visible, logoUrl, appTitle, slogan }) {
   const [gone, setGone] = useState(false);
 
   const logoSrc = logoUrl || '/logo192.png';
-  //const titleText = appTitle || 'brouBook';
   const sloganText = slogan || 'Unsere besten Momente';
 
   useEffect(() => {
@@ -35,10 +34,9 @@ function SplashScreen({ visible, logoUrl, appTitle, slogan }) {
       <div className="splash-content">
         <img
           src={logoSrc}
-          //alt={`${titleText} Logo`}
+          alt="App Logo"
           className="splash-logo"
         />
-        {/*<h1 className="splash-title">{titleText}</h1>*/}
         <p className="splash-slogan">{sloganText}</p>
       </div>
     </div>
