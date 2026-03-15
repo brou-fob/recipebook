@@ -69,7 +69,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);*/
 }
 
 /*.recipe-favorites-filter-button:hover,
@@ -84,14 +84,14 @@
   background: linear-gradient(135deg, #DF7A00 0%, #c46900 100%);
   color: white;
   border-color: #DF7A00;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);*/
 }
 
 .recipe-favorites-filter-button.active:hover,
 .view-mode-button.active:hover {
   background: linear-gradient(135deg, #c46900 0%, #DF7A00 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);*/
 }
 
 .filter-button {
@@ -128,7 +128,7 @@
 }
 
 .add-button {
-  background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
+  background: white;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -137,7 +137,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)*/
 }
 
 .add-button:hover {
@@ -151,7 +151,7 @@
 }
 
 .add-icon-button {
-  background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
+  background: white;
   color: white;
   border: none;
   padding: 0;
@@ -159,7 +159,7 @@
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);*/
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,7 +171,7 @@
 .add-icon-button:hover {
   background: linear-gradient(135deg, #1a1a1a 0%, #402C1C 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);*/
 }
 
 .add-icon-button:active {
@@ -365,7 +365,7 @@
     height: 56px;
     border-radius: 50%;
     padding: 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);*/
     min-width: auto;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
                 background 0.3s ease,
@@ -380,7 +380,7 @@
   .filter-button:hover {
     background: #c46900;
     transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    /*box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);*/
   }
 
   .filter-button:active {
@@ -400,7 +400,7 @@
     border-radius: 50%;
     padding: 0;
     font-size: 1.4rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);*/
     min-width: auto;
     display: flex;
     align-items: center;
