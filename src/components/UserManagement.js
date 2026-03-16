@@ -295,7 +295,7 @@ function UserManagement({ onBack, currentUser, allUsers = [] }) {
                         <button
                           className={`permission-toggle ${perms.deleteRating ? 'active' : ''}`}
                           onClick={() => handleToggleRolePermission(role, 'deleteRating', perms.deleteRating)}
-                          title={perms.deleteRating ? 'Bewertungs-Löschen deaktivieren' : 'Bewertungs-Löschen aktivieren'}
+                          title={perms.deleteRating ? 'Bewertungs-/Kochdatum-Löschen deaktivieren' : 'Bewertungs-/Kochdatum-Löschen aktivieren'}
                         >
                           {perms.deleteRating ? '✓' : '✗'}
                         </button>

@@ -10,7 +10,7 @@
  */
 
 import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 
 /**
  * Set the cook date for a recipe for a user.
@@ -64,5 +64,21 @@ export const getAllCookDates = async (recipeId) => {
   } catch (error) {
     console.error('Error getting all cook dates:', error);
     return [];
+  }
+};
+
+/**
+ * Delete a cook date entry by its document ID.
+ * @param {string} cookDateId - The Firestore document ID of the cook date to delete
+ * @returns {Promise<boolean>} true if deleted successfully
+ */
+export const deleteCookDate = async (cookDateId) => {
+  if (!cookDateId) return false;
+  try {
+    await deleteDoc(doc(db, 'cookDates', cookDateId));
+    return true;
+  } catch (error) {
+    console.error('Error deleting cook date:', error);
+    return false;
   }
 };

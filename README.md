@@ -74,7 +74,7 @@ In addition to the role hierarchy, individual features can be enabled or disable
 | **App-Aufrufe**    | Access to app-call data statistics                            |
 | **Menüpunkt**      | Visibility of the app-calls menu entry                        |
 | **Rezepteimport**  | Allows importing recipes from external sources                |
-| **Bew. löschen**   | Allows deleting recipe ratings                                |
+| **Bew. löschen**   | Allows deleting recipe ratings and "Gekocht am" (cook date) entries |
 | **NW-Abbruch**     | Allows aborting nutritional value calculations                |
 | **Sortier-Karussell** | Shows the sort carousel button in the recipe overview      |
 

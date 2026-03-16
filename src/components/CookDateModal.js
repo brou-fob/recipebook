@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './CookDateModal.css';
-import { setCookDate, getAllCookDates } from '../utils/recipeCookDates';
+import { setCookDate, getAllCookDates, deleteCookDate } from '../utils/recipeCookDates';
 import { isBase64Image } from '../utils/imageUtils';
 
 /**
@@ -19,10 +19,11 @@ import { isBase64Image } from '../utils/imageUtils';
  * @param {string}   [props.timelineBubbleIcon]        - Bubble icon for the "Erstellt am" marker
  * @param {string}   [props.timelineCookEventBubbleIcon] - Bubble icon for the "Gekocht am" marker
  * @param {string}   [props.timelineCookEventDefaultImage] - Default image for cooking events when no recipe image is available
+ * @param {boolean}  [props.canDeleteCookDates]          - Whether the current user may delete "Gekocht am" entries
  * @param {Function} [props.onSaved]                    - Optionally called with the new Date when saved
  * @param {Function} props.onClose                     - Called when the modal should close
  */
-function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, recipeCreatedAt, recipeImage, timelineBubbleIcon = null, timelineCookEventBubbleIcon = null, timelineCookEventDefaultImage = null, onSaved, onClose }) {
+function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, recipeCreatedAt, recipeImage, timelineBubbleIcon = null, timelineCookEventBubbleIcon = null, timelineCookEventDefaultImage = null, canDeleteCookDates = false, onSaved, onClose }) {
   const todayStr = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,6 +83,15 @@ function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, r
     }
   };
 
+  const handleDeleteCookDate = async (cookDateId) => {
+    try {
+      await deleteCookDate(cookDateId);
+      setCookDates((prev) => prev.filter((cd) => cd.id !== cookDateId));
+    } catch (error) {
+      console.error('Error deleting cook date:', error);
+    }
+  };
+
   return (
     <div className="cook-date-modal-overlay" onClick={onClose}>
       <div className="cook-date-modal" onClick={(e) => e.stopPropagation()}>
@@ -129,6 +139,16 @@ function CookDateModal({ recipeId, currentUser, allUsers = [], recipeAuthorId, r
                     <span className="cook-date-timeline-date">{formatDate(cd.date)}</span>
                     <span className="cook-date-timeline-recipe-title">{getUserName(cd.userId)}</span>
                   </div>
+                  {canDeleteCookDates && (
+                    <button
+                      className="cook-date-timeline-delete-btn"
+                      onClick={() => handleDeleteCookDate(cd.id)}
+                      title="Eintrag löschen"
+                      aria-label="Gekocht am-Eintrag löschen"
+                    >
+                      🗑
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

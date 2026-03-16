@@ -1775,6 +1775,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           timelineBubbleIcon={timelineBubbleIcon}
           timelineCookEventBubbleIcon={timelineCookEventBubbleIcon}
           timelineCookEventDefaultImage={timelineCookEventDefaultImage}
+          canDeleteCookDates={currentUser?.deleteRating === true}
           onClose={() => setShowCookDateModal(false)}
         />
       )}
