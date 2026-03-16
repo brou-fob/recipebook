@@ -329,7 +329,7 @@
     z-index: 1100;
     background: #DF7A00;
     color: white;
-    opacity: 0.85;
+    opacity: 0;
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -349,6 +349,10 @@
 
   .filter-button:active {
     transform: scale(1);
+  }
+
+  .filter-button.filter-visible {
+    opacity:0.85;
   }
 
   /* Mobile: Favorites button overlays the filter button at same fixed position */
