@@ -78,7 +78,7 @@
 }
 
 .filter-button {
-  background: transparent;
+  background: white;
   color: #666;
   border: 1px solid #ddd;
   padding: 0.75rem;
@@ -107,10 +107,11 @@
 }
 
 .filter-button.has-active-filters {
-  position: relative;
+  background: #DF7A00;
+  border: 1px solid #DF7A00;
 }
 
-.filter-button.has-active-filters::after {
+/*.filter-button.has-active-filters::after {
   content: '';
   position: absolute;
   top: 4px;
@@ -120,7 +121,7 @@
   border-radius: 50%;
   background-color: #DF7A00;
   border: 2px solid white;
-}
+}*/
 
 .add-button {
   background: white;
