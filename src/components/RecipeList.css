@@ -63,6 +63,7 @@
   flex-shrink: 0;
   color: transparent;
   font-size: 1px;
+  margin-left: 6px;
   padding: 0;
   /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);*/
   transition: all 0.3s ease;
