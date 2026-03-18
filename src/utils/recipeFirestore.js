@@ -178,15 +178,18 @@ export const updateRecipe = async (recipeId, updates, previousAuthorId) => {
  */
 export const deleteRecipe = async (recipeId) => {
   try {
-    // First, get the recipe to check if it has an image
+    // First, get the recipe to check if it has images
     const recipeRef = doc(db, 'recipes', recipeId);
     const recipeSnap = await getDoc(recipeRef);
     
     if (recipeSnap.exists()) {
       const recipeData = recipeSnap.data();
       
-      // Delete the image from Storage if it exists
-      if (recipeData.image) {
+      // Delete all images from Storage if they exist
+      if (Array.isArray(recipeData.images) && recipeData.images.length > 0) {
+        await Promise.all(recipeData.images.map(img => deleteRecipeImage(img.url)));
+      } else if (recipeData.image) {
+        // Fallback for older recipes without images array
         await deleteRecipeImage(recipeData.image);
       }
 

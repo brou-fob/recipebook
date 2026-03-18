@@ -184,6 +184,8 @@ function SortableStep({ id, item, index, stepNumber, onChange, onRemove, canRemo
 function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCreatingVersion = false, allRecipes = [], activeGroupId = null, groups = [], privateLists = [], initialWebImportUrl = '', initialWebImportAuthorId = '' }) {
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
+  // Array of { url: string, isDefault: boolean } for multi-image support
+  const [images, setImages] = useState([]);
   const [portionen, setPortionen] = useState('');
   const [portionUnitId, setPortionUnitId] = useState('portion');
   const [kulinarik, setKulinarik] = useState([]);
@@ -192,7 +194,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const [speisekategorie, setSpeisekategorie] = useState([]);
   const [ingredients, setIngredients] = useState([{ type: 'ingredient', text: '' }]);
   const [steps, setSteps] = useState([{ type: 'step', text: '' }]);
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState(false); // eslint-disable-line no-unused-vars
   const [uploadingImage, setUploadingImage] = useState(false);
   const [authorId, setAuthorId] = useState('');
   const [parentRecipeId, setParentRecipeId] = useState('');
@@ -276,6 +278,14 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     if (recipe) {
       setTitle(recipe.title || '');
       setImage(recipe.image || '');
+      // Load images array: prefer stored images array, fall back to single image field
+      if (Array.isArray(recipe.images) && recipe.images.length > 0) {
+        setImages(recipe.images);
+      } else if (recipe.image) {
+        setImages([{ url: recipe.image, isDefault: true }]);
+      } else {
+        setImages([]);
+      }
       setPortionen(recipe.portionen ?? '');
       setPortionUnitId(recipe.portionUnitId || 'portion');
       // Handle both old string format and new array format for kulinarik
@@ -486,33 +496,58 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     setUploadingImage(true);
     setImageError(false);
 
-    const oldImage = image;
-
     try {
       // Upload to Firebase Storage and get download URL
       const downloadURL = await uploadRecipeImage(file);
       
-      // Update state with new image
-      setImage(downloadURL);
-      
-      // Delete old image if it exists and is a Storage URL
-      // Do this after successful upload to avoid orphaning the old image
-      // Note: If deletion fails, the old image remains in storage but won't affect functionality
-      if (oldImage) {
-        try {
-          await deleteRecipeImage(oldImage);
-        } catch (deleteError) {
-          // Log but don't fail the upload if deletion fails
-          // The orphaned image will be cleaned up by Firebase Storage lifecycle rules or manual cleanup
-          console.warn('Failed to delete old image from storage:', deleteError);
-        }
-      }
+      // Add to images array; first image is default, others are not
+      setImages(prev => {
+        const isFirst = prev.length === 0;
+        return [...prev, { url: downloadURL, isDefault: isFirst }];
+      });
+      // Keep legacy image field in sync with default image
+      setImage(prev => prev || downloadURL);
     } catch (error) {
       alert(error.message);
       setImageError(true);
     } finally {
       setUploadingImage(false);
+      // Reset file input so the same file can be selected again
+      e.target.value = '';
     }
+  };
+
+  const handleRemoveImageFromList = async (urlToRemove) => {
+    setImages(prev => {
+      const remaining = prev.filter(img => img.url !== urlToRemove);
+      // If the removed image was the default, make the first remaining one default
+      const removedWasDefault = prev.find(img => img.url === urlToRemove)?.isDefault;
+      if (removedWasDefault && remaining.length > 0) {
+        remaining[0] = { ...remaining[0], isDefault: true };
+      }
+      return remaining;
+    });
+    // Keep legacy image field in sync
+    setImage(prev => {
+      if (prev === urlToRemove) {
+        // Will be set correctly from images state on next render; use '' as fallback
+        return '';
+      }
+      return prev;
+    });
+    // Delete from Storage
+    try {
+      await deleteRecipeImage(urlToRemove);
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+    }
+  };
+
+  const handleSetDefaultImage = (urlToDefault) => {
+    setImages(prev =>
+      prev.map(img => ({ ...img, isDefault: img.url === urlToDefault }))
+    );
+    setImage(urlToDefault);
   };
 
   const handleRemoveImage = async () => {
@@ -520,6 +555,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     
     // Optimistically clear the UI
     setImage('');
+    setImages([]);
     
     // Try to delete from Storage if it's a Storage URL
     if (imageToRemove) {
@@ -529,6 +565,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         // Log the error and restore the image in UI
         console.error('Failed to delete image:', error);
         setImage(imageToRemove);
+        setImages([{ url: imageToRemove, isDefault: true }]);
         alert('Das Bild konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.');
       }
     }
@@ -558,7 +595,9 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     }
 
     // Auto-populate title image from category images if recipe has no title image
-    let finalImage = image.trim();
+    // Derive the default image from the images array (first isDefault, or first overall)
+    const defaultImg = images.find(img => img.isDefault) || images[0];
+    let finalImage = (defaultImg?.url || image || '').trim();
     if (!finalImage && speisekategorie.length > 0) {
       // Recipe without title image (new or update) - try to get image from category
       const categoryImage = await getImageForCategories(speisekategorie);
@@ -566,6 +605,11 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         finalImage = categoryImage;
       }
     }
+
+    // Build final images array, ensuring default is correct
+    const finalImages = images.length > 0
+      ? images.map(img => ({ url: img.url, isDefault: img.url === finalImage }))
+      : (finalImage ? [{ url: finalImage, isDefault: true }] : []);
 
     // Filter out empty items and convert to storage format
     const filteredIngredients = ingredients.filter(i => i.text.trim() !== '');
@@ -608,6 +652,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     const recipeData = {
       title: title.trim(),
       image: finalImage,
+      images: finalImages,
       portionen: portionen !== '' && !isNaN(parseInt(portionen, 10)) ? parseInt(portionen, 10) : undefined,
       portionUnitId: portionUnitId,
       kulinarik: kulinarik,
@@ -636,6 +681,14 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     // Populate form with imported data
     setTitle(importedRecipe.title || '');
     setImage(importedRecipe.image || '');
+    // Populate images array from imported data
+    if (Array.isArray(importedRecipe.images) && importedRecipe.images.length > 0) {
+      setImages(importedRecipe.images);
+    } else if (importedRecipe.image) {
+      setImages([{ url: importedRecipe.image, isDefault: true }]);
+    } else {
+      setImages([]);
+    }
     setPortionen(importedRecipe.portionen ?? '');
     setPortionUnitId(importedRecipe.portionUnitId || 'portion');
     
@@ -884,10 +937,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         </div>
 
         <div className="form-group">
-          <label htmlFor="image">Rezeptbild (optional)</label>
+          <label htmlFor="image">Rezeptbilder (optional)</label>
           <div className="image-input-container">
             <label htmlFor="imageFile" className="image-upload-label">
-              {uploadingImage ? 'Hochladen...' : 'Bild hochladen'}
+              {uploadingImage ? 'Hochladen...' : 'Bild hinzufügen'}
             </label>
             <input
               type="file"
@@ -898,17 +951,36 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
               disabled={uploadingImage}
             />
           </div>
-          {image && !imageError && (
-            <div className="image-preview">
-              <img src={image} alt="Preview" onError={() => setImageError(true)} />
-              <button
-                type="button"
-                className="remove-image-btn"
-                onClick={handleRemoveImage}
-                title="Bild entfernen"
-              >
-                ✕ Entfernen
-              </button>
+          {images.length > 0 && (
+            <div className="multi-image-grid">
+              {images.map((img, idx) => (
+                <div key={img.url} className={`multi-image-item${img.isDefault ? ' multi-image-item--default' : ''}`}>
+                  <img src={img.url} alt={`Rezeptbild ${idx + 1}`} onError={(e) => { e.target.style.display = 'none'; }} />
+                  <div className="multi-image-actions">
+                    {!img.isDefault && (
+                      <button
+                        type="button"
+                        className="set-default-image-btn"
+                        onClick={() => handleSetDefaultImage(img.url)}
+                        title="Als Standardbild festlegen"
+                      >
+                        ★ Standard
+                      </button>
+                    )}
+                    {img.isDefault && (
+                      <span className="default-image-badge">★ Standard</span>
+                    )}
+                    <button
+                      type="button"
+                      className="remove-image-btn remove-image-btn--small"
+                      onClick={() => handleRemoveImageFromList(img.url)}
+                      title="Bild entfernen"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

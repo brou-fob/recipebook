@@ -449,11 +449,16 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                   <div className="new-badge">Neu</div>
                 )}
 
-                {recipe.image && (
-                  <div className="recipe-image">
-                    <img src={recipe.image} alt={recipe.title} />
-                  </div>
-                )}
+                {(recipe.image || (Array.isArray(recipe.images) && recipe.images.length > 0)) && (() => {
+                    const defaultImg = Array.isArray(recipe.images) && recipe.images.length > 0
+                      ? (recipe.images.find(img => img.isDefault) || recipe.images[0])
+                      : { url: recipe.image };
+                    return (
+                      <div className="recipe-image">
+                        <img src={defaultImg.url} alt={recipe.title} />
+                      </div>
+                    );
+                  })()}
                 <div className="recipe-card-content">
                   <h3>{recipe.title}</h3>
                   {recipe.kulinarik && (Array.isArray(recipe.kulinarik) ? recipe.kulinarik.length > 0 : recipe.kulinarik.trim().length > 0) && (

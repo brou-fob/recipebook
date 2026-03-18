@@ -48,6 +48,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   // Whether to use alt icons due to bright image corners
   const [useCookingModeAlt, setUseCookingModeAlt] = useState(false);
   const [useCloseButtonAlt, setUseCloseButtonAlt] = useState(false);
+  // Image carousel state
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [copyLinkIcon, setCopyLinkIcon] = useState('📋');
   const [nutritionEmptyIcon, setNutritionEmptyIcon] = useState('➕');
   const [nutritionFilledIcon, setNutritionFilledIcon] = useState('🥦');
@@ -143,6 +145,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   // Update selected recipe when initial recipe changes
   useEffect(() => {
     setSelectedRecipe(initialRecipe);
+    setCarouselIndex(0);
     // Initialize serving multiplier from menu portion count if provided
     if (menuPortionCount != null && initialRecipe.portionen) {
       setServingMultiplier(menuPortionCount / initialRecipe.portionen);
@@ -168,7 +171,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       handleRecipeImageLoad({ target: img });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRecipe.image]);
+  }, [selectedRecipe.image, carouselIndex]);
 
   // Keep header visible on mobile - removed auto-hide behavior
   useEffect(() => {
@@ -1361,47 +1364,89 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
         ) : (
           // Normal mode layout
           <>
-            {recipe.image && (
-              <div className="recipe-detail-image">
-                <img
-                  src={recipe.image}
-                  alt={recipe.title}
-                  ref={recipeImageRef}
-                  onLoad={handleRecipeImageLoad}
-                />
-                {isMobile && (
-                  <div className="image-overlay-actions">
-                    <div 
-                      className="overlay-cooking-mode-static" 
-                      onClick={toggleCookingMode} 
-                      role="button" 
-                      tabIndex="0" 
-                      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleCookingMode()}
-                      aria-label="Kochmodus aktivieren"
-                    >
-                      {/* Use alt icon when top-left image corner is too bright */}
-                      {isBase64Image(useCookingModeAlt ? cookingModeAltIcon : cookingModeIcon) ? (
-                        <img src={useCookingModeAlt ? cookingModeAltIcon : cookingModeIcon} alt="Kochmodus" className="overlay-cooking-mode-icon-img" />
-                      ) : (
-                        <span>{useCookingModeAlt ? cookingModeAltIcon : cookingModeIcon}</span>
-                      )}
+            {(recipe.image || (Array.isArray(recipe.images) && recipe.images.length > 0)) && (() => {
+              // Build ordered images list: use images array if available, else fall back to single image
+              const allImages = Array.isArray(recipe.images) && recipe.images.length > 0
+                ? recipe.images
+                : (recipe.image ? [{ url: recipe.image, isDefault: true }] : []);
+              // Put default image first
+              const orderedImages = [
+                ...allImages.filter(img => img.isDefault),
+                ...allImages.filter(img => !img.isDefault),
+              ];
+              const safeIndex = Math.min(carouselIndex, orderedImages.length - 1);
+              const currentImage = orderedImages[safeIndex];
+              const hasMultiple = orderedImages.length > 1;
+              return (
+                <div className="recipe-detail-image">
+                  <img
+                    src={currentImage.url}
+                    alt={recipe.title}
+                    ref={recipeImageRef}
+                    onLoad={handleRecipeImageLoad}
+                  />
+                  {hasMultiple && (
+                    <>
+                      <button
+                        className="carousel-nav carousel-nav--prev"
+                        onClick={() => setCarouselIndex(i => (i - 1 + orderedImages.length) % orderedImages.length)}
+                        aria-label="Vorheriges Bild"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        className="carousel-nav carousel-nav--next"
+                        onClick={() => setCarouselIndex(i => (i + 1) % orderedImages.length)}
+                        aria-label="Nächstes Bild"
+                      >
+                        ›
+                      </button>
+                      <div className="carousel-dots">
+                        {orderedImages.map((_, dotIdx) => (
+                          <button
+                            key={dotIdx}
+                            className={`carousel-dot${dotIdx === safeIndex ? ' carousel-dot--active' : ''}`}
+                            onClick={() => setCarouselIndex(dotIdx)}
+                            aria-label={`Bild ${dotIdx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {isMobile && (
+                    <div className="image-overlay-actions">
+                      <div 
+                        className="overlay-cooking-mode-static" 
+                        onClick={toggleCookingMode} 
+                        role="button" 
+                        tabIndex="0" 
+                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleCookingMode()}
+                        aria-label="Kochmodus aktivieren"
+                      >
+                        {/* Use alt icon when top-left image corner is too bright */}
+                        {isBase64Image(useCookingModeAlt ? cookingModeAltIcon : cookingModeIcon) ? (
+                          <img src={useCookingModeAlt ? cookingModeAltIcon : cookingModeIcon} alt="Kochmodus" className="overlay-cooking-mode-icon-img" />
+                        ) : (
+                          <span>{useCookingModeAlt ? cookingModeAltIcon : cookingModeIcon}</span>
+                        )}
+                      </div>
+                      <button 
+                        className="overlay-back-button"
+                        onClick={handleBackFromLinkedRecipe}
+                        title="Zurück"
+                      >
+                        {/* Use alt icon when top-right image corner is too bright */}
+                        {isBase64Image(useCloseButtonAlt ? closeButtonAltIcon : closeButtonIcon) ? (
+                          <img src={useCloseButtonAlt ? closeButtonAltIcon : closeButtonIcon} alt="Schließen" className="close-button-icon-img" />
+                        ) : (
+                          useCloseButtonAlt ? closeButtonAltIcon : closeButtonIcon
+                        )}
+                      </button>
                     </div>
-                    <button 
-                      className="overlay-back-button"
-                      onClick={handleBackFromLinkedRecipe}
-                      title="Zurück"
-                    >
-                      {/* Use alt icon when top-right image corner is too bright */}
-                      {isBase64Image(useCloseButtonAlt ? closeButtonAltIcon : closeButtonIcon) ? (
-                        <img src={useCloseButtonAlt ? closeButtonAltIcon : closeButtonIcon} alt="Schließen" className="close-button-icon-img" />
-                      ) : (
-                        useCloseButtonAlt ? closeButtonAltIcon : closeButtonIcon
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
 
             {isMobile && (
               <div className="mobile-action-buttons">
