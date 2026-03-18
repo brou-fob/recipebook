@@ -478,6 +478,66 @@
   object-fit: cover;
 }
 
+/* Image carousel navigation */
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: background 0.2s;
+  padding: 0;
+}
+
+.carousel-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.carousel-nav--prev {
+  left: 0.5rem;
+}
+
+.carousel-nav--next {
+  right: 0.5rem;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  z-index: 5;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.carousel-dot--active {
+  background: white;
+}
+
 .image-overlay-actions {
   position: absolute;
   top: 0;
