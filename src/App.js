@@ -255,20 +255,24 @@ function App() {
     return recipes.filter((r) => r.groupId === selectedGroup.id || groupRecipeIds.includes(r.id));
   }, [recipes, selectedGroup]);
 
-  // Detect share URL: #share/:shareId
+  // Detect share URL: #share/:shareId or /share/:shareId (pathname)
   const getShareIdFromHash = () => {
     const hash = window.location.hash;
-    const match = hash.match(/^#share\/(.+)$/);
-    return match ? match[1] : null;
+    const hashMatch = hash.match(/^#share\/(.+)$/);
+    if (hashMatch) return hashMatch[1];
+    const pathMatch = window.location.pathname.match(/^\/share\/(.+)$/);
+    return pathMatch ? pathMatch[1] : null;
   };
 
   const [sharePageId, setSharePageId] = useState(() => getShareIdFromHash());
 
-  // Detect menu share URL: #menu-share/:shareId
+  // Detect menu share URL: #menu-share/:shareId or /menu-share/:shareId (pathname)
   const getMenuShareIdFromHash = () => {
     const hash = window.location.hash;
-    const match = hash.match(/^#menu-share\/(.+)$/);
-    return match ? match[1] : null;
+    const hashMatch = hash.match(/^#menu-share\/(.+)$/);
+    if (hashMatch) return hashMatch[1];
+    const pathMatch = window.location.pathname.match(/^\/menu-share\/(.+)$/);
+    return pathMatch ? pathMatch[1] : null;
   };
 
   const [menuSharePageId, setMenuSharePageId] = useState(() => getMenuShareIdFromHash());
