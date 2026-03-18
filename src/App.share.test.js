@@ -85,9 +85,17 @@ jest.mock('./utils/recipeCallsFirestore', () => ({
   logRecipeCall: jest.fn(),
 }));
 
+const resetLocation = () => {
+  Object.defineProperty(window, 'location', {
+    value: { ...window.location, hash: '', pathname: '/' },
+    writable: true,
+    configurable: true,
+  });
+};
+
 describe('Share URL hash routing', () => {
   afterEach(() => {
-    window.location.hash = '';
+    resetLocation();
     jest.clearAllMocks();
   });
 
@@ -154,5 +162,45 @@ describe('Share URL hash routing', () => {
     });
 
     expect(screen.queryByTestId('share-page')).not.toBeInTheDocument();
+  });
+});
+
+describe('Share URL pathname routing', () => {
+  afterEach(() => {
+    resetLocation();
+    jest.clearAllMocks();
+  });
+
+  test('shows SharePage when initial URL pathname is /share/:shareId', () => {
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, hash: '', pathname: '/share/abc-123' },
+      writable: true,
+      configurable: true,
+    });
+    render(<App />);
+    expect(screen.getByTestId('share-page')).toBeInTheDocument();
+    expect(screen.getByTestId('share-page')).toHaveAttribute('data-share-id', 'abc-123');
+  });
+
+  test('shows MenuSharePage when initial URL pathname is /menu-share/:shareId', () => {
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, hash: '', pathname: '/menu-share/xyz-456' },
+      writable: true,
+      configurable: true,
+    });
+    render(<App />);
+    expect(screen.getByTestId('menu-share-page')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-share-page')).toHaveAttribute('data-share-id', 'xyz-456');
+  });
+
+  test('does not show share pages when pathname is /', () => {
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, hash: '', pathname: '/' },
+      writable: true,
+      configurable: true,
+    });
+    render(<App />);
+    expect(screen.queryByTestId('share-page')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-share-page')).not.toBeInTheDocument();
   });
 });
