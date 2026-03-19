@@ -38,6 +38,13 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const contentRef = useRef(null);
   const stepsContainerRef = useRef(null);
   const recipeImageRef = useRef(null);
+  // Brightness analysis cache (keyed by image src URL)
+  const brightnessCacheRef = useRef({});
+  // Carousel swipe gesture refs
+  const carouselTouchStartX = useRef(null);
+  const carouselTouchStartY = useRef(null);
+  const carouselIsDragging = useRef(false);
+  const carouselLengthRef = useRef(0);
 
   // Get portion units from custom lists
   const [portionUnits, setPortionUnits] = useState([]);
@@ -50,6 +57,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const [useCloseButtonAlt, setUseCloseButtonAlt] = useState(false);
   // Image carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [carouselDragOffset, setCarouselDragOffset] = useState(0);
   const [copyLinkIcon, setCopyLinkIcon] = useState('📋');
   const [nutritionEmptyIcon, setNutritionEmptyIcon] = useState('➕');
   const [nutritionFilledIcon, setNutritionFilledIcon] = useState('🥦');
@@ -155,6 +163,10 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     // Reset brightness-based alt icon state for the new recipe's image
     setUseCookingModeAlt(false);
     setUseCloseButtonAlt(false);
+    // Clear brightness cache so the new recipe's images are re-analyzed
+    brightnessCacheRef.current = {};
+    // Reset carousel drag offset
+    setCarouselDragOffset(0);
     // Scroll to top when opening recipe detail
     window.scrollTo(0, 0);
     if (contentRef.current) {
@@ -939,34 +951,46 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
    */
   const analyzeBrightness = (imgEl) => {
     try {
+      const cacheKey = imgEl.src;
+      if (brightnessCacheRef.current[cacheKey]) {
+        const cached = brightnessCacheRef.current[cacheKey];
+        setUseCookingModeAlt(cached.cookingMode);
+        setUseCloseButtonAlt(cached.closeButton);
+        return;
+      }
+
+      const CANVAS_SIZE = 100;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      canvas.width = imgEl.naturalWidth;
-      canvas.height = imgEl.naturalHeight;
-      ctx.drawImage(imgEl, 0, 0);
+      canvas.width = CANVAS_SIZE;
+      canvas.height = CANVAS_SIZE;
+      ctx.drawImage(imgEl, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-      // Sample the top 20% height and 20% width of each corner
-      const sampleW = Math.max(1, Math.floor(imgEl.naturalWidth * 0.2));
-      const sampleH = Math.max(1, Math.floor(imgEl.naturalHeight * 0.2));
+      // Sample the top-left and top-right 20% of the small canvas
+      const sampleSize = Math.max(1, Math.floor(CANVAS_SIZE * 0.2));
       const BRIGHTNESS_THRESHOLD = 180;
 
       // Top-left corner → cooking mode button
-      const leftData = ctx.getImageData(0, 0, sampleW, sampleH).data;
+      const leftData = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
       let leftBrightness = 0;
       for (let i = 0; i < leftData.length; i += 4) {
         leftBrightness += leftData[i] * 0.299 + leftData[i + 1] * 0.587 + leftData[i + 2] * 0.114;
       }
       leftBrightness /= leftData.length / 4;
-      setUseCookingModeAlt(leftBrightness > BRIGHTNESS_THRESHOLD);
+      const leftBright = leftBrightness > BRIGHTNESS_THRESHOLD;
+      setUseCookingModeAlt(leftBright);
 
       // Top-right corner → close button
-      const rightData = ctx.getImageData(imgEl.naturalWidth - sampleW, 0, sampleW, sampleH).data;
+      const rightData = ctx.getImageData(CANVAS_SIZE - sampleSize, 0, sampleSize, sampleSize).data;
       let rightBrightness = 0;
       for (let i = 0; i < rightData.length; i += 4) {
         rightBrightness += rightData[i] * 0.299 + rightData[i + 1] * 0.587 + rightData[i + 2] * 0.114;
       }
       rightBrightness /= rightData.length / 4;
-      setUseCloseButtonAlt(rightBrightness > BRIGHTNESS_THRESHOLD);
+      const rightBright = rightBrightness > BRIGHTNESS_THRESHOLD;
+      setUseCloseButtonAlt(rightBright);
+
+      brightnessCacheRef.current[cacheKey] = { cookingMode: leftBright, closeButton: rightBright };
     } catch (err) {
       // Silently ignore CORS errors for external images – keep default icons
     }
@@ -997,6 +1021,67 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
         analyzeBrightness(img);
       };
       corsImg.src = img.src;
+    }
+  };
+
+  // --- Carousel swipe gesture handlers ---
+
+  const CAROUSEL_SWIPE_THRESHOLD = 40;
+
+  const handleCarouselTouchStart = (e) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    carouselTouchStartX.current = touch.clientX;
+    carouselTouchStartY.current = touch.clientY;
+    carouselIsDragging.current = false;
+    setCarouselDragOffset(0);
+  };
+
+  const handleCarouselTouchMove = (e) => {
+    const touch = e.touches[0];
+    if (!touch || carouselTouchStartX.current === null) return;
+
+    const deltaX = touch.clientX - carouselTouchStartX.current;
+    const deltaY = touch.clientY - carouselTouchStartY.current;
+
+    if (!carouselIsDragging.current) {
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 8) {
+        carouselIsDragging.current = true;
+      } else if (Math.abs(deltaY) > 8) {
+        // Vertical scroll intent — cancel horizontal gesture
+        carouselTouchStartX.current = null;
+        return;
+      }
+    }
+
+    if (carouselIsDragging.current) {
+      e.preventDefault();
+      setCarouselDragOffset(deltaX);
+    }
+  };
+
+  const handleCarouselTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const startX = carouselTouchStartX.current;
+    carouselTouchStartX.current = null;
+    carouselTouchStartY.current = null;
+
+    if (!touch || !carouselIsDragging.current || startX === null) {
+      setCarouselDragOffset(0);
+      carouselIsDragging.current = false;
+      return;
+    }
+
+    carouselIsDragging.current = false;
+    const delta = touch.clientX - startX;
+    setCarouselDragOffset(0);
+
+    const len = carouselLengthRef.current;
+    if (len <= 1) return;
+    if (delta < -CAROUSEL_SWIPE_THRESHOLD) {
+      setCarouselIndex(i => (i + 1) % len);
+    } else if (delta > CAROUSEL_SWIPE_THRESHOLD) {
+      setCarouselIndex(i => (i - 1 + len) % len);
     }
   };
 
@@ -1377,13 +1462,25 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
               const safeIndex = Math.min(carouselIndex, orderedImages.length - 1);
               const currentImage = orderedImages[safeIndex];
               const hasMultiple = orderedImages.length > 1;
+              carouselLengthRef.current = orderedImages.length;
               return (
-                <div className="recipe-detail-image">
+                <div
+                  className="recipe-detail-image"
+                  onTouchStart={hasMultiple ? handleCarouselTouchStart : undefined}
+                  onTouchMove={hasMultiple ? handleCarouselTouchMove : undefined}
+                  onTouchEnd={hasMultiple ? handleCarouselTouchEnd : undefined}
+                  style={carouselDragOffset !== 0 ? { cursor: 'grabbing' } : undefined}
+                >
                   <img
                     src={currentImage.url}
                     alt={recipe.title}
                     ref={recipeImageRef}
                     onLoad={handleRecipeImageLoad}
+                    style={{
+                      transform: `translateX(${carouselDragOffset}px)`,
+                      transition: carouselDragOffset === 0 ? 'transform 0.3s ease' : 'none',
+                      willChange: 'transform',
+                    }}
                   />
                   {hasMultiple && (
                     <>
