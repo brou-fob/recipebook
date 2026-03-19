@@ -40,9 +40,11 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const recipeImageRef = useRef(null);
   // Brightness analysis cache (keyed by image src URL)
   const brightnessCacheRef = useRef({});
-  // Filmstrip carousel refs
-  const filmstripRef = useRef(null);
-  const scrollEndTimerRef = useRef(null);
+  // Carousel swipe gesture refs
+  const carouselTouchStartX = useRef(null);
+  const carouselTouchStartY = useRef(null);
+  const carouselIsDragging = useRef(false);
+  const carouselLengthRef = useRef(0);
 
   // Get portion units from custom lists
   const [portionUnits, setPortionUnits] = useState([]);
@@ -55,6 +57,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const [useCloseButtonAlt, setUseCloseButtonAlt] = useState(false);
   // Image carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [carouselDragOffset, setCarouselDragOffset] = useState(0);
   const [copyLinkIcon, setCopyLinkIcon] = useState('📋');
   const [nutritionEmptyIcon, setNutritionEmptyIcon] = useState('➕');
   const [nutritionFilledIcon, setNutritionFilledIcon] = useState('🥦');
@@ -162,10 +165,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     setUseCloseButtonAlt(false);
     // Clear brightness cache so the new recipe's images are re-analyzed
     brightnessCacheRef.current = {};
-    // Reset filmstrip scroll position
-    if (filmstripRef.current && typeof filmstripRef.current.scrollTo === 'function') {
-      filmstripRef.current.scrollTo({ left: 0, behavior: 'instant' });
-    }
+    // Reset carousel drag offset
+    setCarouselDragOffset(0);
     // Scroll to top when opening recipe detail
     window.scrollTo(0, 0);
     if (contentRef.current) {
@@ -196,13 +197,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       onHeaderVisibilityChange(true);
     };
   }, [onHeaderVisibilityChange]);
-
-  // Clean up the scroll-end debounce timer when the component unmounts
-  useEffect(() => {
-    return () => {
-      clearTimeout(scrollEndTimerRef.current);
-    };
-  }, []);
 
   // Cooking mode: Wake Lock API integration
   useEffect(() => {
@@ -1030,26 +1024,65 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     }
   };
 
-  // --- Filmstrip carousel handlers ---
+  // --- Carousel swipe gesture handlers ---
 
-  const scrollToImage = (index) => {
-    setCarouselIndex(index);
-    if (filmstripRef.current && typeof filmstripRef.current.scrollTo === 'function') {
-      filmstripRef.current.scrollTo({
-        left: index * filmstripRef.current.clientWidth,
-        behavior: 'smooth',
-      });
+  const CAROUSEL_SWIPE_THRESHOLD = 40;
+
+  const handleCarouselTouchStart = (e) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    carouselTouchStartX.current = touch.clientX;
+    carouselTouchStartY.current = touch.clientY;
+    carouselIsDragging.current = false;
+    setCarouselDragOffset(0);
+  };
+
+  const handleCarouselTouchMove = (e) => {
+    const touch = e.touches[0];
+    if (!touch || carouselTouchStartX.current === null) return;
+
+    const deltaX = touch.clientX - carouselTouchStartX.current;
+    const deltaY = touch.clientY - carouselTouchStartY.current;
+
+    if (!carouselIsDragging.current) {
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 8) {
+        carouselIsDragging.current = true;
+      } else if (Math.abs(deltaY) > 8) {
+        // Vertical scroll intent — cancel horizontal gesture
+        carouselTouchStartX.current = null;
+        return;
+      }
+    }
+
+    if (carouselIsDragging.current) {
+      e.preventDefault();
+      setCarouselDragOffset(deltaX);
     }
   };
 
-  const handleFilmstripScroll = () => {
-    clearTimeout(scrollEndTimerRef.current);
-    scrollEndTimerRef.current = setTimeout(() => {
-      if (!filmstripRef.current) return;
-      const container = filmstripRef.current;
-      const newIndex = Math.round(container.scrollLeft / container.clientWidth);
-      setCarouselIndex(newIndex);
-    }, 50);
+  const handleCarouselTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const startX = carouselTouchStartX.current;
+    carouselTouchStartX.current = null;
+    carouselTouchStartY.current = null;
+
+    if (!touch || !carouselIsDragging.current || startX === null) {
+      setCarouselDragOffset(0);
+      carouselIsDragging.current = false;
+      return;
+    }
+
+    carouselIsDragging.current = false;
+    const delta = touch.clientX - startX;
+    setCarouselDragOffset(0);
+
+    const len = carouselLengthRef.current;
+    if (len <= 1) return;
+    if (delta < -CAROUSEL_SWIPE_THRESHOLD) {
+      setCarouselIndex(i => (i + 1) % len);
+    } else if (delta > CAROUSEL_SWIPE_THRESHOLD) {
+      setCarouselIndex(i => (i - 1 + len) % len);
+    }
   };
 
   const handleToggleFavorite = async () => {
@@ -1427,39 +1460,40 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                 ...allImages.filter(img => !img.isDefault),
               ];
               const safeIndex = Math.min(carouselIndex, orderedImages.length - 1);
+              const currentImage = orderedImages[safeIndex];
               const hasMultiple = orderedImages.length > 1;
+              carouselLengthRef.current = orderedImages.length;
               return (
                 <div
                   className="recipe-detail-image"
+                  onTouchStart={hasMultiple ? handleCarouselTouchStart : undefined}
+                  onTouchMove={hasMultiple ? handleCarouselTouchMove : undefined}
+                  onTouchEnd={hasMultiple ? handleCarouselTouchEnd : undefined}
+                  style={carouselDragOffset !== 0 ? { cursor: 'grabbing' } : undefined}
                 >
-                  <div
-                    className="recipe-image-filmstrip"
-                    ref={filmstripRef}
-                    onScroll={hasMultiple ? handleFilmstripScroll : undefined}
-                  >
-                    {orderedImages.map((img, idx) => (
-                      <div key={idx} className="recipe-image-filmstrip-item">
-                        <img
-                          src={img.url}
-                          alt={recipe.title}
-                          ref={idx === safeIndex ? recipeImageRef : undefined}
-                          onLoad={idx === safeIndex ? handleRecipeImageLoad : undefined}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <img
+                    src={currentImage.url}
+                    alt={recipe.title}
+                    ref={recipeImageRef}
+                    onLoad={handleRecipeImageLoad}
+                    style={{
+                      transform: `translateX(${carouselDragOffset}px)`,
+                      transition: carouselDragOffset === 0 ? 'transform 0.3s ease' : 'none',
+                      willChange: 'transform',
+                    }}
+                  />
                   {hasMultiple && (
                     <>
                       <button
                         className="carousel-nav carousel-nav--prev"
-                        onClick={() => scrollToImage((safeIndex - 1 + orderedImages.length) % orderedImages.length)}
+                        onClick={() => setCarouselIndex(i => (i - 1 + orderedImages.length) % orderedImages.length)}
                         aria-label="Vorheriges Bild"
                       >
                         ‹
                       </button>
                       <button
                         className="carousel-nav carousel-nav--next"
-                        onClick={() => scrollToImage((safeIndex + 1) % orderedImages.length)}
+                        onClick={() => setCarouselIndex(i => (i + 1) % orderedImages.length)}
                         aria-label="Nächstes Bild"
                       >
                         ›
@@ -1469,7 +1503,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                           <button
                             key={dotIdx}
                             className={`carousel-dot${dotIdx === safeIndex ? ' carousel-dot--active' : ''}`}
-                            onClick={() => scrollToImage(dotIdx)}
+                            onClick={() => setCarouselIndex(dotIdx)}
                             aria-label={`Bild ${dotIdx + 1}`}
                           />
                         ))}
