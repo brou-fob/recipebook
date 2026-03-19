@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
 import { getHeaderSlogan, getAppLogoImage } from '../utils/customLists';
 import { subscribeToFaqs } from '../utils/faqFirestore';
@@ -19,7 +19,7 @@ function renderBoldText(text) {
   });
 }
 
-const Header = forwardRef(function Header({ 
+function Header({ 
   onSettingsClick, 
   currentView, 
   onViewChange,
@@ -30,7 +30,7 @@ const Header = forwardRef(function Header({
   onUserManagement,
   visible = true,
   onSearchChange
-}, ref) {
+}) {
   const [headerSlogan, setHeaderSlogan] = useState('');
   const [appLogoImage, setAppLogoImage] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,18 +42,7 @@ const Header = forwardRef(function Header({
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
   const menuRef = useRef(null);
   const searchRef = useRef(null);
-
-  useImperativeHandle(ref, () => ({
-    openSearch() {
-      setSearchOpen(true);
-      // Delay focus to allow the search input to render before focusing
-      const SEARCH_FOCUS_DELAY = 100;
-      setTimeout(() => {
-        searchRef.current?.querySelector('input')?.focus();
-      }, SEARCH_FOCUS_DELAY);
-    }
-  }));
-
+  
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
@@ -361,6 +350,6 @@ const Header = forwardRef(function Header({
       )}
     </>
   );
-});
+}
 
 export default Header;
