@@ -595,8 +595,8 @@
 }
 
 .overlay-cooking-mode-static {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -614,8 +614,8 @@
 }
 
 .overlay-cooking-mode-icon-img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 3rem;
+  height: 3rem;
   object-fit: contain;
 }
 
@@ -631,8 +631,8 @@
 }
 
 .overlay-back-button {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: transparent;
   border: none;
@@ -655,8 +655,8 @@
 }
 
 .close-button-icon-img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 3rem;
+  height: 3rem;
   object-fit: contain;
 }
 
