@@ -14,6 +14,8 @@ function RecipeTypeahead({
   position 
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const listRef = useRef(null);
   const inputRef = useRef(null);
 
   // Extract search query from input value (everything after #)
@@ -34,12 +36,50 @@ function RecipeTypeahead({
   // Limit to top 10 results for performance
   const displayedRecipes = filteredRecipes.slice(0, 10);
 
+  // Reset selected index when filtered recipes change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchQuery]);
+
   // Focus input on mount
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
   }, []);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (listRef.current) {
+      const selectedElement = listRef.current.children[selectedIndex];
+      if (selectedElement && typeof selectedElement.scrollIntoView === 'function') {
+        selectedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedIndex]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => 
+        prev < displayedRecipes.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => prev > 0 ? prev - 1 : prev);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (displayedRecipes[selectedIndex]) {
+        handleSelect(displayedRecipes[selectedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+    }
+  };
 
   const handleSelect = (recipe) => {
     onSelect(recipe);
@@ -60,10 +100,11 @@ function RecipeTypeahead({
         <div className="recipe-typeahead-header">
           <input
             ref={inputRef}
-            type="search"
+            type="text"
             className="recipe-typeahead-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Rezept suchen..."
             autoFocus
           />
@@ -76,13 +117,16 @@ function RecipeTypeahead({
           </button>
         </div>
         
-        <div className="recipe-typeahead-list">
+        <div className="recipe-typeahead-list" ref={listRef}>
           {displayedRecipes.length > 0 ? (
-            displayedRecipes.map((recipe) => (
+            displayedRecipes.map((recipe, index) => (
               <div
                 key={recipe.id}
-                className="recipe-typeahead-item"
+                className={`recipe-typeahead-item ${
+                  index === selectedIndex ? 'selected' : ''
+                }`}
                 onClick={() => handleSelect(recipe)}
+                onMouseEnter={() => setSelectedIndex(index)}
               >
                 <div className="recipe-typeahead-item-content">
                   {recipe.image && (
@@ -113,7 +157,7 @@ function RecipeTypeahead({
         </div>
         
         <div className="recipe-typeahead-footer">
-          Rezept antippen zum Auswählen
+          ↑↓ navigieren • Enter auswählen • Esc abbrechen
         </div>
       </div>
     </div>
