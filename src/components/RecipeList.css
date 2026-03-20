@@ -466,13 +466,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.3s ease,
-                box-shadow 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    will-change: transform;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.15s ease,
+                box-shadow 0.2s ease;
   }
 
-  .recipe-favorites-filter-button:active {
-    transform: scale(1.05);
+  .recipe-favorites-filter-button.pressed {
+    transform: scale(1.08);
     box-shadow: 0 6px 14px rgba(0,0,0,0.25);
   }
   
