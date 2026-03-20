@@ -862,127 +862,32 @@ describe('RecipeDetail - Brightness-based alt icon switching', () => {
     rolle: 'Familymember',
   };
 
-  let originalCreateElement;
-
   beforeEach(() => {
     // Mobile viewport so overlay buttons are rendered
     global.innerWidth = 400;
     global.dispatchEvent(new Event('resize'));
-    originalCreateElement = document.createElement.bind(document);
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  /**
-   * Returns a mock canvas whose getImageData always returns pixels with the
-   * given luminance value so the brightness threshold check is predictable.
-   */
-  function mockCanvasWithBrightness(luminance) {
-    const pixelValue = Math.round(luminance);
-    const spy = jest.spyOn(document, 'createElement').mockImplementation((tag) => {
-      if (tag === 'canvas') {
-        const mockCtx = {
-          drawImage: jest.fn(),
-          getImageData: jest.fn(() => ({
-            // Four pixels, each with (R, G, B, A) = (pixelValue, pixelValue, pixelValue, 255)
-            // Luminance = 0.299*R + 0.587*G + 0.114*B ≈ pixelValue
-            data: new Uint8ClampedArray([
-              pixelValue, pixelValue, pixelValue, 255,
-              pixelValue, pixelValue, pixelValue, 255,
-            ]),
-          })),
-        };
-        const canvas = { width: 0, height: 0, getContext: jest.fn(() => mockCtx) };
-        return canvas;
-      }
-      return originalCreateElement(tag);
-    });
-    return spy;
-  }
-
-  test('switches to alt icons when image corners are too bright (onLoad path)', async () => {
-    const createElementSpy = mockCanvasWithBrightness(200); // above BRIGHTNESS_THRESHOLD of 180
-
+  test('uses alt icons when imageBrightness.isBright is true on the current image', async () => {
     const mockRecipe = {
       id: 'recipe-1',
       title: 'Test Recipe',
-      image: 'data:image/png;base64,abc123',
-      ingredients: ['Ingredient 1'],
-      steps: ['Step 1'],
-    };
-
-    // isBase64Image must return true so the image is analyzed directly
-    const { isBase64Image } = require('../utils/imageUtils');
-    isBase64Image.mockReturnValue(true);
-
-    render(
-      <RecipeDetail
-        recipe={mockRecipe}
-        onBack={() => {}}
-        onEdit={() => {}}
-        onDelete={() => {}}
-        currentUser={currentUser}
-      />
-    );
-
-    const imgEl = document.querySelector('.recipe-detail-image img');
-    expect(imgEl).toBeInTheDocument();
-
-    // Simulate image load
-    await act(async () => {
-      Object.defineProperty(imgEl, 'naturalWidth', { value: 100, configurable: true });
-      Object.defineProperty(imgEl, 'naturalHeight', { value: 100, configurable: true });
-      fireEvent.load(imgEl);
-    });
-
-    // Both alt icon states should be activated; since default alt icons equal
-    // default icons in tests, we verify the canvas was queried (brightness analyzed)
-    expect(createElementSpy).toHaveBeenCalledWith('canvas');
-  });
-
-  test('triggers brightness analysis for already-cached images (useEffect path)', async () => {
-    const createElementSpy = mockCanvasWithBrightness(200); // above threshold
-
-    const mockRecipe = {
-      id: 'recipe-1',
-      title: 'Test Recipe',
-      image: 'data:image/png;base64,abc123',
+      images: [{ url: 'https://example.com/photo.jpg', isDefault: true, imageBrightness: { isBright: true } }],
       ingredients: ['Ingredient 1'],
       steps: ['Step 1'],
     };
 
     const { isBase64Image } = require('../utils/imageUtils');
-    isBase64Image.mockReturnValue(true);
+    isBase64Image.mockReturnValue(false);
 
-    const { rerender } = render(
-      <RecipeDetail
-        recipe={mockRecipe}
-        onBack={() => {}}
-        onEdit={() => {}}
-        onDelete={() => {}}
-        currentUser={currentUser}
-      />
-    );
-
-    // Reset spy so we only count calls triggered by the cached-image effect
-    createElementSpy.mockClear();
-
-    // Simulate the image being already-complete (cached) on the current img element
-    const imgEl = document.querySelector('.recipe-detail-image img');
-    expect(imgEl).toBeInTheDocument();
-    Object.defineProperty(imgEl, 'complete', { value: true, configurable: true });
-    Object.defineProperty(imgEl, 'naturalWidth', { value: 100, configurable: true });
-    Object.defineProperty(imgEl, 'naturalHeight', { value: 100, configurable: true });
-
-    // Change the recipe image src – this changes selectedRecipe.image and
-    // triggers the useEffect that checks for already-cached images
-    const newRecipe = { ...mockRecipe, id: 'recipe-2', image: 'data:image/png;base64,xyz789' };
     await act(async () => {
-      rerender(
+      render(
         <RecipeDetail
-          recipe={newRecipe}
+          recipe={mockRecipe}
           onBack={() => {}}
           onEdit={() => {}}
           onDelete={() => {}}
@@ -991,13 +896,45 @@ describe('RecipeDetail - Brightness-based alt icon switching', () => {
       );
     });
 
-    // Canvas analysis should have been triggered for the cached image
-    expect(createElementSpy).toHaveBeenCalledWith('canvas');
+    // The overlay cooking-mode button should exist (mobile viewport)
+    const cookingModeBtn = document.querySelector('.overlay-cooking-mode-static');
+    expect(cookingModeBtn).toBeInTheDocument();
+    // No canvas analysis should take place – metadata is read instead
+    expect(document.createElement).not.toHaveBeenCalledWith('canvas');
   });
 
-  test('falls back to direct analysis when CORS image load fails (onerror path)', async () => {
-    const createElementSpy = mockCanvasWithBrightness(200); // above BRIGHTNESS_THRESHOLD
+  test('uses default icons when imageBrightness.isBright is false', async () => {
+    const mockRecipe = {
+      id: 'recipe-1',
+      title: 'Test Recipe',
+      images: [{ url: 'https://example.com/photo.jpg', isDefault: true, imageBrightness: { isBright: false } }],
+      ingredients: ['Ingredient 1'],
+      steps: ['Step 1'],
+    };
 
+    const { isBase64Image } = require('../utils/imageUtils');
+    isBase64Image.mockReturnValue(false);
+
+    await act(async () => {
+      render(
+        <RecipeDetail
+          recipe={mockRecipe}
+          onBack={() => {}}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          currentUser={currentUser}
+        />
+      );
+    });
+
+    // The overlay cooking-mode button should exist (mobile viewport)
+    const cookingModeBtn = document.querySelector('.overlay-cooking-mode-static');
+    expect(cookingModeBtn).toBeInTheDocument();
+    // No canvas analysis should take place – metadata is read instead
+    expect(document.createElement).not.toHaveBeenCalledWith('canvas');
+  });
+
+  test('uses default icons when image has no imageBrightness metadata (legacy recipe)', async () => {
     const mockRecipe = {
       id: 'recipe-1',
       title: 'Test Recipe',
@@ -1006,48 +943,26 @@ describe('RecipeDetail - Brightness-based alt icon switching', () => {
       steps: ['Step 1'],
     };
 
-    // isBase64Image must return false so the CORS-Image branch is taken
     const { isBase64Image } = require('../utils/imageUtils');
     isBase64Image.mockReturnValue(false);
 
-    // Capture the Image constructor calls so we can trigger onerror
-    let corsImgInstance = null;
-    const OriginalImage = global.Image;
-    global.Image = function () {
-      corsImgInstance = new OriginalImage();
-      return corsImgInstance;
-    };
-
-    render(
-      <RecipeDetail
-        recipe={mockRecipe}
-        onBack={() => {}}
-        onEdit={() => {}}
-        onDelete={() => {}}
-        currentUser={currentUser}
-      />
-    );
-
-    const imgEl = document.querySelector('.recipe-detail-image img');
-    expect(imgEl).toBeInTheDocument();
-
     await act(async () => {
-      Object.defineProperty(imgEl, 'naturalWidth', { value: 100, configurable: true });
-      Object.defineProperty(imgEl, 'naturalHeight', { value: 100, configurable: true });
-      fireEvent.load(imgEl);
+      render(
+        <RecipeDetail
+          recipe={mockRecipe}
+          onBack={() => {}}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          currentUser={currentUser}
+        />
+      );
     });
 
-    // Trigger the onerror on the CORS Image to exercise the fallback
-    await act(async () => {
-      if (corsImgInstance && corsImgInstance.onerror) {
-        corsImgInstance.onerror();
-      }
-    });
-
-    // The fallback should have attempted canvas analysis
-    expect(createElementSpy).toHaveBeenCalledWith('canvas');
-
-    global.Image = OriginalImage;
+    // The overlay cooking-mode button should exist (mobile viewport)
+    const cookingModeBtn = document.querySelector('.overlay-cooking-mode-static');
+    expect(cookingModeBtn).toBeInTheDocument();
+    // No canvas analysis should take place – metadata fallback to false
+    expect(document.createElement).not.toHaveBeenCalledWith('canvas');
   });
 });
 

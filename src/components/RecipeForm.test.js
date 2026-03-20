@@ -11,6 +11,7 @@ jest.mock('../utils/emojiUtils', () => ({
 jest.mock('../utils/imageUtils', () => ({
   fileToBase64: jest.fn(),
   isBase64Image: jest.fn(() => false),
+  analyzeImageBrightness: jest.fn(() => Promise.resolve({ isBright: false })),
 }));
 
 jest.mock('../utils/customLists', () => ({

@@ -1,4 +1,4 @@
-import { fileToBase64, isBase64Image, isValidImageSource, compressImage } from './imageUtils';
+import { fileToBase64, isBase64Image, isValidImageSource, compressImage, analyzeImageBrightness } from './imageUtils';
 
 describe('imageUtils', () => {
   describe('isBase64Image', () => {
@@ -235,6 +235,104 @@ describe('imageUtils', () => {
         const promise = fileToBase64(file);
         expect(promise).toBeInstanceOf(Promise);
       }
+    });
+  });
+
+  describe('analyzeImageBrightness', () => {
+    let originalCreateElement;
+    let originalImage;
+
+    beforeEach(() => {
+      originalCreateElement = document.createElement.bind(document);
+      originalImage = global.Image;
+    });
+
+    afterEach(() => {
+      document.createElement = originalCreateElement;
+      global.Image = originalImage;
+    });
+
+    function mockCanvasWithLuminance(luminance) {
+      const pixelValue = Math.round(luminance);
+      document.createElement = jest.fn((tag) => {
+        if (tag === 'canvas') {
+          const mockCtx = {
+            drawImage: jest.fn(),
+            getImageData: jest.fn(() => ({
+              data: new Uint8ClampedArray([
+                pixelValue, pixelValue, pixelValue, 255,
+                pixelValue, pixelValue, pixelValue, 255,
+              ]),
+            })),
+          };
+          return { width: 0, height: 0, getContext: jest.fn(() => mockCtx) };
+        }
+        return originalCreateElement(tag);
+      });
+    }
+
+    function mockImageLoad(triggerOnLoad = true) {
+      const mockImg = { onload: null, onerror: null, src: '', crossOrigin: null };
+      global.Image = jest.fn(() => {
+        setTimeout(() => {
+          if (triggerOnLoad && mockImg.onload) mockImg.onload();
+        }, 0);
+        return mockImg;
+      });
+      return mockImg;
+    }
+
+    test('resolves { isBright: true } when both corners exceed the threshold', async () => {
+      mockCanvasWithLuminance(200); // well above 180
+      mockImageLoad();
+
+      const result = await analyzeImageBrightness('data:image/png;base64,abc');
+      expect(result).toEqual({ isBright: true });
+    });
+
+    test('resolves { isBright: false } when both corners are below the threshold', async () => {
+      mockCanvasWithLuminance(100); // well below 180
+      mockImageLoad();
+
+      const result = await analyzeImageBrightness('data:image/png;base64,abc');
+      expect(result).toEqual({ isBright: false });
+    });
+
+    test('resolves { isBright: false } when imageSrc is empty', async () => {
+      const result = await analyzeImageBrightness('');
+      expect(result).toEqual({ isBright: false });
+    });
+
+    test('resolves { isBright: false } when imageSrc is null', async () => {
+      const result = await analyzeImageBrightness(null);
+      expect(result).toEqual({ isBright: false });
+    });
+
+    test('resolves { isBright: false } when image fails to load', async () => {
+      const mockImg = { onload: null, onerror: null, src: '', crossOrigin: null };
+      global.Image = jest.fn(() => {
+        setTimeout(() => { if (mockImg.onerror) mockImg.onerror(); }, 0);
+        return mockImg;
+      });
+
+      const result = await analyzeImageBrightness('https://example.com/bad-image.jpg');
+      expect(result).toEqual({ isBright: false });
+    });
+
+    test('sets crossOrigin to anonymous for non-base64 URLs', async () => {
+      mockCanvasWithLuminance(100);
+      const mockImg = mockImageLoad();
+
+      await analyzeImageBrightness('https://example.com/photo.jpg');
+      expect(mockImg.crossOrigin).toBe('anonymous');
+    });
+
+    test('does not set crossOrigin for base64 data URLs', async () => {
+      mockCanvasWithLuminance(100);
+      const mockImg = mockImageLoad();
+
+      await analyzeImageBrightness('data:image/png;base64,test');
+      expect(mockImg.crossOrigin).toBeNull();
     });
   });
 });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './RecipeForm.css';
 import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
-import { fileToBase64, isBase64Image } from '../utils/imageUtils';
+import { fileToBase64, isBase64Image, analyzeImageBrightness } from '../utils/imageUtils';
 import { uploadRecipeImage, deleteRecipeImage } from '../utils/storageUtils';
 import { getCustomLists } from '../utils/customLists';
 import { getUsers, isCurrentUserAdmin, getUserAiOcrScanCount } from '../utils/userManagement';
@@ -499,11 +499,21 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     try {
       // Upload to Firebase Storage and get download URL
       const downloadURL = await uploadRecipeImage(file);
-      
+
+      // Analyze brightness using a local object URL (avoids CORS restrictions)
+      let imageBrightness = null;
+      try {
+        const objectUrl = URL.createObjectURL(file);
+        imageBrightness = await analyzeImageBrightness(objectUrl);
+        URL.revokeObjectURL(objectUrl);
+      } catch (_e) {
+        // Brightness analysis is non-critical – ignore errors
+      }
+
       // Add to images array; first image is default, others are not
       setImages(prev => {
         const isFirst = prev.length === 0;
-        return [...prev, { url: downloadURL, isDefault: isFirst }];
+        return [...prev, { url: downloadURL, isDefault: isFirst, imageBrightness }];
       });
       // Keep legacy image field in sync with default image
       setImage(prev => prev || downloadURL);
@@ -608,7 +618,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
 
     // Build final images array, ensuring default is correct
     const finalImages = images.length > 0
-      ? images.map(img => ({ url: img.url, isDefault: img.url === finalImage }))
+      ? images.map(img => ({ url: img.url, isDefault: img.url === finalImage, imageBrightness: img.imageBrightness || null }))
       : (finalImage ? [{ url: finalImage, isDefault: true }] : []);
 
     // Filter out empty items and convert to storage format

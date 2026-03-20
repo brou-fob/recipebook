@@ -143,6 +143,70 @@ export function compressImage(base64, maxWidth = 800, maxHeight = 600, quality =
 }
 
 /**
+ * Analyze the brightness of the top-left and top-right corners of an image.
+ * Returns a single `isBright` flag that is true when either corner exceeds the
+ * brightness threshold (luminance > 180).  This result can be stored as
+ * metadata alongside the image so that repeated analysis at display time is
+ * unnecessary.
+ *
+ * @param {string} imageSrc - A base64 data-URL or any image URL accessible to
+ *   the browser.  For non-base64 URLs the Image is loaded with
+ *   `crossOrigin = "anonymous"`.
+ * @returns {Promise<{ isBright: boolean }>}
+ */
+export function analyzeImageBrightness(imageSrc) {
+  return new Promise((resolve) => {
+    if (!imageSrc) {
+      resolve({ isBright: false });
+      return;
+    }
+
+    const img = new Image();
+    if (!isBase64Image(imageSrc)) {
+      img.crossOrigin = 'anonymous';
+    }
+
+    img.onload = () => {
+      try {
+        const CANVAS_SIZE = 100;
+        const canvas = document.createElement('canvas');
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        const sampleSize = Math.max(1, Math.floor(CANVAS_SIZE * 0.2));
+        const BRIGHTNESS_THRESHOLD = 180;
+
+        // Top-left corner
+        const leftData = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+        let leftBrightness = 0;
+        for (let i = 0; i < leftData.length; i += 4) {
+          leftBrightness += leftData[i] * 0.299 + leftData[i + 1] * 0.587 + leftData[i + 2] * 0.114;
+        }
+        leftBrightness /= leftData.length / 4;
+
+        // Top-right corner
+        const rightData = ctx.getImageData(CANVAS_SIZE - sampleSize, 0, sampleSize, sampleSize).data;
+        let rightBrightness = 0;
+        for (let i = 0; i < rightData.length; i += 4) {
+          rightBrightness += rightData[i] * 0.299 + rightData[i + 1] * 0.587 + rightData[i + 2] * 0.114;
+        }
+        rightBrightness /= rightData.length / 4;
+
+        resolve({ isBright: leftBrightness > BRIGHTNESS_THRESHOLD || rightBrightness > BRIGHTNESS_THRESHOLD });
+      } catch (_e) {
+        // Canvas is tainted (CORS) or another error – fall back to not-bright
+        resolve({ isBright: false });
+      }
+    };
+
+    img.onerror = () => resolve({ isBright: false });
+    img.src = imageSrc;
+  });
+}
+
+/**
  * Resize an image to a specific size (for PWA icons)
  * @param {string} base64 - Base64 encoded image string
  * @param {number} size - Target size in pixels (width and height)
