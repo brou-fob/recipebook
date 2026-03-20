@@ -90,6 +90,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   ));
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [filterVisible, setFilterVisible] = useState(true);
+  const [favPressed, setFavPressed] = useState(false);
   const longPressTimer = useRef(null);
   const longPressed = useRef(false);
   const filterButtonRef = useRef(null);
@@ -230,6 +231,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   }, [filterVisible]);
 
   const handleFavTouchStart = () => {
+    setFavPressed(true);
     longPressed.current = false;
     longPressTimer.current = setTimeout(() => {
       longPressed.current = true;
@@ -238,14 +240,13 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   };
 
   const handleFavTouchEnd = (e) => {
+    setFavPressed(false);
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
     if (longPressed.current) {
       e.preventDefault();
-      // Reset verzögert, damit der onClick-Guard noch greift
-      // falls preventDefault() den synthetischen Click nicht unterdrückt
       setTimeout(() => {
         longPressed.current = false;
       }, 400);
@@ -253,6 +254,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   };
 
   const handleFavTouchCancel = () => {
+    setFavPressed(false);
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -429,12 +431,15 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
             )}
             <button 
               ref={favButtonRef}
-              className={`recipe-favorites-filter-button ${showFavoritesOnly ? 'active' : ''}`}
-              style={{ transform: `translateX(${filterShift}px)` }}
+              className={`recipe-favorites-filter-button ${showFavoritesOnly ? 'active' : ''} ${favPressed ? 'pressed' : ''}`}
+              style={{ '--fav-shift': `${filterShift}px` }}
               onClick={() => { if (!longPressed.current) setShowFavoritesOnly(prev => !prev); }}
               onTouchStart={handleFavTouchStart}
               onTouchEnd={handleFavTouchEnd}
               onTouchCancel={handleFavTouchCancel}
+              onMouseDown={() => setFavPressed(true)}
+              onMouseUp={() => setFavPressed(false)}
+              onMouseLeave={() => setFavPressed(false)}
               onContextMenu={(e) => e.preventDefault()}
               title={showFavoritesOnly ? 'Alle Rezepte anzeigen' : 'Nur Favoriten anzeigen'}
             >
