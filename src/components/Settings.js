@@ -1319,7 +1319,7 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
             <div className="settings-section">
               <h3>Button-Icons</h3>
               <p className="section-description">
-                Wählen Sie Icons für verschiedene Buttons. Sie können entweder Emojis/Text eingeben oder eigene Bilder hochladen.
+                Wählen Sie Icons für verschiedene Buttons. Sie können entweder Emojis/Text eingeben oder eigene Bilder hochladen (PNG, JPG, SVG, max. 5MB, max. 10 Zeichen für Text).
               </p>
               
               <div className="button-icons-config">
