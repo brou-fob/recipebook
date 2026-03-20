@@ -37,8 +37,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const wakeLockRef = useRef(null);
   const contentRef = useRef(null);
   const stepsContainerRef = useRef(null);
-  // Brightness analysis cache (keyed by image src URL)
-  const brightnessCacheRef = useRef({});
   // Carousel refs
   const carouselImagesRef = useRef([]);
   const carouselTrackRef = useRef(null);
@@ -158,11 +156,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     } else {
       setServingMultiplier(1);
     }
-    // Reset brightness-based alt icon state for the new recipe's image
-    setUseCookingModeAlt(false);
-    setUseCloseButtonAlt(false);
-    // Clear brightness cache so the new recipe's images are re-analyzed
-    brightnessCacheRef.current = {};
     // Scroll carousel track back to the first image
     if (carouselTrackRef.current) {
       carouselTrackRef.current.scrollLeft = 0;
@@ -174,18 +167,23 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     }
   }, [initialRecipe]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // If the recipe image is already in the browser cache, the onLoad event
-  // will not fire and brightness analysis would be skipped. This effect
-  // detects that situation and triggers the analysis manually.
+  // Derive alt-icon state from imageBrightness metadata stored at upload time.
+  // Both useCookingModeAlt and useCloseButtonAlt always share the same value so
+  // there is never a mixed icon state.
   useEffect(() => {
-    const len = carouselLengthRef.current;
-    const safeIdx = len > 0 ? Math.min(carouselIndex, len - 1) : 0;
-    const img = carouselImagesRef.current[safeIdx];
-    if (img && img.complete && img.naturalWidth > 0) {
-      handleRecipeImageLoad({ target: img });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRecipe.image, carouselIndex]);
+    const allImages = Array.isArray(selectedRecipe.images) && selectedRecipe.images.length > 0
+      ? selectedRecipe.images
+      : (selectedRecipe.image ? [{ url: selectedRecipe.image, isDefault: true }] : []);
+    const orderedImages = [
+      ...allImages.filter(img => img.isDefault),
+      ...allImages.filter(img => !img.isDefault),
+    ];
+    const safeIdx = Math.min(carouselIndex, Math.max(0, orderedImages.length - 1));
+    const currentImage = orderedImages[safeIdx];
+    const isBright = currentImage?.imageBrightness?.isBright || false;
+    setUseCookingModeAlt(isBright);
+    setUseCloseButtonAlt(isBright);
+  }, [selectedRecipe.images, selectedRecipe.image, carouselIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep header visible on mobile - removed auto-hide behavior
   useEffect(() => {
@@ -946,86 +944,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     };
   }, [cookingMode]);
 
-  /**
-   * Analyzes the brightness of the top-left and top-right corners of an image element.
-   * If a corner is too bright (luminance > threshold), the corresponding alt icon is used
-   * so that the button remains visible against a light background.
-   */
-  const analyzeBrightness = (imgEl) => {
-    try {
-      const cacheKey = imgEl.src;
-      if (brightnessCacheRef.current[cacheKey]) {
-        const cached = brightnessCacheRef.current[cacheKey];
-        setUseCookingModeAlt(cached.cookingMode);
-        setUseCloseButtonAlt(cached.closeButton);
-        return;
-      }
-
-      const CANVAS_SIZE = 100;
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = CANVAS_SIZE;
-      canvas.height = CANVAS_SIZE;
-      ctx.drawImage(imgEl, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-      // Sample the top-left and top-right 20% of the small canvas
-      const sampleSize = Math.max(1, Math.floor(CANVAS_SIZE * 0.2));
-      const BRIGHTNESS_THRESHOLD = 180;
-
-      // Top-left corner → cooking mode button
-      const leftData = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
-      let leftBrightness = 0;
-      for (let i = 0; i < leftData.length; i += 4) {
-        leftBrightness += leftData[i] * 0.299 + leftData[i + 1] * 0.587 + leftData[i + 2] * 0.114;
-      }
-      leftBrightness /= leftData.length / 4;
-      const leftBright = leftBrightness > BRIGHTNESS_THRESHOLD;
-      setUseCookingModeAlt(leftBright);
-
-      // Top-right corner → close button
-      const rightData = ctx.getImageData(CANVAS_SIZE - sampleSize, 0, sampleSize, sampleSize).data;
-      let rightBrightness = 0;
-      for (let i = 0; i < rightData.length; i += 4) {
-        rightBrightness += rightData[i] * 0.299 + rightData[i + 1] * 0.587 + rightData[i + 2] * 0.114;
-      }
-      rightBrightness /= rightData.length / 4;
-      const rightBright = rightBrightness > BRIGHTNESS_THRESHOLD;
-      setUseCloseButtonAlt(rightBright);
-
-      brightnessCacheRef.current[cacheKey] = { cookingMode: leftBright, closeButton: rightBright };
-    } catch (err) {
-      // Silently ignore CORS errors for external images – keep default icons
-    }
-  };
-
-  /**
-   * Called when the visible recipe image finishes loading.
-   * For base64 data URLs the image can be analyzed directly.
-   * For URL-based images a separate CORS-enabled Image is loaded so that
-   * canvas pixel access works without blocking the display of the original image.
-   */
-  const handleRecipeImageLoad = (e) => {
-    const img = e.target;
-    if (isBase64Image(img.src)) {
-      // Data URLs are never subject to CORS restrictions – analyze directly.
-      analyzeBrightness(img);
-    } else {
-      // Load a separate copy with crossOrigin so getImageData is allowed.
-      // The visible <img> has no crossOrigin attribute and therefore always displays.
-      const corsImg = new Image();
-      corsImg.crossOrigin = 'anonymous';
-      corsImg.onload = () => analyzeBrightness(corsImg);
-      corsImg.onerror = () => {
-        // CORS-only load failed (e.g. Firebase Storage without CORS config).
-        // Fall back to analyzing the already-rendered img element directly.
-        // analyzeBrightness catches SecurityError (tainted canvas) internally,
-        // so worst case the default icons are kept – same as before this fix.
-        analyzeBrightness(img);
-      };
-      corsImg.src = img.src;
-    }
-  };
-
   // --- Carousel scroll handlers ---
 
   const scrollToCarouselIndex = (index) => {
@@ -1444,7 +1362,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                           src={img.url}
                           alt={recipe.title}
                           ref={el => { carouselImagesRef.current[idx] = el; }}
-                          onLoad={idx === safeIndex ? handleRecipeImageLoad : undefined}
                         />
                       </div>
                     ))}
