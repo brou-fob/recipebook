@@ -110,11 +110,19 @@
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   min-width: 50px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  transform: var(--filter-transform, translateX(0));
+
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.15s ease,
+              box-shadow 0.15s ease;
 }
 
 .filter-button .button-icon-image {
@@ -125,11 +133,6 @@
 
 .mobile-search-button {
   display: none;
-}
-
-.filter-button:active {
-  transform: scale(1.05);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
 }
 
 .filter-button.has-active-filters {
@@ -335,6 +338,13 @@
   margin-left: auto;
 }
 
+.filter-button:focus,
+.filter-button:focus-visible,
+.add-icon-button:focus,
+.add-icon-button:focus-visible {
+  outline: none;
+}
+
 @media (max-width: 768px) {
   .recipe-grid {
     grid-template-columns: repeat(auto-fill, minmax(var(--tile-size-min, 250px), 1fr));
@@ -362,20 +372,35 @@
     opacity: 0;
     width: 56px;
     height: 56px;
+    min-width: 56px;
+    max-width: 56px;
     border-radius: 50%;
     padding: 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    min-width: auto;
-    transition: transform 0.18s ease-out,
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+    will-change: transform;
+    transform: var(--filter-transform, translateX(0));
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
                 opacity 0.35s ease,
-                background 0.3s ease,
-                box-shadow 0.3s ease;
+                background 0.15s ease,
+                box-shadow 0.15s ease;
+  }
+
+  .filter-button.pressed {
+    transform: var(--filter-transform, translateX(0)) scale(1.15);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.3);
   }
 
   /* Slide the filter button off-screen to the left when the sort carousel expands */
 
   .filter-button:active {
-    transform: scale(1);
+    outline: none;
   }
 
   .filter-button.filter-visible {
@@ -461,29 +486,37 @@
   }
 
   /* Mobile: Add recipe button fixed at bottom right, mirrors fav button on the left */
-  .add-icon-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1101;
-    width: 56px;
-    height: 56px;
-    opacity: 0.85;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transform: translateX(var(--add-shift, 0px));
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-                background 0.15s ease,
-                box-shadow 0.15s ease;
-  }
-  
-  .add-icon-button.pressed {
-  transform: translateX(var(--add-shift, 0px)) scale(1.15);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+.add-icon-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1101;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  border-radius: 50%;
+  padding: 0;
+  opacity: 0.85;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   -webkit-tap-highlight-color: transparent;
   -webkit-appearance: none;
   appearance: none;
   touch-action: manipulation;
-  }
+  will-change: transform;
+  transform: translateX(var(--add-shift, 0px));
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.15s ease,
+              box-shadow 0.15s ease;
+}
+  
+.add-icon-button.pressed {
+  transform: translateX(var(--add-shift, 0px)) scale(1.15);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+}
 }
 
 @media (max-width: 480px) {
