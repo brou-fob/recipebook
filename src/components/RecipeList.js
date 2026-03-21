@@ -92,6 +92,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [filterVisible, setFilterVisible] = useState(true);
   const [favPressed, setFavPressed] = useState(false);
+  const [addPressed, setAddPressed] = useState(false);
   const longPressTimer = useRef(null);
   const longPressed = useRef(false);
   const filterButtonRef = useRef(null);
@@ -387,9 +388,15 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
               <>
                 {!activePrivateListId && (
                   <button
-                    className="add-icon-button"
-                    style={{ transform: `translateX(${addShift}px)` }}
+                    className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
+                    style={{ '--add-shift': `${addShift}px` }}
                     onClick={() => onAddRecipe()}
+                    onTouchStart={() => setAddPressed(true)}
+                    onTouchEnd={() => setAddPressed(false)}
+                    onTouchCancel={() => setAddPressed(false)}
+                    onMouseDown={() => setAddPressed(true)}
+                    onMouseUp={() => setAddPressed(false)}
+                    onMouseLeave={() => setAddPressed(false)}
                     title="Rezept hinzufügen"
                     aria-label="Rezept hinzufügen"
                   >
@@ -402,9 +409,15 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                 )}
                 {activePrivateListId && (
                   <button
-                    className="add-icon-button"
-                    style={{ transform: `translateX(${addShift}px)` }}
+                    className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
+                    style={{ '--add-shift': `${addShift}px` }}
                     onClick={() => onAddRecipe(activePrivateListId)}
+                    onTouchStart={() => setAddPressed(true)}
+                    onTouchEnd={() => setAddPressed(false)}
+                    onTouchCancel={() => setAddPressed(false)}
+                    onMouseDown={() => setAddPressed(true)}
+                    onMouseUp={() => setAddPressed(false)}
+                    onMouseLeave={() => setAddPressed(false)}
                     title="Privates Rezept hinzufügen"
                     aria-label="Privates Rezept hinzufügen"
                   >
