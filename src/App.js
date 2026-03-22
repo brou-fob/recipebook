@@ -1256,6 +1256,7 @@ function App() {
         isOpen={isMobileSearchOpen}
         onClose={() => setIsMobileSearchOpen(false)}
         recipes={recipes}
+        currentUser={currentUser}
         onSelectRecipe={(recipe) => {
           setIsMobileSearchOpen(false);
           handleSelectRecipe(recipe);
