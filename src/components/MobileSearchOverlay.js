@@ -274,6 +274,13 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
     return result;
   }, [allCuisinePills, debouncedTerm, cuisineGroups, allSortedCuisineTypes]);
 
+  // Active (selected) pills are always shown first (leftmost) in the carousel
+  const orderedCuisinePills = useMemo(() => {
+    const active = visibleCuisinePills.filter((name) => selectedCuisines.includes(name));
+    const inactive = visibleCuisinePills.filter((name) => !selectedCuisines.includes(name));
+    return [...active, ...inactive];
+  }, [visibleCuisinePills, selectedCuisines]);
+
   if (!isOpen) return null;
 
   return (
@@ -352,9 +359,10 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
         </div>
 
         {/* Kulinariktypen – two-row horizontal carousel below the favorites filter */}
+        {/* Active (selected) pills are always shown first (leftmost) in the carousel */}
         {visibleCuisinePills.length > 0 && (
           <div className="mobile-search-cuisine-grid">
-            {visibleCuisinePills.map((name) => (
+            {orderedCuisinePills.map((name) => (
               <button
                 key={name}
                 className={`mobile-search-filter-pill mobile-search-cuisine-pill${selectedCuisines.includes(name) ? ' active' : ''}`}
