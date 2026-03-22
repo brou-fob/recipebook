@@ -64,7 +64,7 @@ function computeTopCuisineTypes(recipes, cuisineTypes) {
   return computeAllSortedCuisineTypes(recipes, cuisineTypes).slice(0, MAX_CUISINE_TYPE_PILLS);
 }
 
-function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups, onCuisineFilterChange, selectedCuisines: selectedCuisinesProp, availableAuthors, onAuthorFilterChange, selectedAuthors: selectedAuthorsProp, privateLists, onPrivateListFilterChange, selectedPrivateLists: selectedPrivateListsProp }) {
+function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups, onCuisineFilterChange, selectedCuisines: selectedCuisinesProp, availableAuthors, onAuthorFilterChange, selectedAuthors: selectedAuthorsProp, privateLists, onPrivateListFilterChange, selectedPrivateLists: selectedPrivateListsProp, searchTerm: searchTermProp }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -101,8 +101,9 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
   // Reset search and favorites filter when overlay opens/closes
   useEffect(() => {
     if (isOpen) {
-      setSearchTerm('');
-      setDebouncedTerm('');
+      const initial = searchTermProp ?? '';
+      setSearchTerm(initial);
+      setDebouncedTerm(initial);
       setShowFavoritesOnly(showFavoritesOnlyProp ?? false);
       setSelectedCuisines(selectedCuisinesPropRef.current ?? []);
       setSelectedAuthors(selectedAuthorsPropRef.current ?? []);

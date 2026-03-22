@@ -787,6 +787,30 @@ describe('RecipeList - Filter Button Icon', () => {
     expect(filterButton).not.toHaveClass('has-active-filters');
     expect(filterButton).toHaveTextContent('⚙');
   });
+
+  test('shows filterButtonActive when searchTerm is set', async () => {
+    jest.spyOn(require('../utils/customLists'), 'getButtonIcons').mockResolvedValue({
+      filterButton: '⚙',
+      filterButtonActive: '🔽'
+    });
+    jest.spyOn(require('../utils/recipeRatings'), 'getUserRating').mockResolvedValue(null);
+    jest.spyOn(require('../utils/recipeRatings'), 'subscribeToRatingSummary').mockImplementation(() => () => {});
+
+    render(
+      <RecipeList
+        recipes={mockRecipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        onOpenFilterPage={() => {}}
+        activeFilters={{}}
+        searchTerm="Pasta"
+      />
+    );
+
+    const filterButton = await screen.findByTitle('Weitere Filter');
+    expect(filterButton).toHaveClass('has-active-filters');
+    expect(filterButton).toHaveTextContent('🔽');
+  });
 });
 
 describe('RecipeList - Kulinarik Display', () => {
@@ -1037,7 +1061,7 @@ describe('RecipeList - Active Filters Bar', () => {
     expect(document.querySelector('.active-filters-bar')).not.toBeInTheDocument();
   });
 
-  test('shows active-filters-bar with search chip when searchTerm is set', () => {
+  test('does not show search chip in recipe list when searchTerm is set', () => {
     render(
       <RecipeList
         recipes={recipes}
@@ -1048,14 +1072,11 @@ describe('RecipeList - Active Filters Bar', () => {
       />
     );
 
-    const bar = document.querySelector('.active-filters-bar');
-    expect(bar).toBeInTheDocument();
-    const searchChip = document.querySelector('.active-filter-chip--search');
-    expect(searchChip).toBeInTheDocument();
-    expect(searchChip).toHaveTextContent('Pasta');
+    expect(document.querySelector('.active-filters-bar')).not.toBeInTheDocument();
+    expect(document.querySelector('.active-filter-chip--search')).not.toBeInTheDocument();
   });
 
-  test('shows active-filters-bar with cuisine chip when selectedCuisines are set', () => {
+  test('does not show cuisine chip in recipe list when selectedCuisines are set', () => {
     render(
       <RecipeList
         recipes={recipes}
@@ -1065,14 +1086,11 @@ describe('RecipeList - Active Filters Bar', () => {
       />
     );
 
-    const bar = document.querySelector('.active-filters-bar');
-    expect(bar).toBeInTheDocument();
-    const cuisineChip = document.querySelector('.active-filter-chip--cuisine');
-    expect(cuisineChip).toBeInTheDocument();
-    expect(cuisineChip).toHaveTextContent('Italienisch, Asiatisch');
+    expect(document.querySelector('.active-filters-bar')).not.toBeInTheDocument();
+    expect(document.querySelector('.active-filter-chip--cuisine')).not.toBeInTheDocument();
   });
 
-  test('shows both chips when both search and cuisine filters are active', () => {
+  test('does not show chips when both search and cuisine filters are active', () => {
     render(
       <RecipeList
         recipes={recipes}
@@ -1083,61 +1101,8 @@ describe('RecipeList - Active Filters Bar', () => {
       />
     );
 
-    expect(document.querySelector('.active-filter-chip--search')).toBeInTheDocument();
-    expect(document.querySelector('.active-filter-chip--cuisine')).toBeInTheDocument();
-  });
-
-  test('search chip clear button calls onClearSearch', () => {
-    const onClearSearch = jest.fn();
-    render(
-      <RecipeList
-        recipes={recipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        activeFilters={{}}
-        searchTerm="Test"
-        onClearSearch={onClearSearch}
-      />
-    );
-
-    const clearBtn = document.querySelector('.active-filter-chip--search .active-filter-chip-clear');
-    expect(clearBtn).toBeInTheDocument();
-    fireEvent.click(clearBtn);
-    expect(onClearSearch).toHaveBeenCalledTimes(1);
-  });
-
-  test('cuisine chip clear button calls onClearCuisineFilter', () => {
-    const onClearCuisineFilter = jest.fn();
-    render(
-      <RecipeList
-        recipes={recipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        activeFilters={{ selectedCuisines: ['Mexikanisch'] }}
-        onClearCuisineFilter={onClearCuisineFilter}
-      />
-    );
-
-    const clearBtn = document.querySelector('.active-filter-chip--cuisine .active-filter-chip-clear');
-    expect(clearBtn).toBeInTheDocument();
-    fireEvent.click(clearBtn);
-    expect(onClearCuisineFilter).toHaveBeenCalledTimes(1);
-  });
-
-  test('active-filters-bar is inside recipe-list-header', () => {
-    render(
-      <RecipeList
-        recipes={recipes}
-        onSelectRecipe={() => {}}
-        onAddRecipe={() => {}}
-        activeFilters={{}}
-        searchTerm="Test"
-      />
-    );
-
-    const header = document.querySelector('.recipe-list-header');
-    const bar = document.querySelector('.active-filters-bar');
-    expect(header).toContainElement(bar);
+    expect(document.querySelector('.active-filter-chip--search')).not.toBeInTheDocument();
+    expect(document.querySelector('.active-filter-chip--cuisine')).not.toBeInTheDocument();
   });
 });
 
