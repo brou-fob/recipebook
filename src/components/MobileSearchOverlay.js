@@ -214,8 +214,28 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
   const visibleCuisinePills = useMemo(() => {
     if (!debouncedTerm) return allCuisinePills;
     const lower = debouncedTerm.toLowerCase();
-    return allCuisinePills.filter((name) => name.toLowerCase().includes(lower));
-  }, [allCuisinePills, debouncedTerm]);
+    const result = [];
+    const seen = new Set();
+    allCuisinePills.forEach((name) => {
+      if (name.toLowerCase().includes(lower)) {
+        if (!seen.has(name)) {
+          result.push(name);
+          seen.add(name);
+        }
+        // If this is a cuisine group, also show its child types
+        const group = (cuisineGroups || []).find((g) => g.name === name);
+        if (group) {
+          (group.children || []).forEach((child) => {
+            if (!seen.has(child)) {
+              result.push(child);
+              seen.add(child);
+            }
+          });
+        }
+      }
+    });
+    return result;
+  }, [allCuisinePills, debouncedTerm, cuisineGroups]);
 
   if (!isOpen) return null;
 
