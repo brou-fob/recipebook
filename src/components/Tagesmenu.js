@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import './Tagesmenu.css';
 import RecipeImageCarousel from './RecipeImageCarousel';
 
 /**
- * Tagesmenü page – shows full-page recipe cards from interactive private lists.
+ * Tagesmenü page – shows recipe cards as a swipeable Tinder-style stack.
  *
  * Behaviour:
  *  - If the user has multiple interactive lists, a tab bar lets them switch.
- *  - If the user has exactly one interactive list it is pre-selected without
- *    showing any tab bar.
- *  - Each recipe card occupies the full viewport height and snaps into place
- *    via CSS scroll-snap so the user can swipe / scroll through the dishes.
+ *  - Cards are displayed as a visual stack (depth effect).
+ *  - The top card can be swiped left, right, or up via pointer drag (mouse & touch).
+ *  - Swiping beyond the threshold flies the card out and reveals the next one.
+ *  - After all cards are swiped a completion screen with a restart button appears.
  *
  * @param {Object}   props
  * @param {Array}    props.interactiveLists  - Groups with listKind === 'interactive'
@@ -18,6 +18,11 @@ import RecipeImageCarousel from './RecipeImageCarousel';
  * @param {Array}    props.allUsers          - All users (to resolve author names)
  * @param {Function} props.onSelectRecipe    - Called with a recipe when its card is tapped
  */
+
+const SWIPE_THRESHOLD = 80;   // px drag distance to trigger a swipe
+const DIRECTION_THRESHOLD = 5; // px of movement before we decide drag direction
+const STACK_VISIBLE = 3;       // how many cards are rendered in the stack
+
 function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
   const [selectedListId, setSelectedListId] = useState(
     interactiveLists.length > 0 ? interactiveLists[0].id : null
@@ -33,11 +38,150 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
     );
   }, [recipes, selectedList]);
 
+  // Reset swipe index when the user switches lists
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const prevListIdRef = useRef(selectedListId);
+  useEffect(() => {
+    if (prevListIdRef.current !== selectedListId) {
+      prevListIdRef.current = selectedListId;
+      setCurrentIndex(0);
+    }
+  }, [selectedListId]);
+
+  // Drag / animation state
+  // cardPhase: 'idle' | 'dragging' | 'snap' | 'flying'
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [cardPhase, setCardPhase] = useState('idle');
+
+  // Active gesture tracking (ref to avoid stale closure issues)
+  const gestureRef = useRef(null);
+
   const getAuthorName = (authorId) => {
     if (!authorId || !allUsers) return '';
     const user = allUsers.find((u) => u.id === authorId);
     return user ? user.vorname : '';
   };
+
+  // ---- Pointer handlers (applied only to the top card) ----------------
+
+  const handlePointerDown = useCallback((e) => {
+    if (cardPhase === 'flying') return;
+    gestureRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      pointerId: e.pointerId,
+      decided: false,      // whether we've chosen a drag direction yet
+      active: false,       // whether this element has captured the pointer
+      inImageArea: !!e.target.closest('.tagesmenu-card-image'),
+    };
+  }, [cardPhase]);
+
+  const handlePointerMove = useCallback((e) => {
+    const g = gestureRef.current;
+    if (!g) return;
+
+    const dx = e.clientX - g.startX;
+    const dy = e.clientY - g.startY;
+
+    if (!g.decided) {
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < DIRECTION_THRESHOLD) return; // wait for enough movement
+      g.decided = true;
+      const isHorizontal = Math.abs(dx) >= Math.abs(dy);
+      if (isHorizontal && g.inImageArea) {
+        // The user is swiping horizontally inside the image carousel –
+        // cancel card drag and let the carousel's native scroll take over.
+        gestureRef.current = null;
+        return;
+      }
+      // We take over this gesture.
+      g.active = true;
+      e.currentTarget.setPointerCapture(g.pointerId);
+      setCardPhase('dragging');
+    }
+
+    if (!g.active) return;
+    setDragOffset({ x: dx, y: dy });
+  }, []);
+
+  const handlePointerUp = useCallback((e) => {
+    const g = gestureRef.current;
+    if (!g || !g.active) {
+      gestureRef.current = null;
+      return;
+    }
+    const dx = e.clientX - g.startX;
+    const dy = e.clientY - g.startY;
+    gestureRef.current = null;
+
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    if (absDx >= SWIPE_THRESHOLD && absDx >= absDy) {
+      // Horizontal swipe — fly card off to the side
+      const targetX = (dx > 0 ? 1 : -1) * window.innerWidth * 1.5;
+      setDragOffset({ x: targetX, y: dy });
+      setCardPhase('flying');
+    } else if (dy <= -SWIPE_THRESHOLD && absDy > absDx) {
+      // Upward swipe — fly card off to the top
+      setDragOffset({ x: dx, y: -window.innerHeight * 1.5 });
+      setCardPhase('flying');
+    } else {
+      // Below threshold — snap the card back
+      setDragOffset({ x: 0, y: 0 });
+      setCardPhase('snap');
+    }
+  }, []);
+
+  const handlePointerCancel = useCallback(() => {
+    if (!gestureRef.current?.active) {
+      gestureRef.current = null;
+      return;
+    }
+    gestureRef.current = null;
+    setDragOffset({ x: 0, y: 0 });
+    setCardPhase('snap');
+  }, []);
+
+  const handleTransitionEnd = useCallback(() => {
+    if (cardPhase === 'flying') {
+      setCurrentIndex((prev) => prev + 1);
+      setDragOffset({ x: 0, y: 0 });
+      setCardPhase('idle');
+    } else if (cardPhase === 'snap') {
+      setCardPhase('idle');
+    }
+  }, [cardPhase]);
+
+  // ---- Derived values -------------------------------------------------
+
+  const allSwiped = listRecipes.length > 0 && currentIndex >= listRecipes.length;
+  const visibleRecipes = listRecipes.slice(currentIndex, currentIndex + STACK_VISIBLE);
+
+  // How far along the swipe are we (0–1) – used to animate background cards
+  const dragProgress = Math.min(
+    Math.sqrt(dragOffset.x ** 2 + dragOffset.y ** 2) / SWIPE_THRESHOLD,
+    1
+  );
+
+  // Which direction indicator to show while dragging
+  const swipeHint =
+    cardPhase === 'dragging' &&
+    Math.abs(dragOffset.x) > 20 &&
+    Math.abs(dragOffset.x) >= Math.abs(dragOffset.y)
+      ? dragOffset.x > 0 ? 'right' : 'left'
+      : cardPhase === 'dragging' &&
+        dragOffset.y < -20 &&
+        Math.abs(dragOffset.y) > Math.abs(dragOffset.x)
+      ? 'up'
+      : null;
+
+  const swipeHintOpacity = Math.min(
+    Math.abs(swipeHint === 'up' ? dragOffset.y : dragOffset.x) / SWIPE_THRESHOLD,
+    1
+  );
+
+  // ---- Render ---------------------------------------------------------
 
   return (
     <div className="tagesmenu-container">
@@ -60,9 +204,24 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
           <span className="tagesmenu-empty-icon">🍽️</span>
           <p>Diese Liste enthält noch keine Rezepte.</p>
         </div>
+      ) : allSwiped ? (
+        <div className="tagesmenu-empty">
+          <span className="tagesmenu-empty-icon">✅</span>
+          <p>Alle Rezepte angesehen!</p>
+          <button
+            className="tagesmenu-restart-btn"
+            onClick={() => setCurrentIndex(0)}
+          >
+            Nochmal ansehen
+          </button>
+        </div>
       ) : (
-        <div className="tagesmenu-cards">
-          {listRecipes.map((recipe) => {
+        <div className="tagesmenu-stack">
+          {/* Render from back to front so the top card sits on top in DOM order */}
+          {[...visibleRecipes].reverse().map((recipe, revIdx) => {
+            const depth = visibleRecipes.length - 1 - revIdx; // 0 = top card
+            const isTop = depth === 0;
+
             const allImages =
               Array.isArray(recipe.images) && recipe.images.length > 0
                 ? recipe.images
@@ -75,13 +234,79 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
             ];
             const authorName = getAuthorName(recipe.authorId);
 
+            // Build per-card inline style
+            let cardStyle;
+            if (isTop) {
+              const rotate = dragOffset.x * 0.08;
+              const transition =
+                cardPhase === 'flying'
+                  ? 'transform 0.4s ease-in, opacity 0.4s ease-in'
+                  : cardPhase === 'snap'
+                  ? 'transform 0.3s ease'
+                  : 'none';
+              cardStyle = {
+                transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotate}deg)`,
+                transition,
+                opacity: cardPhase === 'flying' ? 0 : 1,
+                zIndex: 10,
+              };
+            } else {
+              // Background cards scale up proportionally as the top card is dragged
+              const baseScale = depth === 1 ? 0.95 : 0.9;
+              const scale = baseScale + (1 - baseScale) * dragProgress;
+              const translateY = depth * 10 * (1 - dragProgress);
+              cardStyle = {
+                transform: `scale(${scale}) translateY(${translateY}px)`,
+                transition: cardPhase === 'dragging' ? 'none' : 'transform 0.3s ease',
+                zIndex: 10 - depth,
+              };
+            }
+
             return (
               <div
                 key={recipe.id}
-                className="tagesmenu-card"
-                onClick={() => onSelectRecipe(recipe)}
+                className={`tagesmenu-card${isTop ? ' tagesmenu-card-top' : ''}`}
+                style={cardStyle}
+                onPointerDown={isTop ? handlePointerDown : undefined}
+                onPointerMove={isTop ? handlePointerMove : undefined}
+                onPointerUp={isTop ? handlePointerUp : undefined}
+                onPointerCancel={isTop ? handlePointerCancel : undefined}
+                onTransitionEnd={isTop ? handleTransitionEnd : undefined}
+                onClick={
+                  isTop && cardPhase === 'idle' && dragOffset.x === 0 && dragOffset.y === 0
+                    ? () => onSelectRecipe(recipe)
+                    : undefined
+                }
               >
+                {/* Swipe direction badges */}
+                {isTop && swipeHint === 'right' && (
+                  <div
+                    className="tagesmenu-swipe-badge tagesmenu-swipe-badge--right"
+                    style={{ opacity: swipeHintOpacity }}
+                  >
+                    👍
+                  </div>
+                )}
+                {isTop && swipeHint === 'left' && (
+                  <div
+                    className="tagesmenu-swipe-badge tagesmenu-swipe-badge--left"
+                    style={{ opacity: swipeHintOpacity }}
+                  >
+                    👎
+                  </div>
+                )}
+                {isTop && swipeHint === 'up' && (
+                  <div
+                    className="tagesmenu-swipe-badge tagesmenu-swipe-badge--up"
+                    style={{ opacity: swipeHintOpacity }}
+                  >
+                    ⭐
+                  </div>
+                )}
+
                 {orderedImages.length > 0 ? (
+                  // stopPropagation prevents the card-level onClick from double-firing
+                  // when the user taps inside the carousel (carousel slide also handles clicks).
                   <div
                     className="tagesmenu-card-image"
                     onClick={(e) => e.stopPropagation()}
@@ -89,7 +314,9 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
                     <RecipeImageCarousel
                       images={orderedImages}
                       altText={recipe.title}
-                      onImageClick={() => onSelectRecipe(recipe)}
+                      onImageClick={
+                        isTop && cardPhase === 'idle' ? () => onSelectRecipe(recipe) : undefined
+                      }
                     />
                   </div>
                 ) : (
@@ -97,6 +324,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
                     <span>🍽️</span>
                   </div>
                 )}
+
                 <div className="tagesmenu-card-info">
                   <h2 className="tagesmenu-card-title">{recipe.title}</h2>
                   {authorName && (
