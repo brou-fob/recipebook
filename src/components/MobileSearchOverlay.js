@@ -116,35 +116,42 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
         className="mobile-search-panel"
         style={{ bottom: panelBottom }}
       >
-        {/* Results scroll area – above the input bar */}
+        {/* Tiles grid – displayed in the upper portion of the panel */}
         <div className="mobile-search-results" role="listbox" aria-label="Suchergebnisse">
+          {!debouncedTerm && (
+            <p className="mobile-search-hint">Suchbegriff eingeben …</p>
+          )}
           {debouncedTerm && filteredRecipes.length === 0 && (
             <p className="mobile-search-no-results">Keine Rezepte gefunden</p>
           )}
-          {filteredRecipes.map((recipe) => (
-            <button
-              key={recipe.id}
-              className="mobile-search-result-item"
-              role="option"
-              aria-selected="false"
-              onClick={() => handleSelect(recipe)}
-            >
-              {recipe.image && (
-                <img
-                  src={recipe.image}
-                  alt=""
-                  className="mobile-search-result-thumb"
-                  aria-hidden="true"
-                />
-              )}
-              <span className="mobile-search-result-title">{recipe.title}</span>
-              {recipe.kulinarik && (
-                <span className="mobile-search-result-tag">
-                  {Array.isArray(recipe.kulinarik) ? recipe.kulinarik[0] : recipe.kulinarik}
-                </span>
-              )}
-            </button>
-          ))}
+          {filteredRecipes.length > 0 && (
+            <div className="mobile-search-tiles-grid">
+              {filteredRecipes.map((recipe) => (
+                <button
+                  key={recipe.id}
+                  className="mobile-search-tile"
+                  role="option"
+                  aria-selected="false"
+                  onClick={() => handleSelect(recipe)}
+                >
+                  <div className="mobile-search-tile-image">
+                    {recipe.image ? (
+                      <img src={recipe.image} alt="" aria-hidden="true" />
+                    ) : (
+                      <span className="mobile-search-tile-placeholder" aria-hidden="true">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="3" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                  <span className="mobile-search-tile-title">{recipe.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Search bar – anchored to the bottom of the panel, just above keyboard */}
