@@ -146,6 +146,49 @@
   font-weight: 500;
 }
 
+/* ---- filter button (fixed, bottom-left, visible when > 1 list) --- */
+
+.tagesmenu-filter-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1101;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
+  color: #ffffff;
+  opacity: 0.85;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.15s ease,
+              opacity 0.15s ease;
+}
+
+.tagesmenu-filter-button:hover {
+  opacity: 1;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.tagesmenu-filter-button:active {
+  transform: scale(1.12);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
+/* ---- tagesmenu list pills top padding in overlay ----------------- */
+
+.tagesmenu-list-pills-grid {
+  padding-top: 12px;
+}
+
 /* ---- empty state -------------------------------------------------- */
 
 .tagesmenu-empty {

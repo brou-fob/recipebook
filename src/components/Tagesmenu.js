@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import './Tagesmenu.css';
 import RecipeImageCarousel from './RecipeImageCarousel';
+import TagesmenuSearchOverlay from './TagesmenuSearchOverlay';
 
 /**
  * Tagesmenü page – shows full-page recipe cards from interactive private lists.
@@ -22,6 +23,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
   const [selectedListId, setSelectedListId] = useState(
     interactiveLists.length > 0 ? interactiveLists[0].id : null
   );
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   const selectedList = interactiveLists.find((l) => l.id === selectedListId) ?? null;
 
@@ -126,6 +128,30 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe }) {
           })}
         </div>
       )}
+
+      {/* Filter button – only shown when there are multiple interactive lists */}
+      {interactiveLists.length > 1 && (
+        <button
+          className="tagesmenu-filter-button"
+          onClick={() => setIsOverlayOpen(true)}
+          aria-label="Listen filtern"
+          title="Listen filtern"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+          </svg>
+        </button>
+      )}
+
+      <TagesmenuSearchOverlay
+        isOpen={isOverlayOpen}
+        onClose={() => setIsOverlayOpen(false)}
+        interactiveLists={interactiveLists}
+        selectedListId={selectedListId}
+        onSelectList={setSelectedListId}
+      />
     </div>
   );
 }
