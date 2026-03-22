@@ -174,7 +174,7 @@
   display: flex;
   align-items: center;
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: 9999px;
   padding: 0 8px;
   min-height: 48px;
   gap: 6px;
@@ -335,22 +335,4 @@
   border-color: transparent;
 }
 
-/* "Abbrechen" button outside the pill */
-.mobile-search-cancel-btn {
-  border: none;
-  background: transparent;
-  color: #007aff;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  touch-action: manipulation;
-}
-
-.mobile-search-cancel-btn:focus-visible {
-  outline: 2px solid #007aff;
-  outline-offset: 2px;
-}
 
