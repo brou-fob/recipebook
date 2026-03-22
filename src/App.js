@@ -974,6 +974,10 @@ function App() {
     setRecipeFilters(prev => ({ ...prev, selectedCuisines: [] }));
   };
 
+  const handleCuisineFilterChangeFromSearch = (newSelectedCuisines) => {
+    setRecipeFilters(prev => ({ ...prev, selectedCuisines: newSelectedCuisines }));
+  };
+
   const handleCancelFilterPage = () => {
     setIsFilterPageOpen(false);
   };
@@ -1272,6 +1276,7 @@ function App() {
         onFavoritesToggle={setShowFavoritesOnly}
         cuisineTypes={cuisineTypes}
         cuisineGroups={cuisineGroups}
+        onCuisineFilterChange={handleCuisineFilterChangeFromSearch}
       />
     </div>
   );
