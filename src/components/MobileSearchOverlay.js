@@ -64,7 +64,7 @@ function computeTopCuisineTypes(recipes, cuisineTypes) {
   return computeAllSortedCuisineTypes(recipes, cuisineTypes).slice(0, MAX_CUISINE_TYPE_PILLS);
 }
 
-function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups, onCuisineFilterChange }) {
+function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups, onCuisineFilterChange, selectedCuisines: selectedCuisinesProp }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -74,6 +74,10 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
   // (= 0 normally, > 0 when the software keyboard is visible on iOS)
   const [panelBottom, setPanelBottom] = useState(0);
   const inputRef = useRef(null);
+  // Keep a ref to the latest selectedCuisinesProp so the open-effect can read
+  // it without re-triggering every time the parent filter changes.
+  const selectedCuisinesPropRef = useRef(selectedCuisinesProp);
+  selectedCuisinesPropRef.current = selectedCuisinesProp;
 
   // Load favorite IDs when currentUser changes
   useEffect(() => {
@@ -94,7 +98,7 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
       setSearchTerm('');
       setDebouncedTerm('');
       setShowFavoritesOnly(showFavoritesOnlyProp ?? false);
-      setSelectedCuisines([]);
+      setSelectedCuisines(selectedCuisinesPropRef.current ?? []);
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, FOCUS_DELAY_MS);

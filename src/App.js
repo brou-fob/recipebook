@@ -1277,6 +1277,7 @@ function App() {
         cuisineTypes={cuisineTypes}
         cuisineGroups={cuisineGroups}
         onCuisineFilterChange={handleCuisineFilterChangeFromSearch}
+        selectedCuisines={recipeFilters.selectedCuisines}
       />
     </div>
   );
