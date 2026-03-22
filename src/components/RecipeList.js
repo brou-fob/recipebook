@@ -103,7 +103,7 @@ function renderKulinarikTags(kulinarik) {
 }
 
 function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, currentUser, onCategoryFilterChange, searchTerm, onOpenFilterPage, onOpenSearch, onClearSearch, activePrivateListName, activePrivateListId, activeFilters, onClearCuisineFilter, showFavoritesOnly: showFavoritesOnlyProp, onShowFavoritesOnlyChange }) {
-  const hasActiveFilters = !!(showFavoritesOnlyProp || (activeFilters && (
+  const hasActiveFilters = !!(searchTerm?.trim() || showFavoritesOnlyProp || (activeFilters && (
     activeFilters.selectedGroup ||
     activeFilters.selectedCuisines?.length > 0 ||
     activeFilters.selectedAuthors?.length > 0 ||
@@ -328,8 +328,6 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const filterShift = carouselExpanded ? -(widthDelta / 2) : 0;
   const filterTransform = `translateX(${filterShift}px)`;
   const addShift = carouselExpanded ? window.innerWidth : 0;
-  
-  const hasActiveFilterBar = !!(searchTerm?.trim() || activeFilters?.selectedCuisines?.length > 0);
 
   return (
     <div className="recipe-list-container">
@@ -435,50 +433,6 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
             )}
           </div>
         </div>
-
-        {hasActiveFilterBar && (
-          <div className="active-filters-bar">
-            {searchTerm?.trim() && (
-              <span className="active-filter-chip active-filter-chip--search">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                {searchTerm.trim()}
-                {onClearSearch && (
-                  <button
-                    className="active-filter-chip-clear"
-                    onClick={onClearSearch}
-                    aria-label="Suche zurücksetzen"
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                    </svg>
-                  </button>
-                )}
-              </span>
-            )}
-            {activeFilters?.selectedCuisines?.length > 0 && (
-              <span className="active-filter-chip active-filter-chip--cuisine">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                </svg>
-                {activeFilters.selectedCuisines.join(', ')}
-                {onClearCuisineFilter && (
-                  <button
-                    className="active-filter-chip-clear"
-                    onClick={onClearCuisineFilter}
-                    aria-label="Kulinarikfilter zurücksetzen"
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                    </svg>
-                  </button>
-                )}
-              </span>
-            )}
-          </div>
-        )}
       </div>
       
       {recipeGroups.length === 0 ? (

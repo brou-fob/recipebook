@@ -1310,6 +1310,7 @@ function App() {
           handleSelectRecipe(recipe);
         }}
         onSearch={handleApplySearch}
+        searchTerm={searchTerm}
         showFavoritesOnly={showFavoritesOnly}
         onFavoritesToggle={setShowFavoritesOnly}
         cuisineTypes={cuisineTypes}

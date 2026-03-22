@@ -491,3 +491,21 @@ describe('MobileSearchOverlay – private list carousel', () => {
     expect(listPills[0]).toHaveClass('active');
   });
 });
+
+describe('MobileSearchOverlay – pre-populated search term', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test('pre-populates the search field with the provided searchTerm prop', () => {
+    renderOverlay({ searchTerm: 'Pasta' });
+    const input = screen.getByRole('searchbox');
+    expect(input.value).toBe('Pasta');
+  });
+
+  test('search field is empty when no searchTerm prop is provided', () => {
+    renderOverlay();
+    const input = screen.getByRole('searchbox');
+    expect(input.value).toBe('');
+  });
+});
