@@ -274,3 +274,51 @@ describe('MobileSearchOverlay – cuisine pills stay active when favorites toggl
     expect(itaPill).toHaveClass('active');
   });
 });
+
+describe('MobileSearchOverlay – active cuisine pills shown leftmost', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    const { expandCuisineSelection } = require('../utils/customLists');
+    expandCuisineSelection.mockImplementation((selected) => selected);
+  });
+
+  test('active pill moves to the first position after clicking', () => {
+    renderOverlay();
+
+    const pills = () =>
+      screen.getAllByRole('button', { name: /Küche$/ });
+
+    // Before clicking, get the initial order
+    const initialFirstPill = pills()[0];
+
+    // Click the last cuisine pill to make it active
+    const lastPill = pills()[pills().length - 1];
+    fireEvent.click(lastPill);
+
+    // After clicking, the active pill should now be the first pill
+    const updatedPills = pills();
+    expect(updatedPills[0]).toHaveClass('active');
+    // And the previously first pill (if it wasn't the one we clicked) should no longer be first
+    if (initialFirstPill !== lastPill) {
+      expect(updatedPills[0]).not.toBe(initialFirstPill);
+    }
+  });
+
+  test('all active pills are shown before any inactive pills', () => {
+    renderOverlay();
+
+    // Select two cuisine pills (not the first one)
+    const allPills = screen.getAllByRole('button', { name: /Küche$/ });
+    fireEvent.click(allPills[1]);
+    fireEvent.click(allPills[2]);
+
+    // After clicking, the first two pills should be active
+    const updatedPills = screen.getAllByRole('button', { name: /Küche$/ });
+    expect(updatedPills[0]).toHaveClass('active');
+    expect(updatedPills[1]).toHaveClass('active');
+    // Remaining pills should be inactive
+    for (let i = 2; i < updatedPills.length; i++) {
+      expect(updatedPills[i]).not.toHaveClass('active');
+    }
+  });
+});
