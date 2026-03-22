@@ -328,154 +328,157 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const filterTransform = `translateX(${filterShift}px)`;
   const addShift = carouselExpanded ? window.innerWidth : 0;
   
+  const hasActiveFilterBar = !!(searchTerm?.trim() || activeFilters?.selectedCuisines?.length > 0);
+
   return (
     <div className="recipe-list-container">
       <div className="recipe-list-header">
-        <div className="recipe-list-title-area">
-          <h2>{getHeading()}</h2>
-          {onCategoryFilterChange && (
-            <select
-              className="category-filter-arrow"
-              value={categoryFilter}
-              onChange={(e) => onCategoryFilterChange(e.target.value)}
-              title="Nach Kategorie filtern"
-              aria-label="Kategorie filtern"
-            >
-              <option value="">Alle Kategorien</option>
-              {customLists.mealCategories.map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          )}
-        </div>
-        <div className="recipe-list-actions">
-          <div className="filter-group">
-            {onOpenFilterPage && (
-              <button 
-                ref={filterButtonRef}
-                className={`filter-button ${hasActiveFilters ? 'has-active-filters' : ''} ${filterPressed ? 'pressed' : ''}`}
-                style={{ '--filter-transform': filterTransform }}
-                onTouchStart={handleFilterTouchStart}
-                onTouchEnd={handleFilterTouchEnd}
-                onTouchCancel={handleFilterTouchCancel}
-                onClick={() => { onOpenFilterPage(); }}
-                onMouseDown={() => setFilterPressed(true)}
-                onMouseUp={() => setFilterPressed(false)}
-                onMouseLeave={() => setFilterPressed(false)}
-                title="Weitere Filter"
+        <div className="recipe-list-header-top">
+          <div className="recipe-list-title-area">
+            <h2>{getHeading()}</h2>
+            {onCategoryFilterChange && (
+              <select
+                className="category-filter-arrow"
+                value={categoryFilter}
+                onChange={(e) => onCategoryFilterChange(e.target.value)}
+                title="Nach Kategorie filtern"
+                aria-label="Kategorie filtern"
               >
-                {hasActiveFilters ? (
-                  isBase64Image(buttonIcons.filterButtonActive) ? (
-                    <img src={buttonIcons.filterButtonActive} alt="Filter aktiv" className="button-icon-image" />
-                  ) : (
-                    buttonIcons.filterButtonActive
-                  )
-                ) : (
-                  isBase64Image(buttonIcons.filterButton) ? (
-                    <img src={buttonIcons.filterButton} alt="Filter" className="button-icon-image" />
-                  ) : (
-                    buttonIcons.filterButton
-                  )
-                )}
-              </button>
-            )}
-            {userCanEdit && (
-              <>
-                {!activePrivateListId && (
-                  <button
-                    className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
-                    style={{ '--add-shift': `${addShift}px` }}
-                    onClick={() => onAddRecipe()}
-                    onTouchStart={() => setAddPressed(true)}
-                    onTouchEnd={() => setAddPressed(false)}
-                    onTouchCancel={() => setAddPressed(false)}
-                    onMouseDown={() => setAddPressed(true)}
-                    onMouseUp={() => setAddPressed(false)}
-                    onMouseLeave={() => setAddPressed(false)}
-                    title="Rezept hinzufügen"
-                    aria-label="Rezept hinzufügen"
-                  >
-                    {isBase64Image(buttonIcons.addRecipe) ? (
-                      <img src={buttonIcons.addRecipe} alt="Rezept hinzufügen" className="button-icon-image" />
-                    ) : (
-                      buttonIcons.addRecipe
-                    )}
-                  </button>
-                )}
-                {activePrivateListId && (
-                  <button
-                    className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
-                    style={{ '--add-shift': `${addShift}px` }}
-                    onClick={() => onAddRecipe(activePrivateListId)}
-                    onTouchStart={() => setAddPressed(true)}
-                    onTouchEnd={() => setAddPressed(false)}
-                    onTouchCancel={() => setAddPressed(false)}
-                    onMouseDown={() => setAddPressed(true)}
-                    onMouseUp={() => setAddPressed(false)}
-                    onMouseLeave={() => setAddPressed(false)}
-                    title="Privates Rezept hinzufügen"
-                    aria-label="Privates Rezept hinzufügen"
-                  >
-                    {isBase64Image(buttonIcons.addPrivateRecipe) ? (
-                      <img src={buttonIcons.addPrivateRecipe} alt="Privates Rezept hinzufügen" className="button-icon-image" />
-                    ) : (
-                      buttonIcons.addPrivateRecipe
-                    )}
-                  </button>
-                )}
-              </>
+                <option value="">Alle Kategorien</option>
+                {customLists.mealCategories.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
             )}
           </div>
-          {currentUser?.sortCarousel && (
-            <SortCarousel activeSort={activeSort} onSortChange={setActiveSort} onExpandChange={setCarouselExpanded} />
-          )}
+          <div className="recipe-list-actions">
+            <div className="filter-group">
+              {onOpenFilterPage && (
+                <button 
+                  ref={filterButtonRef}
+                  className={`filter-button ${hasActiveFilters ? 'has-active-filters' : ''} ${filterPressed ? 'pressed' : ''}`}
+                  style={{ '--filter-transform': filterTransform }}
+                  onTouchStart={handleFilterTouchStart}
+                  onTouchEnd={handleFilterTouchEnd}
+                  onTouchCancel={handleFilterTouchCancel}
+                  onClick={() => { onOpenFilterPage(); }}
+                  onMouseDown={() => setFilterPressed(true)}
+                  onMouseUp={() => setFilterPressed(false)}
+                  onMouseLeave={() => setFilterPressed(false)}
+                  title="Weitere Filter"
+                >
+                  {hasActiveFilters ? (
+                    isBase64Image(buttonIcons.filterButtonActive) ? (
+                      <img src={buttonIcons.filterButtonActive} alt="Filter aktiv" className="button-icon-image" />
+                    ) : (
+                      buttonIcons.filterButtonActive
+                    )
+                  ) : (
+                    isBase64Image(buttonIcons.filterButton) ? (
+                      <img src={buttonIcons.filterButton} alt="Filter" className="button-icon-image" />
+                    ) : (
+                      buttonIcons.filterButton
+                    )
+                  )}
+                </button>
+              )}
+              {userCanEdit && (
+                <>
+                  {!activePrivateListId && (
+                    <button
+                      className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
+                      style={{ '--add-shift': `${addShift}px` }}
+                      onClick={() => onAddRecipe()}
+                      onTouchStart={() => setAddPressed(true)}
+                      onTouchEnd={() => setAddPressed(false)}
+                      onTouchCancel={() => setAddPressed(false)}
+                      onMouseDown={() => setAddPressed(true)}
+                      onMouseUp={() => setAddPressed(false)}
+                      onMouseLeave={() => setAddPressed(false)}
+                      title="Rezept hinzufügen"
+                      aria-label="Rezept hinzufügen"
+                    >
+                      {isBase64Image(buttonIcons.addRecipe) ? (
+                        <img src={buttonIcons.addRecipe} alt="Rezept hinzufügen" className="button-icon-image" />
+                      ) : (
+                        buttonIcons.addRecipe
+                      )}
+                    </button>
+                  )}
+                  {activePrivateListId && (
+                    <button
+                      className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
+                      style={{ '--add-shift': `${addShift}px` }}
+                      onClick={() => onAddRecipe(activePrivateListId)}
+                      onTouchStart={() => setAddPressed(true)}
+                      onTouchEnd={() => setAddPressed(false)}
+                      onTouchCancel={() => setAddPressed(false)}
+                      onMouseDown={() => setAddPressed(true)}
+                      onMouseUp={() => setAddPressed(false)}
+                      onMouseLeave={() => setAddPressed(false)}
+                      title="Privates Rezept hinzufügen"
+                      aria-label="Privates Rezept hinzufügen"
+                    >
+                      {isBase64Image(buttonIcons.addPrivateRecipe) ? (
+                        <img src={buttonIcons.addPrivateRecipe} alt="Privates Rezept hinzufügen" className="button-icon-image" />
+                      ) : (
+                        buttonIcons.addPrivateRecipe
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            {currentUser?.sortCarousel && (
+              <SortCarousel activeSort={activeSort} onSortChange={setActiveSort} onExpandChange={setCarouselExpanded} />
+            )}
+          </div>
         </div>
+
+        {hasActiveFilterBar && (
+          <div className="active-filters-bar">
+            {searchTerm?.trim() && (
+              <span className="active-filter-chip active-filter-chip--search">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                {searchTerm.trim()}
+                {onClearSearch && (
+                  <button
+                    className="active-filter-chip-clear"
+                    onClick={onClearSearch}
+                    aria-label="Suche zurücksetzen"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                  </button>
+                )}
+              </span>
+            )}
+            {activeFilters?.selectedCuisines?.length > 0 && (
+              <span className="active-filter-chip active-filter-chip--cuisine">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                {activeFilters.selectedCuisines.join(', ')}
+                {onClearCuisineFilter && (
+                  <button
+                    className="active-filter-chip-clear"
+                    onClick={onClearCuisineFilter}
+                    aria-label="Kulinarikfilter zurücksetzen"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                  </button>
+                )}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-
-      {searchTerm && searchTerm.trim() && (
-        <div className="search-active-indicator">
-          <span className="search-active-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            {searchTerm.trim()}
-          </span>
-          {onClearSearch && (
-            <button
-              className="search-active-clear"
-              onClick={onClearSearch}
-              aria-label="Suche zurücksetzen"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
-
-      {activeFilters?.selectedCuisines?.length > 0 && (
-        <div className="cuisine-filter-indicator">
-          <span className="cuisine-filter-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-            </svg>
-            {activeFilters.selectedCuisines.join(', ')}
-          </span>
-          {onClearCuisineFilter && (
-            <button
-              className="cuisine-filter-clear"
-              onClick={onClearCuisineFilter}
-              aria-label="Kulinarikfilter zurücksetzen"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
       
       {recipeGroups.length === 0 ? (
         <div className="empty-state">

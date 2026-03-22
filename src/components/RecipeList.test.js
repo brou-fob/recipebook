@@ -1008,6 +1008,139 @@ describe('RecipeList - SortCarousel Visibility', () => {
   });
 });
 
+describe('RecipeList - Active Filters Bar', () => {
+  const recipes = [{ id: '1', title: 'Recipe A' }];
+
+  beforeEach(() => {
+    jest.spyOn(userFavorites, 'getUserFavorites').mockResolvedValue([]);
+    jest.spyOn(require('../utils/customLists'), 'getButtonIcons').mockResolvedValue({
+      filterButton: '⚙',
+    });
+    jest.spyOn(require('../utils/recipeRatings'), 'getUserRating').mockResolvedValue(null);
+    jest.spyOn(require('../utils/recipeRatings'), 'subscribeToRatingSummary').mockImplementation(() => () => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('does not show active-filters-bar when no filters are active', () => {
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{}}
+      />
+    );
+
+    expect(document.querySelector('.active-filters-bar')).not.toBeInTheDocument();
+  });
+
+  test('shows active-filters-bar with search chip when searchTerm is set', () => {
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{}}
+        searchTerm="Pasta"
+      />
+    );
+
+    const bar = document.querySelector('.active-filters-bar');
+    expect(bar).toBeInTheDocument();
+    const searchChip = document.querySelector('.active-filter-chip--search');
+    expect(searchChip).toBeInTheDocument();
+    expect(searchChip).toHaveTextContent('Pasta');
+  });
+
+  test('shows active-filters-bar with cuisine chip when selectedCuisines are set', () => {
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{ selectedCuisines: ['Italienisch', 'Asiatisch'] }}
+      />
+    );
+
+    const bar = document.querySelector('.active-filters-bar');
+    expect(bar).toBeInTheDocument();
+    const cuisineChip = document.querySelector('.active-filter-chip--cuisine');
+    expect(cuisineChip).toBeInTheDocument();
+    expect(cuisineChip).toHaveTextContent('Italienisch, Asiatisch');
+  });
+
+  test('shows both chips when both search and cuisine filters are active', () => {
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{ selectedCuisines: ['Japanisch'] }}
+        searchTerm="Sushi"
+      />
+    );
+
+    expect(document.querySelector('.active-filter-chip--search')).toBeInTheDocument();
+    expect(document.querySelector('.active-filter-chip--cuisine')).toBeInTheDocument();
+  });
+
+  test('search chip clear button calls onClearSearch', () => {
+    const onClearSearch = jest.fn();
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{}}
+        searchTerm="Test"
+        onClearSearch={onClearSearch}
+      />
+    );
+
+    const clearBtn = document.querySelector('.active-filter-chip--search .active-filter-chip-clear');
+    expect(clearBtn).toBeInTheDocument();
+    fireEvent.click(clearBtn);
+    expect(onClearSearch).toHaveBeenCalledTimes(1);
+  });
+
+  test('cuisine chip clear button calls onClearCuisineFilter', () => {
+    const onClearCuisineFilter = jest.fn();
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{ selectedCuisines: ['Mexikanisch'] }}
+        onClearCuisineFilter={onClearCuisineFilter}
+      />
+    );
+
+    const clearBtn = document.querySelector('.active-filter-chip--cuisine .active-filter-chip-clear');
+    expect(clearBtn).toBeInTheDocument();
+    fireEvent.click(clearBtn);
+    expect(onClearCuisineFilter).toHaveBeenCalledTimes(1);
+  });
+
+  test('active-filters-bar is inside recipe-list-header', () => {
+    render(
+      <RecipeList
+        recipes={recipes}
+        onSelectRecipe={() => {}}
+        onAddRecipe={() => {}}
+        activeFilters={{}}
+        searchTerm="Test"
+      />
+    );
+
+    const header = document.querySelector('.recipe-list-header');
+    const bar = document.querySelector('.active-filters-bar');
+    expect(header).toContainElement(bar);
+  });
+});
+
 describe('RecipeList - SortCarousel persistence', () => {
   const recipes = [{ id: '1', title: 'Recipe A' }];
   const userWithPermission = { id: 'user-1', role: 'admin', sortCarousel: true };
