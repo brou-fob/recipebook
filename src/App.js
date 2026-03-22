@@ -210,6 +210,7 @@ function App() {
     showDrafts: 'all',
     selectedCuisines: [],
     selectedAuthors: [],
+    selectedPrivateLists: [],
     selectedGroup: ''
   });
   const recipeCountsInitialized = useRef(false);
@@ -982,11 +983,25 @@ function App() {
     setRecipeFilters(prev => ({ ...prev, selectedAuthors: newSelectedAuthors }));
   };
 
+  const handlePrivateListFilterChangeFromSearch = (newSelectedPrivateLists) => {
+    setRecipeFilters(prev => ({ ...prev, selectedPrivateLists: newSelectedPrivateLists }));
+  };
+
   const availableAuthorsForSearch = useMemo(
     () => allUsers
       .filter(u => recipes.some(r => r.authorId === u.id))
       .map(u => ({ id: u.id, name: u.vorname })),
     [allUsers, recipes]
+  );
+
+  const privateListsForSearch = useMemo(
+    () => groups.filter(
+      (g) =>
+        g.type === 'private' &&
+        (g.ownerId === currentUser?.id ||
+          (Array.isArray(g.memberIds) && g.memberIds.includes(currentUser?.id)))
+    ),
+    [groups, currentUser]
   );
 
   const handleCancelFilterPage = () => {
@@ -1292,6 +1307,9 @@ function App() {
         availableAuthors={availableAuthorsForSearch}
         onAuthorFilterChange={handleAuthorFilterChangeFromSearch}
         selectedAuthors={recipeFilters.selectedAuthors}
+        privateLists={privateListsForSearch}
+        onPrivateListFilterChange={handlePrivateListFilterChangeFromSearch}
+        selectedPrivateLists={recipeFilters.selectedPrivateLists}
       />
     </div>
   );

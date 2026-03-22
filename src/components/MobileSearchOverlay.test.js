@@ -379,3 +379,115 @@ describe('MobileSearchOverlay – active cuisine pills shown leftmost', () => {
     }
   });
 });
+
+describe('MobileSearchOverlay – private list carousel', () => {
+  const mockPrivateLists = [
+    { id: 'pl1', name: 'Lieblingsrezepte', type: 'private', ownerId: 'user1', memberIds: [] },
+    { id: 'pl2', name: 'Familienrezepte', type: 'private', ownerId: 'other', memberIds: ['user1'] },
+    { id: 'pl3', name: 'Vegane Liste', type: 'private', ownerId: 'other', memberIds: ['user1'] },
+  ];
+
+  const loggedInUser = { id: 'user1' };
+
+  beforeEach(() => {
+    localStorage.clear();
+    const { expandCuisineSelection } = require('../utils/customLists');
+    expandCuisineSelection.mockImplementation((selected) => selected);
+  });
+
+  test('shows private list pills for logged-in user', () => {
+    renderOverlay({
+      currentUser: loggedInUser,
+      privateLists: mockPrivateLists,
+      onPrivateListFilterChange: jest.fn(),
+    });
+    expect(screen.getByText('Lieblingsrezepte')).toBeInTheDocument();
+    expect(screen.getByText('Familienrezepte')).toBeInTheDocument();
+    expect(screen.getByText('Vegane Liste')).toBeInTheDocument();
+  });
+
+  test('does not show private list carousel when user is not logged in', () => {
+    renderOverlay({
+      currentUser: null,
+      privateLists: mockPrivateLists,
+      onPrivateListFilterChange: jest.fn(),
+    });
+    expect(screen.queryByText('Lieblingsrezepte')).not.toBeInTheDocument();
+    expect(screen.queryByText('Familienrezepte')).not.toBeInTheDocument();
+  });
+
+  test('does not show private list carousel when no private lists are provided', () => {
+    renderOverlay({
+      currentUser: loggedInUser,
+      privateLists: [],
+      onPrivateListFilterChange: jest.fn(),
+    });
+    expect(screen.queryByText('Lieblingsrezepte')).not.toBeInTheDocument();
+  });
+
+  test('filters private list pills by search term', async () => {
+    renderOverlay({
+      currentUser: loggedInUser,
+      privateLists: mockPrivateLists,
+      onPrivateListFilterChange: jest.fn(),
+    });
+    const input = screen.getByRole('searchbox');
+
+    fireEvent.change(input, { target: { value: 'fami' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Familienrezepte')).toBeInTheDocument();
+      expect(screen.queryByText('Lieblingsrezepte')).not.toBeInTheDocument();
+      expect(screen.queryByText('Vegane Liste')).not.toBeInTheDocument();
+    });
+  });
+
+  test('private list pill filtering is case-insensitive', async () => {
+    renderOverlay({
+      currentUser: loggedInUser,
+      privateLists: mockPrivateLists,
+      onPrivateListFilterChange: jest.fn(),
+    });
+    const input = screen.getByRole('searchbox');
+
+    fireEvent.change(input, { target: { value: 'VEGAN' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Vegane Liste')).toBeInTheDocument();
+      expect(screen.queryByText('Lieblingsrezepte')).not.toBeInTheDocument();
+    });
+  });
+
+  test('clicking a private list pill calls onPrivateListFilterChange', () => {
+    const onPrivateListFilterChange = jest.fn();
+    renderOverlay({
+      currentUser: loggedInUser,
+      privateLists: mockPrivateLists,
+      onPrivateListFilterChange,
+    });
+
+    fireEvent.click(screen.getByText('Lieblingsrezepte'));
+    expect(onPrivateListFilterChange).toHaveBeenCalledWith(['pl1']);
+  });
+
+  test('active private list pill is shown first', () => {
+    const onPrivateListFilterChange = jest.fn();
+    renderOverlay({
+      currentUser: loggedInUser,
+      privateLists: mockPrivateLists,
+      onPrivateListFilterChange,
+    });
+
+    // Click the last pill to make it active
+    fireEvent.click(screen.getByText('Vegane Liste'));
+
+    expect(onPrivateListFilterChange).toHaveBeenCalledWith(['pl3']);
+
+    // The active pill should now be the first private list pill
+    const listPills = screen
+      .getAllByRole('button')
+      .filter((btn) => mockPrivateLists.some((pl) => pl.name === btn.textContent));
+    expect(listPills[0].textContent).toBe('Vegane Liste');
+    expect(listPills[0]).toHaveClass('active');
+  });
+});
