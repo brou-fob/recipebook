@@ -364,9 +364,6 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
       >
         {/* Tiles carousel – displayed at the top of the panel */}
         <div className="mobile-search-results" role="listbox" aria-label="Suchergebnisse">
-          {!debouncedTerm && !showFavoritesOnly && selectedCuisines.length === 0 && (
-            <p className="mobile-search-hint">Suchbegriff eingeben …</p>
-          )}
           {debouncedTerm && filteredRecipes.length === 0 && (
             <p className="mobile-search-no-results">
               {showFavoritesOnly ? 'Kein Favorit gefunden' : 'Keine Rezepte gefunden'}
