@@ -217,6 +217,53 @@
   border-left: 4px solid #402C1C;
 }
 
+.new-cuisine-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 0.75rem;
+  align-items: center;
+}
+
+.new-cuisine-input input[type="text"] {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: auto;
+}
+
+.new-cuisine-input input[type="text"]:focus {
+  outline: none;
+  border-color: #402C1C;
+}
+
+.new-cuisine-input button {
+  padding: 0.5rem 1rem;
+  background-color: #402C1C;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.new-cuisine-input button:hover:not(:disabled) {
+  background-color: #5a3e2b;
+}
+
+.new-cuisine-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.new-cuisine-error {
+  margin-top: 0.4rem;
+  color: #c62828;
+  font-size: 0.85rem;
+}
+
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
