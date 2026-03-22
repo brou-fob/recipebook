@@ -163,7 +163,7 @@ describe('MobileSearchOverlay – dynamic cuisine type expansion on search', () 
 
     await waitFor(() => {
       const pills = screen.getAllByRole('button', { name: /isch/i });
-      // Exactly 5 cuisine type pills (the cancel button does not match /isch/)
+      // Exactly 5 cuisine type pills
       expect(pills.length).toBe(5);
     });
   });

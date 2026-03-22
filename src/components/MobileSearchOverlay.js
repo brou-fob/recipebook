@@ -461,13 +461,6 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
               </button>
             )}
           </div>
-          <button
-            className="mobile-search-cancel-btn"
-            onClick={onClose}
-            aria-label="Suche abbrechen"
-          >
-            Abbrechen
-          </button>
         </div>
       </div>
     </div>
