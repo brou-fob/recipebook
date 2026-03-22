@@ -64,13 +64,14 @@ function computeTopCuisineTypes(recipes, cuisineTypes) {
   return computeAllSortedCuisineTypes(recipes, cuisineTypes).slice(0, MAX_CUISINE_TYPE_PILLS);
 }
 
-function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups, onCuisineFilterChange, selectedCuisines: selectedCuisinesProp, availableAuthors, onAuthorFilterChange, selectedAuthors: selectedAuthorsProp }) {
+function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups, onCuisineFilterChange, selectedCuisines: selectedCuisinesProp, availableAuthors, onAuthorFilterChange, selectedAuthors: selectedAuthorsProp, privateLists, onPrivateListFilterChange, selectedPrivateLists: selectedPrivateListsProp }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [selectedCuisines, setSelectedCuisines] = useState([]);
   const [selectedAuthors, setSelectedAuthors] = useState([]);
+  const [selectedPrivateLists, setSelectedPrivateLists] = useState([]);
   // panelBottom tracks how far from the bottom of the screen the panel sits
   // (= 0 normally, > 0 when the software keyboard is visible on iOS)
   const [panelBottom, setPanelBottom] = useState(0);
@@ -81,6 +82,8 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
   selectedCuisinesPropRef.current = selectedCuisinesProp;
   const selectedAuthorsPropRef = useRef(selectedAuthorsProp);
   selectedAuthorsPropRef.current = selectedAuthorsProp;
+  const selectedPrivateListsPropRef = useRef(selectedPrivateListsProp);
+  selectedPrivateListsPropRef.current = selectedPrivateListsProp;
 
   // Load favorite IDs when currentUser changes
   useEffect(() => {
@@ -103,6 +106,7 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
       setShowFavoritesOnly(showFavoritesOnlyProp ?? false);
       setSelectedCuisines(selectedCuisinesPropRef.current ?? []);
       setSelectedAuthors(selectedAuthorsPropRef.current ?? []);
+      setSelectedPrivateLists(selectedPrivateListsPropRef.current ?? []);
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, FOCUS_DELAY_MS);
@@ -170,8 +174,17 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
     if (selectedAuthors.length > 0) {
       list = list.filter((r) => selectedAuthors.includes(r.authorId));
     }
+    if (selectedPrivateLists.length > 0) {
+      list = list.filter((r) =>
+        selectedPrivateLists.some((listId) => {
+          if (r.groupId === listId) return true;
+          const pl = (privateLists || []).find((g) => g.id === listId);
+          return Array.isArray(pl?.recipeIds) && pl.recipeIds.includes(r.id);
+        })
+      );
+    }
     return list;
-  }, [recipes, showFavoritesOnly, favoriteIds, selectedCuisines, cuisineGroups, selectedAuthors]);
+  }, [recipes, showFavoritesOnly, favoriteIds, selectedCuisines, cuisineGroups, selectedAuthors, selectedPrivateLists, privateLists]);
 
   const filteredRecipes = fuzzyFilter(
     baseRecipes,
@@ -238,6 +251,17 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
         ? prev.filter((a) => a !== authorId)
         : [...prev, authorId];
       onAuthorFilterChange?.(newValue);
+      return newValue;
+    });
+  };
+
+  const handlePrivateListPillClick = (listId) => {
+    setSelectedPrivateLists((prev) => {
+      const isSelected = prev.includes(listId);
+      const newValue = isSelected
+        ? prev.filter((l) => l !== listId)
+        : [...prev, listId];
+      onPrivateListFilterChange?.(newValue);
       return newValue;
     });
   };
@@ -310,6 +334,18 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
     const inactive = authors.filter((a) => !selectedAuthors.includes(a.id));
     return [...active, ...inactive];
   }, [availableAuthors, selectedAuthors, debouncedTerm]);
+
+  // Private list pills: filtered by search term, active (selected) lists shown first
+  const orderedPrivateListPills = useMemo(() => {
+    let lists = privateLists || [];
+    if (debouncedTerm) {
+      const lower = debouncedTerm.toLowerCase();
+      lists = lists.filter((l) => l.name.toLowerCase().includes(lower));
+    }
+    const active = lists.filter((l) => selectedPrivateLists.includes(l.id));
+    const inactive = lists.filter((l) => !selectedPrivateLists.includes(l.id));
+    return [...active, ...inactive];
+  }, [privateLists, selectedPrivateLists, debouncedTerm]);
 
   if (!isOpen) return null;
 
@@ -419,6 +455,24 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
                 title={selectedAuthors.includes(author.id) ? 'Filter aufheben' : `Nach ${author.name} filtern`}
               >
                 {author.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Private Listen-Karussell – single-row horizontal carousel below the author filter */}
+        {/* Only visible for logged-in users; active (selected) lists shown first */}
+        {currentUser && orderedPrivateListPills.length > 0 && (
+          <div className="mobile-search-private-list-grid">
+            {orderedPrivateListPills.map((list) => (
+              <button
+                key={list.id}
+                className={`mobile-search-filter-pill mobile-search-cuisine-pill${selectedPrivateLists.includes(list.id) ? ' active' : ''}`}
+                onClick={() => handlePrivateListPillClick(list.id)}
+                aria-pressed={selectedPrivateLists.includes(list.id)}
+                title={selectedPrivateLists.includes(list.id) ? 'Filter aufheben' : `Nach ${list.name} filtern`}
+              >
+                {list.name}
               </button>
             ))}
           </div>
