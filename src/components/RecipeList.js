@@ -82,6 +82,25 @@ function sortRecipeGroups(groups, sortType, sortSettings, viewCounts) {
 
 const SORT_STORAGE_KEY = 'recipebook_active_sort';
 const LONG_PRESS_DELAY_MS = 500;
+const MAX_KULINARIK_TAGS = 5;
+
+function renderKulinarikTags(kulinarik) {
+  if (!Array.isArray(kulinarik)) {
+    return <span className="kulinarik-tag">{kulinarik}</span>;
+  }
+  const displayed = kulinarik.slice(0, MAX_KULINARIK_TAGS);
+  const remaining = kulinarik.length - MAX_KULINARIK_TAGS;
+  return (
+    <>
+      {displayed.map((k, i) => (
+        <span key={k} className="kulinarik-tag">{k}</span>
+      ))}
+      {remaining > 0 && (
+        <span className="kulinarik-tag kulinarik-tag-more">+{remaining} weitere</span>
+      )}
+    </>
+  );
+}
 
 function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, currentUser, onCategoryFilterChange, searchTerm, onOpenFilterPage, onOpenSearch, onClearSearch, activePrivateListName, activePrivateListId, activeFilters, onClearCuisineFilter, showFavoritesOnly: showFavoritesOnlyProp, onShowFavoritesOnlyChange }) {
   const hasActiveFilters = !!(activeFilters && (
@@ -513,9 +532,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                   {recipe.kulinarik && (Array.isArray(recipe.kulinarik) ? recipe.kulinarik.length > 0 : recipe.kulinarik.trim().length > 0) && (
                     <div className="recipe-kulinarik">
                       {Array.isArray(recipe.kulinarik)
-                        ? recipe.kulinarik.map((k, i) => (
-                            <span key={i} className="kulinarik-tag">{k}</span>
-                          ))
+                        ? renderKulinarikTags(recipe.kulinarik)
                         : <span className="kulinarik-tag">{recipe.kulinarik}</span>
                       }
                     </div>

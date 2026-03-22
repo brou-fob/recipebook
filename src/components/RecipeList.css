@@ -287,6 +287,9 @@
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.25rem;
+  overflow: hidden;
+  /* Limits display to ~2 lines: 2 × (0.78rem font + 0.15rem top + 0.15rem bottom padding) + 0.4rem row gap ≈ 2.56rem; 3.2rem adds a small buffer */
+  max-height: 3.2rem;
 }
 
 .kulinarik-tag {
@@ -297,6 +300,10 @@
   padding: 0.15rem 0.6rem;
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.kulinarik-tag-more {
+  background: linear-gradient(135deg, #888 0%, #555 100%);
 }
 
 .recipe-footer {
