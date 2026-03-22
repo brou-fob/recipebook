@@ -205,6 +205,7 @@ function App() {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [cuisineGroups, setCuisineGroups] = useState([]);
+  const [cuisineTypes, setCuisineTypes] = useState([]);
   const [recipeFilters, setRecipeFilters] = useState({
     showDrafts: 'all',
     selectedCuisines: [],
@@ -363,8 +364,10 @@ function App() {
   useEffect(() => {
     getCustomLists().then(lists => {
       setCuisineGroups(lists.cuisineGroups || []);
+      setCuisineTypes(lists.cuisineTypes || []);
     }).catch(() => {
       setCuisineGroups([]);
+      setCuisineTypes([]);
     });
   }, []);
 
@@ -1267,6 +1270,8 @@ function App() {
         onSearch={handleApplySearch}
         showFavoritesOnly={showFavoritesOnly}
         onFavoritesToggle={setShowFavoritesOnly}
+        cuisineTypes={cuisineTypes}
+        cuisineGroups={cuisineGroups}
       />
     </div>
   );

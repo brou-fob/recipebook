@@ -1,18 +1,68 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './MobileSearchOverlay.css';
 import { fuzzyFilter } from '../utils/fuzzySearch';
 import { getUserFavorites } from '../utils/userFavorites';
+import { expandCuisineSelection } from '../utils/customLists';
 
 const DEBOUNCE_DELAY_MS = 200;
 // Delay in ms before auto-focusing the input – gives the slide-up animation
 // a head-start before the keyboard appears, preventing a jarring layout jump.
 const FOCUS_DELAY_MS = 120;
 
-function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle }) {
+const MAX_CUISINE_TYPE_PILLS = 5;
+const CUISINE_USAGE_STORAGE_KEY = 'mobileSearch_cuisineUsage';
+
+function getCuisineUsageCounts() {
+  try {
+    const stored = localStorage.getItem(CUISINE_USAGE_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function incrementCuisineUsage(cuisineName) {
+  const counts = getCuisineUsageCounts();
+  counts[cuisineName] = (counts[cuisineName] || 0) + 1;
+  try {
+    localStorage.setItem(CUISINE_USAGE_STORAGE_KEY, JSON.stringify(counts));
+  } catch (e) {
+    // ignore storage errors
+  }
+}
+
+/**
+ * Compute the top cuisine type pills from the given recipes.
+ * Sorts by: usage frequency (localStorage) desc, then recipe count desc.
+ * Returns at most MAX_CUISINE_TYPE_PILLS entries.
+ */
+function computeTopCuisineTypes(recipes, cuisineTypes) {
+  if (!cuisineTypes || cuisineTypes.length === 0) return [];
+  const recipeList = recipes || [];
+  const recipeCounts = {};
+  recipeList.forEach((recipe) => {
+    const kulinarik = Array.isArray(recipe.kulinarik) ? recipe.kulinarik : [];
+    kulinarik.forEach((k) => {
+      recipeCounts[k] = (recipeCounts[k] || 0) + 1;
+    });
+  });
+  const usageCounts = getCuisineUsageCounts();
+  return cuisineTypes
+    .filter((type) => recipeCounts[type] > 0)
+    .sort((a, b) => {
+      const usageDiff = (usageCounts[b] || 0) - (usageCounts[a] || 0);
+      if (usageDiff !== 0) return usageDiff;
+      return (recipeCounts[b] || 0) - (recipeCounts[a] || 0);
+    })
+    .slice(0, MAX_CUISINE_TYPE_PILLS);
+}
+
+function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearch, currentUser, showFavoritesOnly: showFavoritesOnlyProp, onFavoritesToggle, cuisineTypes, cuisineGroups }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [selectedCuisine, setSelectedCuisine] = useState(null);
   // panelBottom tracks how far from the bottom of the screen the panel sits
   // (= 0 normally, > 0 when the software keyboard is visible on iOS)
   const [panelBottom, setPanelBottom] = useState(0);
@@ -37,6 +87,7 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
       setSearchTerm('');
       setDebouncedTerm('');
       setShowFavoritesOnly(showFavoritesOnlyProp ?? false);
+      setSelectedCuisine(null);
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, FOCUS_DELAY_MS);
@@ -89,9 +140,20 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
     };
   }, [isOpen]);
 
-  const baseRecipes = showFavoritesOnly
-    ? (recipes || []).filter((r) => favoriteIds.includes(r.id))
-    : (recipes || []);
+  const baseRecipes = useMemo(() => {
+    let list = recipes || [];
+    if (showFavoritesOnly) {
+      list = list.filter((r) => favoriteIds.includes(r.id));
+    }
+    if (selectedCuisine) {
+      const expanded = expandCuisineSelection([selectedCuisine], cuisineGroups || []);
+      list = list.filter((r) => {
+        const kulinarik = Array.isArray(r.kulinarik) ? r.kulinarik : [];
+        return expanded.some((c) => kulinarik.includes(c));
+      });
+    }
+    return list;
+  }, [recipes, showFavoritesOnly, favoriteIds, selectedCuisine, cuisineGroups]);
 
   const filteredRecipes = fuzzyFilter(
     baseRecipes,
@@ -122,6 +184,27 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
     inputRef.current?.focus();
   };
 
+  const topCuisineTypes = useMemo(
+    () => computeTopCuisineTypes(recipes, cuisineTypes),
+    [recipes, cuisineTypes]
+    // Note: getCuisineUsageCounts() is read inside computeTopCuisineTypes from localStorage.
+    // The sort order is intentionally computed once per overlay open (when recipes/cuisineTypes change),
+    // and will reflect updated usage counts the next time the overlay opens.
+  );
+
+  const handleCuisinePillClick = (cuisineName) => {
+    const newValue = selectedCuisine === cuisineName ? null : cuisineName;
+    setSelectedCuisine(newValue);
+    if (newValue) {
+      incrementCuisineUsage(cuisineName);
+    }
+  };
+
+  const cuisinePills = [
+    ...topCuisineTypes,
+    ...(cuisineGroups || []).map((g) => g.name),
+  ];
+
   if (!isOpen) return null;
 
   return (
@@ -139,7 +222,7 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
       >
         {/* Tiles grid – displayed in the upper portion of the panel */}
         <div className="mobile-search-results" role="listbox" aria-label="Suchergebnisse">
-          {!debouncedTerm && !showFavoritesOnly && (
+          {!debouncedTerm && !showFavoritesOnly && !selectedCuisine && (
             <p className="mobile-search-hint">Suchbegriff eingeben …</p>
           )}
           {debouncedTerm && filteredRecipes.length === 0 && (
@@ -149,6 +232,9 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
           )}
           {!debouncedTerm && filteredRecipes.length === 0 && showFavoritesOnly && (
             <p className="mobile-search-no-results">Keine favorisierten Rezepte</p>
+          )}
+          {!debouncedTerm && filteredRecipes.length === 0 && selectedCuisine && !showFavoritesOnly && (
+            <p className="mobile-search-no-results">Keine Rezepte für diesen Kulinariktyp</p>
           )}
           {filteredRecipes.length > 0 && (
             <div className="mobile-search-tiles-grid">
@@ -191,6 +277,17 @@ function MobileSearchOverlay({ isOpen, onClose, recipes, onSelectRecipe, onSearc
             >
               ★ Favoriten
             </button>
+            {cuisinePills.map((name) => (
+              <button
+                key={name}
+                className={`mobile-search-filter-pill mobile-search-cuisine-pill${selectedCuisine === name ? ' active' : ''}`}
+                onClick={() => handleCuisinePillClick(name)}
+                aria-pressed={selectedCuisine === name}
+                title={selectedCuisine === name ? 'Filter aufheben' : `Nach ${name} filtern`}
+              >
+                {name}
+              </button>
+            ))}
           </div>
         </div>
 
