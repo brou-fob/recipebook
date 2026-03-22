@@ -11,7 +11,6 @@ import MenuForm from './components/MenuForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import PasswordChangeModal from './components/PasswordChangeModal';
-import FilterPage from './components/FilterPage';
 import Kueche from './components/Kueche';
 import SharePage from './components/SharePage';
 import MenuSharePage from './components/MenuSharePage';
@@ -212,7 +211,6 @@ function App() {
   const [headerVisible, setHeaderVisible] = useState(true);
   const headerRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFilterPageOpen, setIsFilterPageOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [cuisineGroups, setCuisineGroups] = useState([]);
@@ -979,13 +977,16 @@ function App() {
     }
   };
 
-  const handleOpenFilterPage = () => {
-    setIsFilterPageOpen(true);
-  };
-
-  const handleApplyFilters = (filters) => {
-    setRecipeFilters(filters);
-    setIsFilterPageOpen(false);
+  const handleClearAllFilters = () => {
+    setRecipeFilters({
+      showDrafts: 'all',
+      selectedCuisines: [],
+      selectedAuthors: [],
+      selectedPrivateLists: [],
+      selectedGroup: ''
+    });
+    setShowFavoritesOnly(false);
+    handleClearSearch();
   };
 
   const handleClearCuisineFilter = () => {
@@ -1020,10 +1021,6 @@ function App() {
     ),
     [groups, currentUser]
   );
-
-  const handleCancelFilterPage = () => {
-    setIsFilterPageOpen(false);
-  };
 
   const handleUniversalImport = (recipe) => {
     setShowUniversalImport(false);
@@ -1253,16 +1250,6 @@ function App() {
       ) : (
         // Recipe views
         <>
-          {isFilterPageOpen && (
-            <FilterPage
-              currentFilters={recipeFilters}
-              onApply={handleApplyFilters}
-              onCancel={handleCancelFilterPage}
-              availableAuthors={allUsers.filter(u => (u.recipe_count ?? 0) > 0).map(u => ({ id: u.id, name: u.vorname }))}
-              isAdmin={currentUser?.isAdmin || false}
-              privateGroups={groups.filter(g => g.type === 'private')}
-            />
-          )}
           <RecipeList
             recipes={recipes.filter(recipe => 
               matchesCategoryFilter(recipe, categoryFilter) && 
@@ -1278,13 +1265,13 @@ function App() {
             onCategoryFilterChange={handleCategoryFilterChange}
             currentUser={currentUser}
             searchTerm={searchTerm}
-            onOpenFilterPage={handleOpenFilterPage}
             onOpenSearch={handleOpenSearch}
             onClearSearch={handleClearSearch}
             activePrivateListName={activePrivateListName}
             activePrivateListId={recipeFilters.selectedGroup || (recipeFilters.selectedPrivateLists.length === 1 ? recipeFilters.selectedPrivateLists[0] : null)}
             activeFilters={recipeFilters}
             onClearCuisineFilter={handleClearCuisineFilter}
+            onClearAllFilters={handleClearAllFilters}
             showFavoritesOnly={showFavoritesOnly}
             onShowFavoritesOnlyChange={setShowFavoritesOnly}
           />

@@ -627,7 +627,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
       />
     );
 
@@ -653,7 +653,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
       />
     );
 
@@ -679,7 +679,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
         activeFilters={{ selectedGroup: 'Vorspeisen' }}
       />
     );
@@ -702,7 +702,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
         activeFilters={{}}
       />
     );
@@ -727,7 +727,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
         activeFilters={{ selectedGroup: 'Hauptgerichte' }}
       />
     );
@@ -753,7 +753,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
         activeFilters={{}}
         showFavoritesOnly={true}
       />
@@ -777,7 +777,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
         activeFilters={{}}
         showFavoritesOnly={false}
       />
@@ -801,7 +801,7 @@ describe('RecipeList - Filter Button Icon', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
         activeFilters={{}}
         searchTerm="Pasta"
       />
@@ -1200,7 +1200,7 @@ describe('RecipeList - Filter Button Visibility', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
       />
     );
 
@@ -1215,7 +1215,7 @@ describe('RecipeList - Filter Button Visibility', () => {
         recipes={mockRecipes}
         onSelectRecipe={() => {}}
         onAddRecipe={() => {}}
-        onOpenFilterPage={() => {}}
+        onClearAllFilters={() => {}}
       />
     );
 

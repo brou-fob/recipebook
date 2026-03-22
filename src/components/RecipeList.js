@@ -102,7 +102,7 @@ function renderKulinarikTags(kulinarik) {
   );
 }
 
-function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, currentUser, onCategoryFilterChange, searchTerm, onOpenFilterPage, onOpenSearch, onClearSearch, activePrivateListName, activePrivateListId, activeFilters, onClearCuisineFilter, showFavoritesOnly: showFavoritesOnlyProp, onShowFavoritesOnlyChange }) {
+function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, currentUser, onCategoryFilterChange, searchTerm, onOpenSearch, onClearSearch, activePrivateListName, activePrivateListId, activeFilters, onClearCuisineFilter, onClearAllFilters, showFavoritesOnly: showFavoritesOnlyProp, onShowFavoritesOnlyChange }) {
   const hasActiveFilters = !!(searchTerm?.trim() || showFavoritesOnlyProp || (activeFilters && (
     activeFilters.selectedGroup ||
     activeFilters.selectedCuisines?.length > 0 ||
@@ -254,7 +254,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     e.preventDefault();
     if (filterLongPressed.current) {
       filterLongPressed.current = false;
-      onOpenFilterPage?.();
+      onClearAllFilters?.();
     } else {
       onOpenSearch?.();
     }
@@ -352,15 +352,14 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
           </div>
           <div className="recipe-list-actions">
             <div className="filter-group">
-              {onOpenFilterPage && (
-                <button 
+              <button 
                   ref={filterButtonRef}
                   className={`filter-button ${hasActiveFilters ? 'has-active-filters' : ''} ${filterPressed ? 'pressed' : ''}`}
                   style={{ '--filter-transform': filterTransform }}
                   onTouchStart={handleFilterTouchStart}
                   onTouchEnd={handleFilterTouchEnd}
                   onTouchCancel={handleFilterTouchCancel}
-                  onClick={() => { onOpenFilterPage(); }}
+                  onClick={() => { onOpenSearch?.(); }}
                   onMouseDown={() => setFilterPressed(true)}
                   onMouseUp={() => setFilterPressed(false)}
                   onMouseLeave={() => setFilterPressed(false)}
@@ -380,7 +379,6 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                     )
                   )}
                 </button>
-              )}
               {userCanEdit && (
                 <>
                   {!activePrivateListId && (
