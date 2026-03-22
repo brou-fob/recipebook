@@ -273,9 +273,6 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   // Whether the current user can rename cuisine types and meal categories
   const canEditLists = isAdmin || rolePermissions?.[currentUser?.role]?.editLists === true;
 
-  // Active calculations abort state
-  const [abortingCalcId, setAbortingCalcId] = useState(null);
-
   // Cleanup timeout on unmount
   useEffect(() => {
     const loadSettings = async () => {
@@ -1123,24 +1120,6 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
     setTimelineCookEventDefaultImage(null);
   };
 
-  const handleAbortCalcForRecipe = async (recipe) => {
-    if (!onUpdateRecipe) return;
-    setAbortingCalcId(recipe.id);
-    try {
-      await onUpdateRecipe(recipe.id, {
-        naehrwerte: {
-          ...(recipe.naehrwerte || {}),
-          calcPending: false,
-          calcError: 'Berechnung abgebrochen',
-        },
-      });
-    } catch (err) {
-      console.error('Error aborting calculation:', err);
-    } finally {
-      setAbortingCalcId(null);
-    }
-  };
-
   return (
     <div className="settings-container">
       <div className="settings-header">
@@ -1196,48 +1175,6 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
       <div className="settings-content">
         {activeTab === 'general' ? (
           <>
-            {rolePermissions?.[currentUser?.role]?.abortCalc && (
-              <div className="settings-section">
-                <h3>Aktive Nährwertberechnungen</h3>
-                <p className="section-description">
-                  Übersicht aller Rezepte, bei denen gerade eine Nährwertberechnung läuft. Sie können einzelne Berechnungen hier gezielt abbrechen.
-                </p>
-                {(() => {
-                  const pending = allRecipes.filter(r => r.naehrwerte?.calcPending === true);
-                  if (pending.length === 0) {
-                    return <p className="section-description">Keine aktiven Berechnungen vorhanden.</p>;
-                  }
-                  return (
-                    <table className="role-permissions-table">
-                      <thead>
-                        <tr>
-                          <th>Rezept</th>
-                          <th>Aktion</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pending.map(recipe => (
-                          <tr key={recipe.id}>
-                            <td>{recipe.titel || recipe.name || recipe.id}</td>
-                            <td>
-                              <button
-                                className="nutrition-abort-settings-button"
-                                onClick={() => handleAbortCalcForRecipe(recipe)}
-                                disabled={abortingCalcId === recipe.id}
-                                title="Berechnung abbrechen"
-                              >
-                                {abortingCalcId === recipe.id ? 'Wird abgebrochen…' : '❌ Abbrechen'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  );
-                })()}
-              </div>
-            )}
-
             <div className="settings-section">
               <h3>Header-Slogan</h3>
               <p className="section-description">

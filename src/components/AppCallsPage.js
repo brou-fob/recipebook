@@ -6,7 +6,7 @@ import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import { enableRecipeSharing } from '../utils/recipeFirestore';
 
-function AppCallsPage({ onBack, currentUser, recipes = [] }) {
+function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
   const [appCalls, setAppCalls] = useState([]);
   const [recipeCalls, setRecipeCalls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +15,7 @@ function AppCallsPage({ onBack, currentUser, recipes = [] }) {
   const [creatingShareIds, setCreatingShareIds] = useState({});
   const [sharedRecipeIds, setSharedRecipeIds] = useState(new Set());
   const [shareLinkErrors, setShareLinkErrors] = useState({});
+  const [abortingCalcId, setAbortingCalcId] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,6 +46,24 @@ function AppCallsPage({ onBack, currentUser, recipes = [] }) {
       setShareLinkErrors(prev => ({ ...prev, [recipe.id]: 'Fehler beim Erstellen des Links.' }));
     } finally {
       setCreatingShareIds(prev => ({ ...prev, [recipe.id]: false }));
+    }
+  };
+
+  const handleAbortCalcForRecipe = async (recipe) => {
+    if (!onUpdateRecipe) return;
+    setAbortingCalcId(recipe.id);
+    try {
+      await onUpdateRecipe(recipe.id, {
+        naehrwerte: {
+          ...(recipe.naehrwerte || {}),
+          calcPending: false,
+          calcError: 'Berechnung abgebrochen',
+        },
+      });
+    } catch (err) {
+      console.error('Error aborting calculation:', err);
+    } finally {
+      setAbortingCalcId(null);
     }
   };
 
@@ -110,6 +129,12 @@ function AppCallsPage({ onBack, currentUser, recipes = [] }) {
           onClick={() => setActiveTab('nolink')}
         >
           Rezepte ohne Link
+        </button>
+        <button
+          className={`app-calls-tab${activeTab === 'naehrwert' ? ' active' : ''}`}
+          onClick={() => setActiveTab('naehrwert')}
+        >
+          Nährwertberechnungen
         </button>
       </div>
       <div className="app-calls-content">
@@ -208,7 +233,7 @@ function AppCallsPage({ onBack, currentUser, recipes = [] }) {
               </>
             )}
           </>
-        ) : (
+        ) : activeTab === 'nolink' ? (
           <>
             <p className="app-calls-info-text">
               Hier sind alle öffentlichen Rezepte aufgelistet, die noch keinen Shared Link besitzen.
@@ -252,6 +277,52 @@ function AppCallsPage({ onBack, currentUser, recipes = [] }) {
                 </div>
               </>
             )}
+          </>
+        ) : (
+          <>
+            <p className="app-calls-info-text">
+              Übersicht aller Rezepte, bei denen gerade eine Nährwertberechnung läuft. Sie können einzelne Berechnungen hier gezielt abbrechen.
+            </p>
+            {(() => {
+              const pending = recipes.filter(r => r.naehrwerte?.calcPending === true);
+              if (pending.length === 0) {
+                return <div className="app-calls-empty">Keine aktiven Berechnungen vorhanden.</div>;
+              }
+              return (
+                <>
+                  <div className="app-calls-table-container">
+                    <table className="app-calls-table">
+                      <thead>
+                        <tr>
+                          <th>Rezept</th>
+                          <th>Aktion</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pending.map(recipe => (
+                          <tr key={recipe.id}>
+                            <td>{recipe.titel || recipe.name || recipe.id}</td>
+                            <td>
+                              <button
+                                className="nutrition-abort-settings-button"
+                                onClick={() => handleAbortCalcForRecipe(recipe)}
+                                disabled={abortingCalcId === recipe.id}
+                                title="Berechnung abbrechen"
+                              >
+                                {abortingCalcId === recipe.id ? 'Wird abgebrochen…' : '❌ Abbrechen'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="app-calls-stats">
+                    Gesamt: <strong>{pending.length}</strong> {pending.length === 1 ? 'aktive Berechnung' : 'aktive Berechnungen'}
+                  </div>
+                </>
+              );
+            })()}
           </>
         )}
       </div>

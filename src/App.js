@@ -1141,6 +1141,7 @@ function App() {
           onBack={() => handleViewChange('kueche')}
           currentUser={currentUser}
           recipes={recipes}
+          onUpdateRecipe={(id, updates) => updateRecipeInFirestore(id, updates)}
         />
       ) : currentView === 'meineKuechenstars' ? (
         <MeineKuechenstarsPage
