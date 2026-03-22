@@ -4,6 +4,7 @@ import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
 import { fileToBase64, isBase64Image, analyzeImageBrightness } from '../utils/imageUtils';
 import { uploadRecipeImage, deleteRecipeImage } from '../utils/storageUtils';
 import { getCustomLists } from '../utils/customLists';
+import { addCuisineProposal } from '../utils/cuisineProposalsFirestore';
 import { getUsers, isCurrentUserAdmin, getUserAiOcrScanCount } from '../utils/userManagement';
 import { getImageForCategories } from '../utils/categoryImages';
 import { formatIngredientSpacing } from '../utils/ingredientUtils';
@@ -208,6 +209,9 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     units: [],
     portionUnits: []
   });
+  const [newCuisineInput, setNewCuisineInput] = useState('');
+  const [newCuisineDuplicateError, setNewCuisineDuplicateError] = useState(false);
+  const [newCuisineLoading, setNewCuisineLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [buttonIcons, setButtonIcons] = useState({
     importRecipe: '📥',
@@ -365,6 +369,27 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   useEffect(() => {
     setImageError(false);
   }, [image]);
+
+  const handleAddNewCuisine = async () => {
+    const name = newCuisineInput.trim();
+    if (!name) return;
+    if (customLists.cuisineTypes.some(t => t.toLowerCase() === name.toLowerCase())) {
+      setNewCuisineDuplicateError(true);
+      return;
+    }
+    setNewCuisineDuplicateError(false);
+    setNewCuisineLoading(true);
+    try {
+      await addCuisineProposal({ name, groupName: null, createdBy: currentUser?.id || '' });
+      setCustomLists(prev => ({ ...prev, cuisineTypes: [...prev.cuisineTypes, name] }));
+      setKulinarik(prev => [...prev, name]);
+      setNewCuisineInput('');
+    } catch (err) {
+      console.error('Error adding new cuisine type:', err);
+    } finally {
+      setNewCuisineLoading(false);
+    }
+  };
 
   const handleAddIngredient = () => {
     setIngredients([...ingredients, { type: 'ingredient', text: '' }]);
@@ -1088,6 +1113,26 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
             <div className="selected-items">
               Ausgewählt: {kulinarik.join(', ')}
             </div>
+          )}
+          <div className="new-cuisine-input">
+            <input
+              type="text"
+              value={newCuisineInput}
+              onChange={(e) => { setNewCuisineInput(e.target.value); setNewCuisineDuplicateError(false); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddNewCuisine()}
+              placeholder="Neuen Kulinariktyp eingeben…"
+              aria-label="Neuen Kulinariktyp eingeben"
+            />
+            <button
+              type="button"
+              onClick={handleAddNewCuisine}
+              disabled={newCuisineLoading || !newCuisineInput.trim()}
+            >
+              {newCuisineLoading ? '…' : 'Hinzufügen'}
+            </button>
+          </div>
+          {newCuisineDuplicateError && (
+            <p className="new-cuisine-error">Dieser Kulinariktyp existiert bereits.</p>
           )}
         </div>
 
