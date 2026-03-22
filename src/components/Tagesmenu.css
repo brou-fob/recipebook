@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ *
- * Tagesmenu – full-page recipe-card scroll experience                 *
+ * Tagesmenu – Tinder-style swipeable card stack                       *
  * ------------------------------------------------------------------ */
 
 .tagesmenu-container {
@@ -52,29 +52,79 @@
   background: rgba(230, 57, 70, 0.08);
 }
 
-/* ---- scrollable card stack ---------------------------------------- */
+/* ---- card stack container ---------------------------------------- */
 
-.tagesmenu-cards {
+.tagesmenu-stack {
   flex: 1;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
+  position: relative;
+  overflow: hidden;
+  /* extra bottom padding so the back-card peek is visible */
+  padding: 12px 12px 28px;
 }
 
-/* ---- individual full-page card ------------------------------------ */
+/* ---- individual card in the stack --------------------------------- */
 
 .tagesmenu-card {
-  scroll-snap-align: start;
-  height: 100%;
-  width: 100%;
+  position: absolute;
+  inset: 12px 12px 24px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  cursor: pointer;
-  background: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  overflow: hidden;
+  user-select: none;
+  will-change: transform;
 }
 
-/* image area fills remaining space above the info strip */
+/* The frontmost (draggable) card gets a grab cursor */
+.tagesmenu-card-top {
+  cursor: grab;
+}
+
+.tagesmenu-card-top:active {
+  cursor: grabbing;
+}
+
+/* ---- swipe badge overlays ---------------------------------------- */
+
+.tagesmenu-swipe-badge {
+  position: absolute;
+  top: 20px;
+  z-index: 20;
+  padding: 0.4rem 0.9rem;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  pointer-events: none;
+  border-width: 3px;
+  border-style: solid;
+}
+
+.tagesmenu-swipe-badge--right {
+  right: 20px;
+  border-color: #4caf50;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.tagesmenu-swipe-badge--left {
+  left: 20px;
+  border-color: #f44336;
+  color: #f44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.tagesmenu-swipe-badge--up {
+  left: 50%;
+  transform: translateX(-50%);
+  border-color: #ff9800;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+/* ---- image area fills remaining space above the info strip -------- */
+
 .tagesmenu-card-image {
   flex: 1;
   overflow: hidden;
@@ -146,7 +196,7 @@
   font-weight: 500;
 }
 
-/* ---- empty state -------------------------------------------------- */
+/* ---- empty state & completion screen ------------------------------ */
 
 .tagesmenu-empty {
   flex: 1;
@@ -167,3 +217,21 @@
   margin: 0;
   font-size: 1rem;
 }
+
+.tagesmenu-restart-btn {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  background: #e63946;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tagesmenu-restart-btn:hover {
+  background: #c1121f;
+}
+
