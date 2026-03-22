@@ -141,6 +141,20 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const [sortSettings, setSortSettings] = useState(null);
   const [viewCounts, setViewCounts] = useState(null);
   
+  // Load button icons on mount (first to minimize icon-switch delay)
+  useEffect(() => {
+    const loadButtonIcons = async () => {
+      try {
+        const icons = await getButtonIcons();
+        setButtonIcons(icons);
+      } catch (error) {
+        console.error('Error loading button icons:', error);
+        // Keep default values if loading fails
+      }
+    };
+    loadButtonIcons();
+  }, []);
+
   // Persist carousel sort selection
   useEffect(() => {
     sessionStorage.setItem(SORT_STORAGE_KEY, activeSort);
@@ -168,20 +182,6 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       }
     };
     loadCustomLists();
-  }, []);
-
-  // Load button icons on mount
-  useEffect(() => {
-    const loadButtonIcons = async () => {
-      try {
-        const icons = await getButtonIcons();
-        setButtonIcons(icons);
-      } catch (error) {
-        console.error('Error loading button icons:', error);
-        // Keep default values if loading fails
-      }
-    };
-    loadButtonIcons();
   }, []);
 
   // Load sort settings on mount
