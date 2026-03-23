@@ -58,6 +58,16 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [cardPhase, setCardPhase] = useState('idle');
 
+  // Suppresses background-card CSS transitions for exactly one render cycle
+  // immediately after a swipe completes, preventing them from animating
+  // back to their smaller "stacked" positions and causing a visual glitch.
+  const [justSwiped, setJustSwiped] = useState(false);
+  useEffect(() => {
+    if (!justSwiped) return;
+    const raf = requestAnimationFrame(() => setJustSwiped(false));
+    return () => cancelAnimationFrame(raf);
+  }, [justSwiped]);
+
   // Active gesture tracking (ref to avoid stale closure issues)
   const gestureRef = useRef(null);
 
@@ -211,6 +221,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
           setRecipeSwipeFlag(currentUser.id, swipe.list.id, swipe.recipe.id, flag);
         }
       }
+      setJustSwiped(true);
       setCurrentIndex((prev) => prev + 1);
       setDragOffset({ x: 0, y: 0 });
       setCardPhase('idle');
@@ -323,7 +334,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
               const translateY = depth * 10 * (1 - dragProgress);
               cardStyle = {
                 transform: `scale(${scale}) translateY(${translateY}px)`,
-                transition: cardPhase === 'dragging' ? 'none' : 'transform 0.3s ease',
+                transition: cardPhase === 'dragging' || justSwiped ? 'none' : 'transform 0.3s ease',
                 zIndex: 10 - depth,
               };
             }
