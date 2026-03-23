@@ -116,14 +116,13 @@
   font-size: 4rem;
 }
 
-/* ---- info strip – scrollable, takes remaining card space ----------- */
+/* ---- info strip – non-scrollable, takes remaining card space ------- */
 
 .tagesmenu-card-info {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 1rem 1.25rem 1.25rem;
   background: #ffffff;
-  -webkit-overflow-scrolling: touch;
 }
 
 .tagesmenu-card-title {
@@ -182,6 +181,10 @@
 .tagesmenu-ingredients-list li,
 .tagesmenu-steps-list li {
   margin-bottom: 0.2rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .tagesmenu-ingredient-heading,
