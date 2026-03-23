@@ -85,6 +85,13 @@
   background: rgba(255, 152, 0, 0.1);
 }
 
+.tagesmenu-swipe-badge-img {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  display: block;
+}
+
 /* ---- image area – fixed small height at the top of the card ------- */
 
 .tagesmenu-card-image {

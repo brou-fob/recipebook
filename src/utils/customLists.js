@@ -268,7 +268,10 @@ export const DEFAULT_BUTTON_ICONS = {
   timerStop: '⏹',
   cookDate: '📅',
   addRecipe: '➕',
-  addPrivateRecipe: '🔒'
+  addPrivateRecipe: '🔒',
+  swipeRight: '👍',
+  swipeLeft: '👎',
+  swipeUp: '⭐'
 };
 
 // Cache for settings to avoid repeated Firestore reads

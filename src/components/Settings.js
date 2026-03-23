@@ -223,7 +223,10 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
     timerStop: '⏹',
     cookDate: '📅',
     addRecipe: '➕',
-    addPrivateRecipe: '🔒'
+    addPrivateRecipe: '🔒',
+    swipeRight: '👍',
+    swipeLeft: '👎',
+    swipeUp: '⭐'
   });
   const [uploadingButtonIcon, setUploadingButtonIcon] = useState(null);
 
@@ -2683,6 +2686,177 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                         <img src={buttonIcons.cookDate} alt="Icon" className="icon-image" />
                       ) : (
                         <span>{buttonIcons.cookDate}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
+                  <label htmlFor="swipeRightIcon">Swipe-Rechts-Icon (Tagesmenü – Kandidat):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.swipeRight) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="swipeRightIcon"
+                          value={buttonIcons.swipeRight}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, swipeRight: e.target.value })}
+                          placeholder="z.B. 👍"
+                          maxLength={10}
+                        />
+                        <label htmlFor="swipeRightIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'swipeRight' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="swipeRightIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('swipeRight', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'swipeRight'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('swipeRight')}
+                          title="Bild entfernen"
+                        >
+                          ✕ Entfernen
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, swipeRight: DEFAULT_BUTTON_ICONS.swipeRight })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.swipeRight) ? (
+                        <img src={buttonIcons.swipeRight} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.swipeRight}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
+                  <label htmlFor="swipeLeftIcon">Swipe-Links-Icon (Tagesmenü – Archivieren):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.swipeLeft) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="swipeLeftIcon"
+                          value={buttonIcons.swipeLeft}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, swipeLeft: e.target.value })}
+                          placeholder="z.B. 👎"
+                          maxLength={10}
+                        />
+                        <label htmlFor="swipeLeftIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'swipeLeft' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="swipeLeftIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('swipeLeft', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'swipeLeft'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('swipeLeft')}
+                          title="Bild entfernen"
+                        >
+                          ✕ Entfernen
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, swipeLeft: DEFAULT_BUTTON_ICONS.swipeLeft })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.swipeLeft) ? (
+                        <img src={buttonIcons.swipeLeft} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.swipeLeft}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
+                  <label htmlFor="swipeUpIcon">Swipe-Oben-Icon (Tagesmenü – Parken):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.swipeUp) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="swipeUpIcon"
+                          value={buttonIcons.swipeUp}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, swipeUp: e.target.value })}
+                          placeholder="z.B. ⭐"
+                          maxLength={10}
+                        />
+                        <label htmlFor="swipeUpIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'swipeUp' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="swipeUpIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('swipeUp', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'swipeUp'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('swipeUp')}
+                          title="Bild entfernen"
+                        >
+                          ✕ Entfernen
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, swipeUp: DEFAULT_BUTTON_ICONS.swipeUp })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.swipeUp) ? (
+                        <img src={buttonIcons.swipeUp} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.swipeUp}</span>
                       )}
                     </div>
                   </div>

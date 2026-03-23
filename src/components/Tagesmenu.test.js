@@ -13,6 +13,20 @@ jest.mock('../utils/customLists', () => ({
     statusValidityDaysGeparkt: null,
     statusValidityDaysArchiv: null,
   }),
+  getButtonIcons: () => Promise.resolve({
+    swipeRight: '👍',
+    swipeLeft: '👎',
+    swipeUp: '⭐',
+  }),
+  DEFAULT_BUTTON_ICONS: {
+    swipeRight: '👍',
+    swipeLeft: '👎',
+    swipeUp: '⭐',
+  },
+}));
+
+jest.mock('../utils/imageUtils', () => ({
+  isBase64Image: jest.fn(() => false),
 }));
 
 beforeAll(() => {
