@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import './MenuList.css';
 import { getUserMenuFavorites } from '../utils/menuFavorites';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { isBase64Image } from '../utils/imageUtils';
 
 function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorite, currentUser, allUsers }) {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [addPressed, setAddPressed] = useState(false);
+  const [buttonIcons, setButtonIcons] = useState({
+    addMenu: DEFAULT_BUTTON_ICONS.addMenu,
+  });
+
+  // Load button icons on mount
+  useEffect(() => {
+    const loadButtonIcons = async () => {
+      try {
+        const icons = await getButtonIcons();
+        setButtonIcons(icons);
+      } catch (error) {
+        console.error('Error loading button icons:', error);
+      }
+    };
+    loadButtonIcons();
+  }, []);
 
   // Load favorite IDs when user changes
   useEffect(() => {
@@ -90,9 +109,6 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
           >
             ★ Favoriten
           </button>
-          <button className="add-menu-button" onClick={onAddMenu}>
-            + Menü erstellen
-          </button>
         </div>
       </div>
       
@@ -137,6 +153,24 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
           })}
         </div>
       )}
+      <button
+        className={`add-menu-fab-button ${addPressed ? 'pressed' : ''}`}
+        onClick={onAddMenu}
+        onTouchStart={() => setAddPressed(true)}
+        onTouchEnd={() => setAddPressed(false)}
+        onTouchCancel={() => setAddPressed(false)}
+        onMouseDown={() => setAddPressed(true)}
+        onMouseUp={() => setAddPressed(false)}
+        onMouseLeave={() => setAddPressed(false)}
+        title="Menü erstellen"
+        aria-label="Menü erstellen"
+      >
+        {isBase64Image(buttonIcons.addMenu) ? (
+          <img src={buttonIcons.addMenu} alt="Menü erstellen" className="button-icon-image" />
+        ) : (
+          buttonIcons.addMenu
+        )}
+      </button>
     </div>
   );
 }

@@ -1988,6 +1988,63 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                 </div>
 
                 <div className="button-icon-item">
+                  <label htmlFor="addMenuIcon">Menü-hinzufügen-Button (Menüübersicht):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.addMenu) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="addMenuIcon"
+                          value={buttonIcons.addMenu}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, addMenu: e.target.value })}
+                          placeholder="z.B. 📋"
+                          maxLength={10}
+                        />
+                        <label htmlFor="addMenuIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'addMenu' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="addMenuIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('addMenu', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'addMenu'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('addMenu')}
+                          title="Bild entfernen"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, addMenu: DEFAULT_BUTTON_ICONS.addMenu })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.addMenu) ? (
+                        <img src={buttonIcons.addMenu} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.addMenu}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
                   <label htmlFor="addPrivateRecipeIcon">Privates-Rezept-hinzufügen-Button (Rezeptübersicht):</label>
                   <div className="button-icon-input-group">
                     {!isBase64Image(buttonIcons.addPrivateRecipe) ? (

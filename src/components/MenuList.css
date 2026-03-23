@@ -54,23 +54,46 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
-.add-menu-button {
+.add-menu-fab-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1101;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  border-radius: 50%;
+  padding: 0;
   background: linear-gradient(135deg, #402C1C 0%, #1a1a1a 100%);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
-  font-size: 1rem;
-  font-weight: 600;
+  opacity: 0.85;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  will-change: transform;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.15s ease,
+              box-shadow 0.15s ease;
 }
 
-.add-menu-button:hover {
-  background: linear-gradient(135deg, #1a1a1a 0%, #402C1C 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.add-menu-fab-button.pressed {
+  transform: scale(1.15);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+}
+
+.add-menu-fab-button .button-icon-image {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .empty-state {
@@ -204,8 +227,7 @@
     width: 100%;
   }
   
-  .menu-favorites-filter-button,
-  .add-menu-button {
+  .menu-favorites-filter-button {
     width: 100%;
   }
 }
