@@ -147,8 +147,32 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
       setAllMembersFlags({});
       return;
     }
-    getAllMembersSwipeFlags(selectedListId, allMemberIds).then(setAllMembersFlags).catch(() => {});
-  }, [selectedListId, selectedList]);
+    // DEBUG LOGS START
+    console.log('🔍 Loading flags for members:', allMemberIds);
+    console.log('🔍 List ID:', selectedListId);
+    console.log('🔍 Current user ID:', currentUser?.id);
+    // DEBUG LOGS END
+
+    getAllMembersSwipeFlags(selectedListId, allMemberIds).then((flags) => {
+      // DEBUG LOGS START
+      console.log('📦 Loaded allMembersFlags:', flags);
+      console.log('📊 Number of members with flags:', Object.keys(flags).length);
+
+      // Zeige für jeden Member die Anzahl der Swipes
+      Object.entries(flags).forEach(([userId, userFlags]) => {
+        console.log(`  User ${userId}: ${Object.keys(userFlags).length} swipes`);
+        // Zeige die ersten 3 Swipes als Beispiel
+        Object.entries(userFlags).slice(0, 3).forEach(([recipeId, flag]) => {
+          console.log(`    Recipe ${recipeId}: ${flag}`);
+        });
+      });
+      // DEBUG LOGS END
+
+      setAllMembersFlags(flags);
+    }).catch((error) => {
+      console.error('❌ Error loading allMembersFlags:', error);
+    });
+  }, [selectedListId, selectedList, currentUser]);
 
   // Drag / animation state
   // cardPhase: 'idle' | 'dragging' | 'snap' | 'flying'
@@ -361,12 +385,45 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
   // Precompute group status for each recipe in a single pass to avoid redundant calls in the render
   const groupStatusByRecipeId = useMemo(() => {
     if (listMemberIds.length <= 1) return {};
-    return Object.fromEntries(
-      allListRecipes.map((r) => [
-        r.id,
-        computeGroupRecipeStatus(listMemberIds, allMembersFlags, r.id, groupThresholds),
-      ])
+
+    // DEBUG LOGS START
+    console.log('🧮 Computing group status...');
+    console.log('  Members:', listMemberIds);
+    console.log('  Total recipes:', allListRecipes.length);
+    console.log('  Thresholds:', groupThresholds);
+    // DEBUG LOGS END
+
+    const result = Object.fromEntries(
+      allListRecipes.map((r) => {
+        const status = computeGroupRecipeStatus(listMemberIds, allMembersFlags, r.id, groupThresholds);
+
+        // DEBUG LOGS START
+        // Zeige Details für jedes Rezept mit Status
+        if (status) {
+          console.log(`  ✅ Recipe "${r.title}" (${r.id}): ${status}`);
+          // Zeige die Votes der einzelnen Members
+          listMemberIds.forEach(memberId => {
+            const flag = allMembersFlags[memberId]?.[r.id];
+            console.log(`    Member ${memberId}: ${flag || 'NOT SWIPED'}`);
+          });
+        }
+        // DEBUG LOGS END
+
+        return [r.id, status];
+      })
     );
+
+    // DEBUG LOGS START
+    const kandidatCount = Object.values(result).filter(s => s === 'kandidat').length;
+    const archivCount = Object.values(result).filter(s => s === 'archiv').length;
+    const noStatusCount = Object.values(result).filter(s => s === null).length;
+    console.log(`📊 Group Status Summary:`);
+    console.log(`  Kandidat: ${kandidatCount}`);
+    console.log(`  Archiv: ${archivCount}`);
+    console.log(`  No Status: ${noStatusCount}`);
+    // DEBUG LOGS END
+
+    return result;
   }, [allListRecipes, listMemberIds, allMembersFlags, groupThresholds]);
 
   // How far along the swipe are we (0–1) – used to animate background cards
