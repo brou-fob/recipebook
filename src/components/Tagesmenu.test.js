@@ -3,6 +3,7 @@ import { render, act } from '@testing-library/react';
 import Tagesmenu from './Tagesmenu';
 
 let mockActiveFlagsValue = {};
+let mockMaxKandidatenSchwelle = null;
 
 jest.mock('../utils/recipeSwipeFlags', () => ({
   setRecipeSwipeFlag: jest.fn(),
@@ -23,6 +24,7 @@ jest.mock('../utils/customLists', () => ({
     groupThresholdArchivMinArchiv: 50,
     groupThresholdArchivMaxKandidat: 50,
   }),
+  getMaxKandidatenSchwelle: () => Promise.resolve(mockMaxKandidatenSchwelle),
   getButtonIcons: () => Promise.resolve({
     swipeRight: '👍',
     swipeLeft: '👎',
@@ -387,5 +389,64 @@ describe('Tagesmenu – pre-existing active flags', () => {
     expect(groups[0]).toHaveTextContent('Kandidat');
     expect(groups[1]).toHaveTextContent('Archiviert');
     expect(document.querySelectorAll('.tagesmenu-results-tile')).toHaveLength(3);
+  });
+});
+
+describe('Tagesmenu – candidate score threshold (maxKandidatenSchwelle)', () => {
+  // A list that has an owner so listMemberIds is non-empty (required for score computation)
+  const listWithOwner = { id: 'list1', name: 'Test Liste', listKind: 'interactive', recipeIds: [], ownerId: 'user1' };
+
+  function renderMenuWithOwner(recipeList = recipes) {
+    return render(
+      <Tagesmenu
+        interactiveLists={[listWithOwner]}
+        recipes={recipeList}
+        allUsers={[]}
+        onSelectRecipe={() => {}}
+        currentUser={currentUser}
+      />
+    );
+  }
+
+  beforeEach(() => {
+    mockActiveFlagsValue = {};
+    mockMaxKandidatenSchwelle = null;
+  });
+
+  afterEach(() => {
+    mockActiveFlagsValue = {};
+    mockMaxKandidatenSchwelle = null;
+  });
+
+  test('swipe stack is not ended early when threshold is null (disabled)', async () => {
+    // threshold = null → no early termination, all cards should be swipeable
+    mockMaxKandidatenSchwelle = null;
+
+    await act(async () => { renderMenuWithOwner(); });
+
+    // Stack should still be visible
+    expect(document.querySelector('.tagesmenu-stack')).not.toBeNull();
+    expect(document.querySelector('.tagesmenu-results')).toBeNull();
+  });
+
+  test('shows results view immediately when S >= threshold before any swipe', async () => {
+    // 1 member (user1/owner), 3 recipes, no swipes yet → ni = 1 for each recipe
+    // S = 3 * 1/(1+1) = 1.5; threshold = 1 → 1.5 >= 1 → stack ends immediately
+    mockMaxKandidatenSchwelle = 1;
+
+    await act(async () => { renderMenuWithOwner(); });
+
+    expect(document.querySelector('.tagesmenu-results')).not.toBeNull();
+    expect(document.querySelector('.tagesmenu-stack')).toBeNull();
+  });
+
+  test('swipe stack continues when S < threshold', async () => {
+    // 1 member, 3 recipes, no swipes → S = 1.5; threshold = 2 → 1.5 < 2 → stack continues
+    mockMaxKandidatenSchwelle = 2;
+
+    await act(async () => { renderMenuWithOwner(); });
+
+    expect(document.querySelector('.tagesmenu-stack')).not.toBeNull();
+    expect(document.querySelector('.tagesmenu-results')).toBeNull();
   });
 });
