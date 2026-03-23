@@ -9,7 +9,7 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [addPressed, setAddPressed] = useState(false);
   const [buttonIcons, setButtonIcons] = useState({
-    addMenu: DEFAULT_BUTTON_ICONS.addMenu,
+    addRecipe: DEFAULT_BUTTON_ICONS.addRecipe,
   });
 
   // Load button icons on mount
@@ -165,10 +165,10 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
         title="Menü erstellen"
         aria-label="Menü erstellen"
       >
-        {isBase64Image(buttonIcons.addMenu) ? (
-          <img src={buttonIcons.addMenu} alt="Menü erstellen" className="button-icon-image" />
+        {isBase64Image(buttonIcons.addRecipe) ? (
+          <img src={buttonIcons.addRecipe} alt="Menü erstellen" className="button-icon-image" />
         ) : (
-          buttonIcons.addMenu
+          buttonIcons.addRecipe
         )}
       </button>
     </div>
