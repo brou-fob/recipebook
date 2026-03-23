@@ -209,7 +209,8 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
     setCardPhase('snap');
   }, []);
 
-  const handleTransitionEnd = useCallback(() => {
+  const handleTransitionEnd = useCallback((e) => {
+    if (e.propertyName !== 'transform') return;
     if (cardPhase === 'flying') {
       // Record the swipe flag before advancing to the next card
       const swipe = pendingSwipeRef.current;
