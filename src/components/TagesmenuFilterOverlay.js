@@ -106,7 +106,7 @@ function TagesmenuFilterOverlay({ isOpen, onClose, interactiveLists, selectedLis
 
   return (
     <div
-      className="mobile-search-overlay"
+      className="mobile-search-overlay tagesmenu-filter-overlay"
       role="dialog"
       aria-modal="true"
       aria-label="Interaktive Listen filtern"

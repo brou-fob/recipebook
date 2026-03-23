@@ -356,3 +356,9 @@
 }
 
 
+
+/* ─── Spezifischer oberer Abstand für Tagesmenü-Filter-Overlay ─────────── */
+
+.tagesmenu-filter-overlay .mobile-search-private-list-grid {
+  padding-top: 12px;
+}
