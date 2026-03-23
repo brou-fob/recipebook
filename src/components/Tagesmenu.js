@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import './Tagesmenu.css';
 import { setRecipeSwipeFlag, getActiveSwipeFlags } from '../utils/recipeSwipeFlags';
-import { getStatusValiditySettings } from '../utils/customLists';
+import { getStatusValiditySettings, getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { isBase64Image } from '../utils/imageUtils';
 import TagesmenuFilterOverlay from './TagesmenuFilterOverlay';
 
 /**
@@ -52,6 +53,13 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
     statusValidityDaysArchiv: null,
   });
 
+  // Configurable swipe badge icons loaded from settings
+  const [swipeIcons, setSwipeIcons] = useState({
+    swipeRight: DEFAULT_BUTTON_ICONS.swipeRight,
+    swipeLeft: DEFAULT_BUTTON_ICONS.swipeLeft,
+    swipeUp: DEFAULT_BUTTON_ICONS.swipeUp,
+  });
+
   const listRecipes = useMemo(() => {
     if (!selectedList) return [];
     const groupRecipeIds = Array.isArray(selectedList.recipeIds) ? selectedList.recipeIds : [];
@@ -75,6 +83,17 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
   // Load status validity settings once on mount
   useEffect(() => {
     getStatusValiditySettings().then(setStatusValiditySettings).catch(() => {});
+  }, []);
+
+  // Load configurable swipe icons once on mount
+  useEffect(() => {
+    getButtonIcons().then((icons) => {
+      setSwipeIcons({
+        swipeRight: icons.swipeRight ?? DEFAULT_BUTTON_ICONS.swipeRight,
+        swipeLeft: icons.swipeLeft ?? DEFAULT_BUTTON_ICONS.swipeLeft,
+        swipeUp: icons.swipeUp ?? DEFAULT_BUTTON_ICONS.swipeUp,
+      });
+    }).catch(() => {});
   }, []);
 
   // Load active swipe flags from Firestore when user or selected list changes
@@ -438,7 +457,9 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                     className="tagesmenu-swipe-badge tagesmenu-swipe-badge--right"
                     style={{ opacity: swipeHintOpacity }}
                   >
-                    👍
+                    {isBase64Image(swipeIcons.swipeRight)
+                      ? <img src={swipeIcons.swipeRight} alt="" className="tagesmenu-swipe-badge-img" />
+                      : swipeIcons.swipeRight}
                   </div>
                 )}
                 {isTop && swipeHint === 'left' && (
@@ -446,7 +467,9 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                     className="tagesmenu-swipe-badge tagesmenu-swipe-badge--left"
                     style={{ opacity: swipeHintOpacity }}
                   >
-                    👎
+                    {isBase64Image(swipeIcons.swipeLeft)
+                      ? <img src={swipeIcons.swipeLeft} alt="" className="tagesmenu-swipe-badge-img" />
+                      : swipeIcons.swipeLeft}
                   </div>
                 )}
                 {isTop && swipeHint === 'up' && (
@@ -454,7 +477,9 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                     className="tagesmenu-swipe-badge tagesmenu-swipe-badge--up"
                     style={{ opacity: swipeHintOpacity }}
                   >
-                    ⭐
+                    {isBase64Image(swipeIcons.swipeUp)
+                      ? <img src={swipeIcons.swipeUp} alt="" className="tagesmenu-swipe-badge-img" />
+                      : swipeIcons.swipeUp}
                   </div>
                 )}
 
