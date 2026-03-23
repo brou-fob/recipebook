@@ -8,6 +8,7 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [addPressed, setAddPressed] = useState(false);
+  const [favPressed, setFavPressed] = useState(false);
   const [buttonIcons, setButtonIcons] = useState({
     addRecipe: DEFAULT_BUTTON_ICONS.addRecipe,
   });
@@ -101,15 +102,6 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
     <div className="menu-list-container">
       <div className="menu-list-header">
         <h2>{showFavoritesOnly ? 'Meine Menüs' : 'Menüs'}</h2>
-        <div className="menu-list-actions">
-          <button 
-            className={`menu-favorites-filter-button ${showFavoritesOnly ? 'active' : ''}`}
-            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            title={showFavoritesOnly ? 'Alle Menüs anzeigen' : 'Nur Favoriten anzeigen'}
-          >
-            ★ Favoriten
-          </button>
-        </div>
       </div>
       
       {filteredMenus.length === 0 ? (
@@ -170,6 +162,20 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
         ) : (
           buttonIcons.addRecipe
         )}
+      </button>
+      <button
+        className={`menu-favorites-filter-button ${showFavoritesOnly ? 'active' : ''} ${favPressed ? 'pressed' : ''}`}
+        onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+        onTouchStart={() => setFavPressed(true)}
+        onTouchEnd={() => setFavPressed(false)}
+        onTouchCancel={() => setFavPressed(false)}
+        onMouseDown={() => setFavPressed(true)}
+        onMouseUp={() => setFavPressed(false)}
+        onMouseLeave={() => setFavPressed(false)}
+        title={showFavoritesOnly ? 'Alle Menüs anzeigen' : 'Nur Favoriten anzeigen'}
+        aria-label={showFavoritesOnly ? 'Alle Menüs anzeigen' : 'Nur Favoriten anzeigen'}
+      >
+        ★
       </button>
     </div>
   );
