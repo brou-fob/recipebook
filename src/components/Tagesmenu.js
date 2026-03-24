@@ -566,13 +566,12 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
               );
             };
 
-            // "Gemeinsame Kandidaten" group: recipes from current session with group status
-            // 'kandidat', sorted by voting count (desc), limited to maxKandidatenSchwelle.
+            // "Gemeinsame Kandidaten" group: all recipes with group status 'kandidat',
+            // sorted by voting count (desc), limited to maxKandidatenSchwelle.
             const gemeinsameKandidaten = (() => {
               if (maxKandidatenSchwelle === null) return [];
               const pool = allListRecipes.filter((r) => {
-                const isInCurrentSession = !activeFlags[r.id] || swipeResults[r.id] !== undefined;
-                return isInCurrentSession && groupStatusByRecipeId[r.id] === 'kandidat';
+                return groupStatusByRecipeId[r.id] === 'kandidat';
               });
               const sorted = [...pool].sort((a, b) => {
                 const aVotes = listMemberIds.filter((uid) => allMembersFlags[uid]?.[a.id] === 'kandidat').length;
@@ -589,11 +588,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
               label,
               flag,
               group: allListRecipes.filter((r) => {
-                // Only show recipes from the current swipe session:
-                // - Recipes without active flags (still in the stack), OR
-                // - Recipes swiped during this session
-                const isInCurrentSession = !activeFlags[r.id] || swipeResults[r.id] !== undefined;
-                return isInCurrentSession && groupStatusByRecipeId[r.id] === flag;
+                return groupStatusByRecipeId[r.id] === flag;
               }),
             })).filter(({ group }) => group.length > 0);
 
