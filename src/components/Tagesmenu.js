@@ -590,6 +590,12 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                 ...allImages.filter((img) => img.isDefault),
                 ...allImages.filter((img) => !img.isDefault),
               ];
+              const authorName = getAuthorName(recipe.authorId);
+              const kulinarikTags = Array.isArray(recipe.kulinarik)
+                ? recipe.kulinarik
+                : recipe.kulinarik
+                ? [recipe.kulinarik]
+                : [];
               return (
                 <button
                   key={recipe.id}
@@ -604,6 +610,16 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                     )}
                   </div>
                   <p className="tagesmenu-results-tile-name">{recipe.title}</p>
+                  {authorName && (
+                    <p className="tagesmenu-results-tile-author">{authorName}</p>
+                  )}
+                  {kulinarikTags.length > 0 && (
+                    <div className="tagesmenu-results-tile-kulinarik">
+                      {kulinarikTags.slice(0, 2).map((k) => (
+                        <span key={k} className="tagesmenu-results-tile-kulinarik-tag">{k}</span>
+                      ))}
+                    </div>
+                  )}
                 </button>
               );
             };
@@ -611,7 +627,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
             // "Gemeinsame Kandidaten" group: use pre-computed useMemo value
             if (gemeinsameKandidaten.length === 0) return null;
             const tilesColumnClass =
-              gemeinsameKandidaten.length <= 2
+              gemeinsameKandidaten.length === 1
                 ? 'tagesmenu-results-tiles--1col'
                 : gemeinsameKandidaten.length <= 6
                 ? 'tagesmenu-results-tiles--2col'
@@ -656,6 +672,12 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                       ...allImages.filter((img) => img.isDefault),
                       ...allImages.filter((img) => !img.isDefault),
                     ];
+                    const authorName = getAuthorName(recipe.authorId);
+                    const kulinarikTags = Array.isArray(recipe.kulinarik)
+                      ? recipe.kulinarik
+                      : recipe.kulinarik
+                      ? [recipe.kulinarik]
+                      : [];
                     return (
                       <button
                         key={recipe.id}
@@ -670,6 +692,16 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
                           )}
                         </div>
                         <p className="tagesmenu-results-tile-name">{recipe.title}</p>
+                        {authorName && (
+                          <p className="tagesmenu-results-tile-author">{authorName}</p>
+                        )}
+                        {kulinarikTags.length > 0 && (
+                          <div className="tagesmenu-results-tile-kulinarik">
+                            {kulinarikTags.slice(0, 2).map((k) => (
+                              <span key={k} className="tagesmenu-results-tile-kulinarik-tag">{k}</span>
+                            ))}
+                          </div>
+                        )}
                       </button>
                     );
                   })}

@@ -243,6 +243,8 @@
 
 .tagesmenu-container--results {
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes tagesmenu-results-in {
@@ -257,10 +259,12 @@
 }
 
 .tagesmenu-results {
-  padding: 1.25rem 1rem 2rem;
+  flex: 1;
+  min-height: 0;
+  padding: 1.25rem 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   animation: tagesmenu-results-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -323,6 +327,20 @@
   grid-template-columns: repeat(3, 1fr);
 }
 
+/* The gemeinsame-kandidaten group fills remaining vertical space */
+.tagesmenu-results-group--gemeinsame-kandidaten {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tagesmenu-results-group--gemeinsame-kandidaten .tagesmenu-results-tiles {
+  flex: 1;
+  align-content: stretch;
+  grid-auto-rows: 1fr;
+}
+
 .tagesmenu-results-tile {
   background: #ffffff;
   border: 1px solid #e0e0e0;
@@ -336,6 +354,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+  height: 100%;
 }
 
 .tagesmenu-results-tile:active {
@@ -345,13 +364,14 @@
 
 .tagesmenu-results-tile-image {
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 4/3;
   overflow: hidden;
   background: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
+  flex-shrink: 0;
 }
 
 .tagesmenu-results-tile-image img {
@@ -363,7 +383,7 @@
 
 .tagesmenu-results-tile-name {
   margin: 0;
-  padding: 0.35rem 0.5rem 0.4rem;
+  padding: 0.35rem 0.5rem 0.2rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: #1a1a1a;
@@ -372,6 +392,33 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.tagesmenu-results-tile-author {
+  margin: 0;
+  padding: 0 0.5rem 0.2rem;
+  font-size: 0.62rem;
+  color: #888888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tagesmenu-results-tile-kulinarik {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  padding: 0 0.5rem 0.4rem;
+}
+
+.tagesmenu-results-tile-kulinarik-tag {
+  background: #fdecea;
+  color: #e63946;
+  border-radius: 8px;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 /* ---- filter button (bottom-left, only shown when > 1 interactive list) -- */
