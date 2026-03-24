@@ -223,6 +223,7 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
     timerStop: '⏹',
     cookDate: '📅',
     addRecipe: '➕',
+    editRecipe: '✏️',
     addPrivateRecipe: '🔒',
     swipeRight: '👍',
     swipeLeft: '👎',
@@ -2098,6 +2099,63 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                         <img src={buttonIcons.addRecipe} alt="Icon" className="icon-image" />
                       ) : (
                         <span>{buttonIcons.addRecipe}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
+                  <label htmlFor="editRecipeIcon">Bearbeiten-Button (Rezeptdetailansicht):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.editRecipe) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="editRecipeIcon"
+                          value={buttonIcons.editRecipe}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, editRecipe: e.target.value })}
+                          placeholder="z.B. ✏️"
+                          maxLength={10}
+                        />
+                        <label htmlFor="editRecipeIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'editRecipe' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="editRecipeIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('editRecipe', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'editRecipe'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('editRecipe')}
+                          title="Bild entfernen"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, editRecipe: DEFAULT_BUTTON_ICONS.editRecipe })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.editRecipe) ? (
+                        <img src={buttonIcons.editRecipe} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.editRecipe}</span>
                       )}
                     </div>
                   </div>
