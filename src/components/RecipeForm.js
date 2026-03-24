@@ -217,11 +217,8 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     importRecipe: DEFAULT_BUTTON_ICONS.importRecipe,
     scanImage: DEFAULT_BUTTON_ICONS.scanImage,
     webImport: DEFAULT_BUTTON_ICONS.webImport,
-    saveRecipe: DEFAULT_BUTTON_ICONS.saveRecipe
-    importRecipe: '📥',
-    scanImage: '📷',
-    webImport: '🌐',
-    cancelRecipe: '✕'
+    saveRecipe: DEFAULT_BUTTON_ICONS.saveRecipe,
+    cancelRecipe: DEFAULT_BUTTON_ICONS.cancelRecipe
   });
   const [showTypeahead, setShowTypeahead] = useState(false);
   const [typeaheadIngredientIndex, setTypeaheadIngredientIndex] = useState(null);
@@ -360,11 +357,8 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         importRecipe: icons.importRecipe || DEFAULT_BUTTON_ICONS.importRecipe,
         scanImage: icons.scanImage || DEFAULT_BUTTON_ICONS.scanImage,
         webImport: icons.webImport || DEFAULT_BUTTON_ICONS.webImport,
-        saveRecipe: icons.saveRecipe || DEFAULT_BUTTON_ICONS.saveRecipe
-        importRecipe: icons.importRecipe || '📥',
-        scanImage: icons.scanImage || '📷',
-        webImport: icons.webImport || '🌐',
-        cancelRecipe: icons.cancelRecipe || '✕'
+        saveRecipe: icons.saveRecipe || DEFAULT_BUTTON_ICONS.saveRecipe,
+        cancelRecipe: icons.cancelRecipe || DEFAULT_BUTTON_ICONS.cancelRecipe
       });
     };
     loadCustomLists();
