@@ -362,6 +362,38 @@ function getGridLayout(count) {
 }
 
 /**
+ * Convert a Firebase Storage URL to a Base64 data-URL to avoid CORS issues.
+ * Returns the URL as-is when it is already a data-URL.
+ *
+ * @param {string} url - Firebase Storage URL or data-URL.
+ * @returns {Promise<string|null>} Base64 data-URL, or null on failure.
+ */
+export async function convertFirebaseImageToBase64(url) {
+  try {
+    if (!url || typeof url !== 'string') return null;
+    // Already a data-URL – nothing to convert.
+    if (url.startsWith('data:')) return url;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn('[convertFirebaseImageToBase64] Fetch failed for:', url, response.status);
+      return null;
+    }
+    const blob = await response.blob();
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn('[convertFirebaseImageToBase64] Failed to convert:', url, error);
+    return null;
+  }
+}
+
+/**
  * Build a grid/mosaic image from up to six image URLs or base64 strings.
  *
  * @param {string[]} imageUrls - Image sources (URL or base64 data-URL).
@@ -402,8 +434,21 @@ export async function buildMenuGridImage(imageUrls, options = {}) {
   });
   console.log('[buildMenuGridImage] Canvas options: width=%d height=%d gap=%d quality=%s', width, height, gap, quality);
 
-  const count = Math.min(validUrls.length, 6);
-  const urls = validUrls.slice(0, count);
+  // Convert remote Firebase Storage URLs to Base64 to avoid CORS issues.
+  console.log('[buildMenuGridImage] --- Converting remote URLs to Base64 ---');
+  const convertedUrls = await Promise.all(
+    validUrls.map(async (url, i) => {
+      if (url.startsWith('data:')) return url;
+      const b64 = await convertFirebaseImageToBase64(url);
+      if (!b64) {
+        console.warn('[buildMenuGridImage] [%d] Could not convert to Base64, using original URL: %s', i, url);
+      }
+      return b64 || url;
+    })
+  );
+
+  const count = Math.min(convertedUrls.length, 6);
+  const urls = convertedUrls.slice(0, count);
   const { cols, rows } = getGridLayout(count);
   console.log('[buildMenuGridImage] Grid layout: %d images → %dcols × %drows', count, cols, rows);
 

@@ -532,16 +532,43 @@ REACT_APP_FIREBASE_PROJECT_ID=your_project_id
 
 **Important**: Never commit `.env.local` to version control. Use `.env.example` as a template.
 
-## Firebase Storage CORS Configuration
+## Firebase Storage CORS Setup
 
-To allow images to load from Firebase Storage, you need to configure CORS:
+After deploying the application, configure CORS for Firebase Storage to allow images to load correctly in the Menu-Grid.
 
-1. Install [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
-2. Authenticate: `gcloud auth login`
-3. Set project: `gcloud config set project broubook`
-4. Apply CORS config: `gsutil cors set storage-cors.json gs://broubook.firebasestorage.app`
+### Prerequisites
+- Install [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+- Authenticate: `gcloud auth login`
+- Set project: `gcloud config set project broubook`
 
-To verify: `gsutil cors get gs://broubook.firebasestorage.app`
+### Apply CORS Configuration
+
+```bash
+gsutil cors set storage-cors.json gs://broubook.firebasestorage.app
+```
+
+Or use the provided deployment script:
+
+```bash
+chmod +x scripts/deploy-cors.sh
+./scripts/deploy-cors.sh
+```
+
+### Verify Configuration
+
+```bash
+gsutil cors get gs://broubook.firebasestorage.app
+```
+
+### Troubleshooting
+If images fail to load with CORS errors:
+1. Check browser console for the specific origin in the error message
+2. Add the missing origin to `storage-cors.json`
+3. Reapply the configuration with `gsutil cors set ...`
+4. Clear browser cache
+
+For development, you can temporarily use `"origin": ["*"]` in `storage-cors.json`.
+For production, restrict to the specific domains listed in the file.
 
 ## Testing Node.js Updates
 
