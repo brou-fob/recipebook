@@ -1648,6 +1648,120 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                 </div>
 
                 <div className="button-icon-item">
+                  <label htmlFor="saveRecipeIcon">Rezept-speichern-Button (Rezeptbearbeitung):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.saveRecipe) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="saveRecipeIcon"
+                          value={buttonIcons.saveRecipe}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, saveRecipe: e.target.value })}
+                          placeholder="z.B. 💾"
+                          maxLength={10}
+                        />
+                        <label htmlFor="saveRecipeIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'saveRecipe' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="saveRecipeIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('saveRecipe', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'saveRecipe'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('saveRecipe')}
+                          title="Bild entfernen"
+                        >
+                          ✕ Entfernen
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, saveRecipe: DEFAULT_BUTTON_ICONS.saveRecipe })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.saveRecipe) ? (
+                        <img src={buttonIcons.saveRecipe} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.saveRecipe}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
+                  <label htmlFor="cancelRecipeIcon">Abbrechen-Button (Rezeptbearbeitung):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.cancelRecipe) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="cancelRecipeIcon"
+                          value={buttonIcons.cancelRecipe}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, cancelRecipe: e.target.value })}
+                          placeholder="z.B. ✕"
+                          maxLength={10}
+                        />
+                        <label htmlFor="cancelRecipeIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'cancelRecipe' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="cancelRecipeIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('cancelRecipe', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'cancelRecipe'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('cancelRecipe')}
+                          title="Bild entfernen"
+                        >
+                          ✕ Entfernen
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, cancelRecipe: DEFAULT_BUTTON_ICONS.cancelRecipe })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.cancelRecipe) ? (
+                        <img src={buttonIcons.cancelRecipe} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.cancelRecipe}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
                   <label htmlFor="closeButtonIcon">Schließen-Button (Rezeptdetailansicht):</label>
                   <div className="button-icon-input-group">
                     {!isBase64Image(buttonIcons.closeButton) ? (
