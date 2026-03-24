@@ -395,7 +395,7 @@ describe('Tagesmenu – pre-existing active flags', () => {
     expect(document.querySelectorAll('.tagesmenu-results-tile')).toHaveLength(3);
   });
 
-  test('Gemeinsamer Status shows all recipes with group status, including pre-existing ones from previous sessions', async () => {
+  test('Gemeinsamer Status does not show a Kandidat group; kandidat recipes appear only in Meine Auswahl', async () => {
     // Setup: 5 recipes total, r1 and r2 have pre-existing flags from a previous session, r3-r5 are new
     mockActiveFlagsValue = { r1: 'kandidat', r2: 'archiv' };
     
@@ -457,32 +457,25 @@ describe('Tagesmenu – pre-existing active flags', () => {
     // Results view should be shown
     expect(document.querySelector('.tagesmenu-results')).not.toBeNull();
 
-    // "Gemeinsamer Status" section should exist (for multi-member lists)
+    // "Gemeinsamer Status" section should NOT be shown since all group statuses are 'kandidat'
+    // (Kandidat group removed from "Gemeinsamer Status"; no archiv recipes; maxKandidatenSchwelle=null)
     const sharedStatusTitle = Array.from(document.querySelectorAll('.tagesmenu-results-section-title'))
       .find(el => el.textContent === 'Gemeinsamer Status');
-    
-    expect(sharedStatusTitle).not.toBeNull();
+    expect(sharedStatusTitle).toBeUndefined();
 
-    // Count recipes in "Gemeinsamer Status" section
-    // Should show ALL 5 recipes (r1–r5) since all have 'kandidat' group status,
-    // including r1 and r2 which were flagged in a previous session.
-    const sharedStatusKandidatGroup = document.querySelector('.tagesmenu-results-group');
-    const sharedStatusTiles = sharedStatusKandidatGroup.querySelectorAll('.tagesmenu-results-tile');
-    
-    expect(sharedStatusTiles).toHaveLength(5);
-    
-    // Verify both previous-session and current-session recipes are shown
-    const tileNames = Array.from(sharedStatusTiles).map(tile => 
-      tile.querySelector('.tagesmenu-results-tile-name').textContent
-    );
-    expect(tileNames).toContain('Old Recipe 1');
-    expect(tileNames).toContain('Old Recipe 2');
-    expect(tileNames).toContain('New Recipe 3');
-    expect(tileNames).toContain('New Recipe 4');
-    expect(tileNames).toContain('New Recipe 5');
+    // "Meine Auswahl" section should show own kandidat recipes (r1 from activeFlags + r3/r4/r5 swiped)
+    const meineAuswahlTitle = Array.from(document.querySelectorAll('.tagesmenu-results-section-title'))
+      .find(el => el.textContent === 'Meine Auswahl');
+    expect(meineAuswahlTitle).not.toBeNull();
+
+    // Verify no "Kandidat" group heading appears under "Gemeinsamer Status"
+    const allGroupHeadings = Array.from(document.querySelectorAll('.tagesmenu-results-group-title'))
+      .map(el => el.textContent);
+    // "Kandidat" heading only appears once (under "Meine Auswahl"), not as a separate shared-status group
+    expect(allGroupHeadings.filter(h => h === 'Kandidat')).toHaveLength(1);
   });
 
-  test('Gemeinsamer Status shows pre-existing kandidat candidates when returning to Tagesmenü without new swipes', async () => {
+  test('Gemeinsamer Status does not show Kandidat group for pre-existing kandidat flags; recipes appear in Meine Auswahl', async () => {
     // Simulate returning to Tagesmenü: all recipes already flagged from a previous session.
     // swipeResults will be empty (no swipes this session).
     mockActiveFlagsValue = { r1: 'kandidat', r2: 'kandidat', r3: 'kandidat' };
@@ -522,19 +515,24 @@ describe('Tagesmenu – pre-existing active flags', () => {
     // All recipes have active flags, so the swipe stack is empty and results page shows immediately
     expect(document.querySelector('.tagesmenu-results')).not.toBeNull();
 
-    // "Gemeinsamer Status" section should exist and show all 3 candidates
+    // "Gemeinsamer Status" section should NOT be shown:
+    // all group statuses are 'kandidat', Kandidat group was removed from Gemeinsamer Status,
+    // no archiv recipes exist, and maxKandidatenSchwelle is null (no Gemeinsame Kandidaten).
     const sharedStatusTitle = Array.from(document.querySelectorAll('.tagesmenu-results-section-title'))
       .find(el => el.textContent === 'Gemeinsamer Status');
-    expect(sharedStatusTitle).not.toBeNull();
+    expect(sharedStatusTitle).toBeUndefined();
 
-    const sharedStatusKandidatGroup = document.querySelector('.tagesmenu-results-group');
-    const sharedStatusTiles = sharedStatusKandidatGroup.querySelectorAll('.tagesmenu-results-tile');
+    // "Meine Auswahl" section shows all 3 pre-existing kandidat recipes
+    const meineAuswahlTitle = Array.from(document.querySelectorAll('.tagesmenu-results-section-title'))
+      .find(el => el.textContent === 'Meine Auswahl');
+    expect(meineAuswahlTitle).not.toBeNull();
 
-    // All 3 pre-existing candidates should be visible even without new swipes this session
-    expect(sharedStatusTiles).toHaveLength(3);
-    const tileNames = Array.from(sharedStatusTiles).map(tile =>
-      tile.querySelector('.tagesmenu-results-tile-name').textContent
-    );
+    const meineAuswahlKandidatGroup = Array.from(document.querySelectorAll('.tagesmenu-results-group'))
+      .find(el => el.querySelector('.tagesmenu-results-group-title')?.textContent === 'Kandidat');
+    expect(meineAuswahlKandidatGroup).not.toBeNull();
+
+    const tileNames = Array.from(meineAuswahlKandidatGroup.querySelectorAll('.tagesmenu-results-tile-name'))
+      .map(el => el.textContent);
     expect(tileNames).toContain('Rezept 1');
     expect(tileNames).toContain('Rezept 2');
     expect(tileNames).toContain('Rezept 3');
