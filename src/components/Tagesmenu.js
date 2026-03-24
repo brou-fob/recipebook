@@ -582,7 +582,6 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
             })();
 
             const groupStatusGroups = [
-              { label: 'Kandidat', flag: 'kandidat' },
               { label: 'Archiviert', flag: 'archiv' },
             ].map(({ label, flag }) => ({
               label,
