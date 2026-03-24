@@ -721,9 +721,28 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const handleFabClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // Helper to create synthetic event for fallback
+    const createSyntheticEvent = () => ({ 
+      preventDefault: () => {}, 
+      target: formRef.current 
+    });
+    
     // Trigger form submission using the form ref
     if (formRef.current) {
-      formRef.current.requestSubmit();
+      try {
+        // Use requestSubmit() to trigger validation
+        if (typeof formRef.current.requestSubmit === 'function') {
+          formRef.current.requestSubmit();
+        } else {
+          // Fallback for browsers that don't support requestSubmit
+          // Call handleSubmit directly with synthetic event
+          handleSubmit(createSyntheticEvent());
+        }
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        // Fallback: call handleSubmit directly with synthetic event
+        handleSubmit(createSyntheticEvent());
+      }
     }
   };
 

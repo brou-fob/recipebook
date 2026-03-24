@@ -856,7 +856,6 @@
   right: 20px;
   z-index: 1101;
   background: white;
-  color: white;
   border: 1px solid #ddd;
   padding: 0;
   border-radius: 50%;
@@ -893,6 +892,7 @@
   .save-fab-button {
     width: 56px;
     height: 56px;
+    /* Matches Add-Button opacity from RecipeList for design consistency */
     opacity: 0.85;
     transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
                 background 0.15s ease,
