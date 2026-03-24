@@ -285,7 +285,8 @@ export const DEFAULT_BUTTON_ICONS = {
   swipeLeft: '👎',
   swipeUp: '⭐',
   menuFavoritesButton: '★',
-  tagesmenuFilterButton: '☰'
+  tagesmenuFilterButton: '☰',
+  cancelRecipe: '✕'
 };
 
 // Cache for settings to avoid repeated Firestore reads

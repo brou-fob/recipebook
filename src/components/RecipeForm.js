@@ -218,6 +218,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     scanImage: DEFAULT_BUTTON_ICONS.scanImage,
     webImport: DEFAULT_BUTTON_ICONS.webImport,
     saveRecipe: DEFAULT_BUTTON_ICONS.saveRecipe
+    importRecipe: '📥',
+    scanImage: '📷',
+    webImport: '🌐',
+    cancelRecipe: '✕'
   });
   const [showTypeahead, setShowTypeahead] = useState(false);
   const [typeaheadIngredientIndex, setTypeaheadIngredientIndex] = useState(null);
@@ -233,6 +237,8 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const [fabPressed, setFabPressed] = useState(false);
   // Form ref for FAB button
   const formRef = useRef(null);
+  // Cancel button press state
+  const [cancelPressed, setCancelPressed] = useState(false);
 
   // Auto-open WebImportModal when initialWebImportUrl is provided on mount
   useEffect(() => {
@@ -355,6 +361,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         scanImage: icons.scanImage || DEFAULT_BUTTON_ICONS.scanImage,
         webImport: icons.webImport || DEFAULT_BUTTON_ICONS.webImport,
         saveRecipe: icons.saveRecipe || DEFAULT_BUTTON_ICONS.saveRecipe
+        importRecipe: icons.importRecipe || '📥',
+        scanImage: icons.scanImage || '📷',
+        webImport: icons.webImport || '🌐',
+        cancelRecipe: icons.cancelRecipe || '✕'
       });
     };
     loadCustomLists();
@@ -1330,6 +1340,26 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
           </button>
         </div>
       </form>
+
+      {/* Cancel FAB button - positioned at bottom-left */}
+      <button
+        className={`cancel-fab-button ${cancelPressed ? 'pressed' : ''}`}
+        onClick={onCancel}
+        onTouchStart={() => setCancelPressed(true)}
+        onTouchEnd={() => setCancelPressed(false)}
+        onTouchCancel={() => setCancelPressed(false)}
+        onMouseDown={() => setCancelPressed(true)}
+        onMouseUp={() => setCancelPressed(false)}
+        onMouseLeave={() => setCancelPressed(false)}
+        title="Abbrechen"
+        aria-label="Rezeptbearbeitung abbrechen"
+      >
+        {isBase64Image(buttonIcons.cancelRecipe) ? (
+          <img src={buttonIcons.cancelRecipe} alt="Abbrechen" className="button-icon-image" />
+        ) : (
+          buttonIcons.cancelRecipe
+        )}
+      </button>
 
       {showImportModal && (
         <RecipeImportModal

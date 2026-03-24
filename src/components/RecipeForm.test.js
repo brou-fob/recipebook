@@ -29,6 +29,7 @@ jest.mock('../utils/customLists', () => ({
     scanImage: '📷',
     webImport: '🌐',
     saveRecipe: '💾'
+    cancelRecipe: '✕'
   }),
   DEFAULT_BUTTON_ICONS: {
     cookingMode: '👨‍🍳',
