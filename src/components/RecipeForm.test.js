@@ -26,7 +26,9 @@ jest.mock('../utils/customLists', () => ({
   getButtonIcons: () => Promise.resolve({
     cookingMode: '👨‍🍳',
     importRecipe: '📥',
-    scanImage: '📷'
+    scanImage: '📷',
+    webImport: '🌐',
+    cancelRecipe: '✕'
   }),
 }));
 
