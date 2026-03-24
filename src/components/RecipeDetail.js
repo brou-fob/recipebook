@@ -67,6 +67,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const [timerStartIcon, setTimerStartIcon] = useState('⏱');
   const [timerStopIcon, setTimerStopIcon] = useState('⏹');
   const [cookDateIcon, setCookDateIcon] = useState('📅');
+  const [editRecipeIcon, setEditRecipeIcon] = useState('✏️');
+  const [editFabPressed, setEditFabPressed] = useState(false);
   const [conversionTable, setConversionTable] = useState([]);
   const [showCookDateModal, setShowCookDateModal] = useState(false);
   const [cookDateModalPrefillToday, setCookDateModalPrefillToday] = useState(false);
@@ -99,6 +101,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       setTimerStartIcon(icons.timerStart || '⏱');
       setTimerStopIcon(icons.timerStop || '⏹');
       setCookDateIcon(icons.cookDate || '📅');
+      setEditRecipeIcon(icons.editRecipe || '✏️');
       setConversionTable(lists.conversionTable || []);
       const bubbleIcon = await getTimelineBubbleIcon();
       const cookEventBubbleIcon = await getTimelineCookEventBubbleIcon();
@@ -1896,6 +1899,26 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
             </button>
           </div>
         </div>
+      )}
+      {userCanDirectlyEdit && onEdit && (
+        <button
+          className={`edit-fab-button${editFabPressed ? ' pressed' : ''}`}
+          onClick={() => onEdit(recipe)}
+          onTouchStart={() => setEditFabPressed(true)}
+          onTouchEnd={() => setEditFabPressed(false)}
+          onTouchCancel={() => setEditFabPressed(false)}
+          onMouseDown={() => setEditFabPressed(true)}
+          onMouseUp={() => setEditFabPressed(false)}
+          onMouseLeave={() => setEditFabPressed(false)}
+          title="Rezept bearbeiten"
+          aria-label="Rezept bearbeiten"
+        >
+          {isBase64Image(editRecipeIcon) ? (
+            <img src={editRecipeIcon} alt="Bearbeiten" className="button-icon-image" />
+          ) : (
+            editRecipeIcon
+          )}
+        </button>
       )}
     </div>
   );

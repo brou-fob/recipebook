@@ -278,6 +278,7 @@ export const DEFAULT_BUTTON_ICONS = {
   timerStop: '⏹',
   cookDate: '📅',
   addRecipe: '➕',
+  editRecipe: '✏️',
   addMenu: '📋',
   addPrivateRecipe: '🔒',
   saveRecipe: '💾',
