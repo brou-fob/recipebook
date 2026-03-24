@@ -395,8 +395,8 @@ describe('Tagesmenu – pre-existing active flags', () => {
     expect(document.querySelectorAll('.tagesmenu-results-tile')).toHaveLength(3);
   });
 
-  test('Gemeinsamer Status only shows recipes from current swipe session', async () => {
-    // Setup: 5 recipes total, r1 and r2 have pre-existing flags, r3-r5 are new
+  test('Gemeinsamer Status shows all recipes with group status, including pre-existing ones from previous sessions', async () => {
+    // Setup: 5 recipes total, r1 and r2 have pre-existing flags from a previous session, r3-r5 are new
     mockActiveFlagsValue = { r1: 'kandidat', r2: 'archiv' };
     
     // Multi-member list to enable "Gemeinsamer Status" section
@@ -411,8 +411,8 @@ describe('Tagesmenu – pre-existing active flags', () => {
 
     // Set up group status: all recipes are considered 'kandidat' by the mock
     mockAllMembersFlagsValue = {
-      user1: { r3: 'kandidat', r4: 'kandidat', r5: 'kandidat' },
-      user2: { r3: 'kandidat', r4: 'kandidat', r5: 'kandidat' },
+      user1: { r1: 'kandidat', r2: 'kandidat', r3: 'kandidat', r4: 'kandidat', r5: 'kandidat' },
+      user2: { r1: 'kandidat', r2: 'kandidat', r3: 'kandidat', r4: 'kandidat', r5: 'kandidat' },
     };
 
     const allRecipes = [
@@ -464,23 +464,80 @@ describe('Tagesmenu – pre-existing active flags', () => {
     expect(sharedStatusTitle).not.toBeNull();
 
     // Count recipes in "Gemeinsamer Status" section
-    // Should only show r3, r4, r5 (from current session), NOT r1, r2 (pre-existing flags)
-    const allTiles = document.querySelectorAll('.tagesmenu-results-tile');
+    // Should show ALL 5 recipes (r1–r5) since all have 'kandidat' group status,
+    // including r1 and r2 which were flagged in a previous session.
     const sharedStatusKandidatGroup = document.querySelector('.tagesmenu-results-group');
     const sharedStatusTiles = sharedStatusKandidatGroup.querySelectorAll('.tagesmenu-results-tile');
     
-    // Should show 3 recipes (r3, r4, r5) in shared status section
-    expect(sharedStatusTiles).toHaveLength(3);
+    expect(sharedStatusTiles).toHaveLength(5);
     
-    // Verify the recipes are the correct ones (new ones, not old ones)
+    // Verify both previous-session and current-session recipes are shown
     const tileNames = Array.from(sharedStatusTiles).map(tile => 
       tile.querySelector('.tagesmenu-results-tile-name').textContent
     );
+    expect(tileNames).toContain('Old Recipe 1');
+    expect(tileNames).toContain('Old Recipe 2');
     expect(tileNames).toContain('New Recipe 3');
     expect(tileNames).toContain('New Recipe 4');
     expect(tileNames).toContain('New Recipe 5');
-    expect(tileNames).not.toContain('Old Recipe 1');
-    expect(tileNames).not.toContain('Old Recipe 2');
+  });
+
+  test('Gemeinsamer Status shows pre-existing kandidat candidates when returning to Tagesmenü without new swipes', async () => {
+    // Simulate returning to Tagesmenü: all recipes already flagged from a previous session.
+    // swipeResults will be empty (no swipes this session).
+    mockActiveFlagsValue = { r1: 'kandidat', r2: 'kandidat', r3: 'kandidat' };
+
+    const multiMemberList = {
+      id: 'list1',
+      name: 'Test Liste',
+      listKind: 'interactive',
+      recipeIds: [],
+      ownerId: 'user1',
+      memberIds: ['user2'],
+    };
+
+    mockAllMembersFlagsValue = {
+      user1: { r1: 'kandidat', r2: 'kandidat', r3: 'kandidat' },
+      user2: { r1: 'kandidat', r2: 'kandidat', r3: 'kandidat' },
+    };
+
+    const allRecipes = [
+      makeRecipe('r1', 'Rezept 1'),
+      makeRecipe('r2', 'Rezept 2'),
+      makeRecipe('r3', 'Rezept 3'),
+    ];
+
+    await act(async () => {
+      render(
+        <Tagesmenu
+          interactiveLists={[multiMemberList]}
+          recipes={allRecipes}
+          allUsers={[]}
+          onSelectRecipe={() => {}}
+          currentUser={currentUser}
+        />
+      );
+    });
+
+    // All recipes have active flags, so the swipe stack is empty and results page shows immediately
+    expect(document.querySelector('.tagesmenu-results')).not.toBeNull();
+
+    // "Gemeinsamer Status" section should exist and show all 3 candidates
+    const sharedStatusTitle = Array.from(document.querySelectorAll('.tagesmenu-results-section-title'))
+      .find(el => el.textContent === 'Gemeinsamer Status');
+    expect(sharedStatusTitle).not.toBeNull();
+
+    const sharedStatusKandidatGroup = document.querySelector('.tagesmenu-results-group');
+    const sharedStatusTiles = sharedStatusKandidatGroup.querySelectorAll('.tagesmenu-results-tile');
+
+    // All 3 pre-existing candidates should be visible even without new swipes this session
+    expect(sharedStatusTiles).toHaveLength(3);
+    const tileNames = Array.from(sharedStatusTiles).map(tile =>
+      tile.querySelector('.tagesmenu-results-tile-name').textContent
+    );
+    expect(tileNames).toContain('Rezept 1');
+    expect(tileNames).toContain('Rezept 2');
+    expect(tileNames).toContain('Rezept 3');
   });
 });
 
@@ -926,8 +983,8 @@ describe('Tagesmenu – Gemeinsame Kandidaten group', () => {
     expect(tileNames[2]).toBe('Rezept 3');
   });
 
-  test('Gemeinsame Kandidaten group only includes current-session recipes', async () => {
-    // r1 has a pre-existing active flag and was NOT swiped in this session → excluded
+  test('Gemeinsame Kandidaten group includes all recipes with kandidat group status, including pre-existing ones', async () => {
+    // r1 has a pre-existing active flag from a previous session → should now be INCLUDED
     mockActiveFlagsValue = { r1: 'kandidat' };
     mockMaxKandidatenSchwelle = 3;
     mockAllMembersFlagsValue = {
@@ -956,10 +1013,10 @@ describe('Tagesmenu – Gemeinsame Kandidaten group', () => {
     expect(gemeinsameGroup).not.toBeNull();
     const tileNames = Array.from(gemeinsameGroup.querySelectorAll('.tagesmenu-results-tile-name'))
       .map((el) => el.textContent);
-    // Only r2 and r3 (current-session swipes), r1 is excluded (pre-existing flag)
+    // All 3 recipes should appear: r1 (pre-existing), r2 and r3 (current session)
+    expect(tileNames).toContain('Rezept 1');
     expect(tileNames).toContain('Rezept 2');
     expect(tileNames).toContain('Rezept 3');
-    expect(tileNames).not.toContain('Rezept 1');
   });
 
   test('Gemeinsame Kandidaten group is not shown when no recipes qualify', async () => {
