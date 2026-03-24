@@ -69,6 +69,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const [cookDateIcon, setCookDateIcon] = useState('📅');
   const [editRecipeIcon, setEditRecipeIcon] = useState('✏️');
   const [editFabPressed, setEditFabPressed] = useState(false);
+  const [newVersionIcon, setNewVersionIcon] = useState('📝');
+  const [newVersionFabPressed, setNewVersionFabPressed] = useState(false);
   const [conversionTable, setConversionTable] = useState([]);
   const [showCookDateModal, setShowCookDateModal] = useState(false);
   const [cookDateModalPrefillToday, setCookDateModalPrefillToday] = useState(false);
@@ -102,6 +104,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       setTimerStopIcon(icons.timerStop || '⏹');
       setCookDateIcon(icons.cookDate || '📅');
       setEditRecipeIcon(icons.editRecipe || '✏️');
+      setNewVersionIcon(icons.newVersion || '📝');
       setConversionTable(lists.conversionTable || []);
       const bubbleIcon = await getTimelineBubbleIcon();
       const cookEventBubbleIcon = await getTimelineCookEventBubbleIcon();
@@ -1917,6 +1920,26 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
             <img src={editRecipeIcon} alt="Bearbeiten" className="button-icon-image" />
           ) : (
             editRecipeIcon
+          )}
+        </button>
+      )}
+      {userCanCreateVersion && !userCanDirectlyEdit && onCreateVersion && (
+        <button
+          className={`new-version-fab-button${newVersionFabPressed ? ' pressed' : ''}`}
+          onClick={() => onCreateVersion(recipe)}
+          onTouchStart={() => setNewVersionFabPressed(true)}
+          onTouchEnd={() => setNewVersionFabPressed(false)}
+          onTouchCancel={() => setNewVersionFabPressed(false)}
+          onMouseDown={() => setNewVersionFabPressed(true)}
+          onMouseUp={() => setNewVersionFabPressed(false)}
+          onMouseLeave={() => setNewVersionFabPressed(false)}
+          title="Eigene Version erstellen"
+          aria-label="Eigene Version erstellen"
+        >
+          {isBase64Image(newVersionIcon) ? (
+            <img src={newVersionIcon} alt="Neue Version" className="button-icon-image" />
+          ) : (
+            newVersionIcon
           )}
         </button>
       )}

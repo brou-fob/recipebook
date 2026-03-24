@@ -289,7 +289,8 @@ export const DEFAULT_BUTTON_ICONS = {
   tagesmenuFilterButton: '☰',
   tagesmenuZumTagesMenu: '🗓️',
   tagesmenuMeineAuswahl: '📋',
-  cancelRecipe: '✕'
+  cancelRecipe: '✕',
+  newVersion: '📝'
 };
 
 // Cache for settings to avoid repeated Firestore reads

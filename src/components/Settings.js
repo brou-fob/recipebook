@@ -230,7 +230,8 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
     swipeUp: '⭐',
     menuFavoritesButton: '★',
     tagesmenuFilterButton: '☰',
-    tagesmenuZumTagesMenu: '🗓️'
+    tagesmenuZumTagesMenu: '🗓️',
+    newVersion: '📝'
   });
   const [uploadingButtonIcon, setUploadingButtonIcon] = useState(null);
 
@@ -2156,6 +2157,63 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                         <img src={buttonIcons.editRecipe} alt="Icon" className="icon-image" />
                       ) : (
                         <span>{buttonIcons.editRecipe}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
+                </div>
+
+                <div className="button-icon-item">
+                  <label htmlFor="newVersionIcon">Neue-Version-Button (Rezeptdetailansicht):</label>
+                  <div className="button-icon-input-group">
+                    {!isBase64Image(buttonIcons.newVersion) ? (
+                      <>
+                        <input
+                          type="text"
+                          id="newVersionIcon"
+                          value={buttonIcons.newVersion}
+                          onChange={(e) => setButtonIcons({ ...buttonIcons, newVersion: e.target.value })}
+                          placeholder="z.B. 📝"
+                          maxLength={10}
+                        />
+                        <label htmlFor="newVersionIconFile" className="upload-icon-btn" title="Bild hochladen">
+                          {uploadingButtonIcon === 'newVersion' ? '⏳' : '📷'}
+                        </label>
+                        <input
+                          type="file"
+                          id="newVersionIconFile"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                          onChange={(e) => handleButtonIconImageUpload('newVersion', e)}
+                          style={{ display: 'none' }}
+                          disabled={uploadingButtonIcon === 'newVersion'}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="icon-image-info">Bild hochgeladen</div>
+                        <button
+                          type="button"
+                          className="remove-icon-btn"
+                          onClick={() => handleRemoveButtonIconImage('newVersion')}
+                          title="Bild entfernen"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="reset-icon-btn"
+                      onClick={() => setButtonIcons({ ...buttonIcons, newVersion: DEFAULT_BUTTON_ICONS.newVersion })}
+                      title="Auf Standard zurücksetzen"
+                    >
+                      ↻
+                    </button>
+                    <div className="icon-preview">
+                      {isBase64Image(buttonIcons.newVersion) ? (
+                        <img src={buttonIcons.newVersion} alt="Icon" className="icon-image" />
+                      ) : (
+                        <span>{buttonIcons.newVersion}</span>
                       )}
                     </div>
                   </div>
