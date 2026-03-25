@@ -1255,7 +1255,21 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                 Eigene Version erstellen
               </button>
             )}
-            <button
+            {currentUser && !currentUser.isGuest && (
+              <button
+                className="cook-date-button"
+                onClick={() => { setCookDateModalPrefillToday(false); setShowCookDateModal(true); }}
+                title="Kochdatum erfassen"
+                aria-label="Kochdatum erfassen"
+              >
+                {isBase64Image(cookDateIcon) ? (
+                  <img src={cookDateIcon} alt="Kochdatum" className="cook-date-icon-img" />
+                ) : (
+                  cookDateIcon
+                )}
+              </button>
+            )}
+              <button
               className="shopping-list-trigger-button"
               onClick={handleShoppingListClick}
               title="Einkaufsliste anzeigen"
@@ -1319,20 +1333,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                   {isAddToMyRecipesLoading ? 'Wird hinzugefügt…' : currentUser ? '+ Zu meinen Rezepten' : 'Anmelden & hinzufügen'}
                 </button>
               )
-            )}
-            {currentUser && !currentUser.isGuest && (
-              <button
-                className="cook-date-button"
-                onClick={() => { setCookDateModalPrefillToday(false); setShowCookDateModal(true); }}
-                title="Kochdatum erfassen"
-                aria-label="Kochdatum erfassen"
-              >
-                {isBase64Image(cookDateIcon) ? (
-                  <img src={cookDateIcon} alt="Kochdatum" className="cook-date-icon-img" />
-                ) : (
-                  cookDateIcon
-                )}
-              </button>
             )}
             <RecipeRating
               recipeId={recipe.id}
