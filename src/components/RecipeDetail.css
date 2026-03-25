@@ -817,6 +817,7 @@ difficulty-stars .star {
   margin-bottom: 0rem;
   flex-wrap: wrap;
   gap: 0.5rem;
+  border-bottom: none;
 }
 
 .serving-control {
