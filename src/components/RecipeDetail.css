@@ -149,8 +149,8 @@
 
   background: #fff;
   color: #DF7A00;
-  border: 1px solid #DF7A00;
-  border-radius: 12px;
+  border: 1px solid #DF7A00 !important;
+  border-radius: 12px !important;
 
   cursor: pointer;
   line-height: 1;
@@ -187,9 +187,8 @@
 }
 
 .favorite-button--active {
-  background: #DF7A00;
-  color: #fff;
-  border-color: #DF7A00;
+  background: #DF7A00 !important;
+  border-color: #DF7A00 !important;
 }
 
 .favorite-button--active:hover {
