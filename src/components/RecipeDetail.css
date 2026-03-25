@@ -140,7 +140,7 @@
 
 .favorite-button {
   background: white;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 1.25rem;
   cursor: pointer;
@@ -155,12 +155,12 @@
   padding: 0;
 }
 
-.favorite-button:hover {
+/*.favorite-button:hover {
   background: #fff3e0;
   border-color: #DF7A00;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+}*/
 
 .favorite-button.is-favorite {
   background: #DF7A00;
