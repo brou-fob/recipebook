@@ -1219,9 +1219,12 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           <div className="action-buttons">
             {onToggleFavorite && (
               <button 
-                className={`favorite-button ${isFavorite ? 'is-favorite' : ''}`}
+                className={`favorite-button ${isFavorite ? 'favorite-button--active' : ''}`}
                 onClick={handleToggleFavorite}
                 title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                aria-label={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                aria-pressed={isFavorite}
+                type="button"
               >
                 {isFavorite ? '★' : '☆'}
               </button>
@@ -1570,13 +1573,16 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
             {isMobile && (
               <div className="mobile-action-buttons">
                 {onToggleFavorite && (
-                  <button 
-                    className={`favorite-button ${isFavorite ? 'is-favorite' : ''}`}
-                    onClick={handleToggleFavorite}
-                    title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
-                  >
-                    {isFavorite ? '★' : '☆'}
-                  </button>
+                <button
+                  className={`favorite-button ${isFavorite ? 'favorite-button--active' : ''}`}
+                  onClick={handleToggleFavorite}
+                  title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  aria-label={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  aria-pressed={isFavorite}
+                  type="button"
+                >
+                  {isFavorite ? '★' : '☆'}
+                </button>
                 )}
                 <button
                   className="shopping-list-trigger-button"
