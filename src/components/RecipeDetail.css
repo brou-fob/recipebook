@@ -807,7 +807,6 @@ difficulty-stars .star {
   color: #1a1a1a;
   font-size: 1.25rem;
   font-weight: 700;
-  border-bottom: none;
 }
 
 .section-header {
@@ -817,7 +816,6 @@ difficulty-stars .star {
   margin-bottom: 0rem;
   flex-wrap: wrap;
   gap: 0.5rem;
-  border-bottom: none;
 }
 
 .serving-control {
@@ -867,6 +865,7 @@ difficulty-stars .star {
 .steps-list {
   margin: 0;
   padding-left: 1.5rem;
+  border-top: none;
 }
 
 .ingredients-list li,
