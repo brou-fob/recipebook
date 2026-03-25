@@ -1921,7 +1921,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       {alarmRunning && (
         <div className="alarm-modal-overlay">
           <div className="alarm-modal" role="dialog" aria-modal="true">
-            <div className="alarm-modal-icon">⏰</div>
             <h2 className="alarm-modal-title">Timer abgelaufen!</h2>
             <p className="alarm-modal-label">{alarmLabel}</p>
             <button className="alarm-modal-stop-btn" onClick={stopAlarm}>
