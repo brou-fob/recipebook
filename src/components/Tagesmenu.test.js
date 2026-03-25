@@ -38,6 +38,8 @@ jest.mock('../utils/customLists', () => ({
     swipeLeft: '👎',
     swipeUp: '⭐',
   },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 jest.mock('../utils/imageUtils', () => ({

@@ -71,8 +71,9 @@ jest.mock('../utils/customLists', () => ({
     timerStop: '⏹',
     cookDate: '📅',
     addRecipe: '➕',
-    addPrivateRecipe: '🔒',
   },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 jest.mock('../utils/recipeLinks', () => ({

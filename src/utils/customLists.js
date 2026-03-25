@@ -328,8 +328,64 @@ export const DEFAULT_BUTTON_ICONS = {
   tagesmenuZumTagesMenu: '🗓️',
   tagesmenuMeineAuswahl: '📋',
   cancelRecipe: '✕',
-  newVersion: '📝'
+  newVersion: '📝',
+  // Dark mode alternative icons (empty string = use normal icon in dark mode)
+  cookingModeDark: '',
+  cookingModeAltDark: '',
+  importRecipeDark: '',
+  scanImageDark: '',
+  webImportDark: '',
+  closeButtonDark: '',
+  closeButtonAltDark: '',
+  menuCloseButtonDark: '',
+  filterButtonDark: '',
+  filterButtonActiveDark: '',
+  copyLinkDark: '',
+  nutritionEmptyDark: '',
+  nutritionFilledDark: '',
+  ratingHeartEmptyDark: '',
+  ratingHeartEmptyModalDark: '',
+  ratingHeartFilledDark: '',
+  privateListBackDark: '',
+  shoppingListDark: '',
+  bringButtonDark: '',
+  timerStartDark: '',
+  timerStopDark: '',
+  cookDateDark: '',
+  addRecipeDark: '',
+  editRecipeDark: '',
+  addMenuDark: '',
+  addPrivateRecipeDark: '',
+  saveRecipeDark: '',
+  swipeRightDark: '',
+  swipeLeftDark: '',
+  swipeUpDark: '',
+  menuFavoritesButtonDark: '',
+  menuFavoritesButtonActiveDark: '',
+  tagesmenuFilterButtonDark: '',
+  tagesmenuZumTagesMenuDark: '',
+  tagesmenuMeineAuswahlDark: '',
+  cancelRecipeDark: '',
+  newVersionDark: '',
 };
+
+/**
+ * Returns the effective icon for a given key, respecting dark mode.
+ * If dark mode is active and a dark variant is set, returns the dark variant.
+ * Otherwise returns the normal icon.
+ * @param {Object} icons - The button icons object
+ * @param {string} key - The icon key (e.g. 'cookingMode')
+ * @param {boolean} isDarkMode - Whether dark mode is currently active
+ * @returns {string} The effective icon value
+ */
+export function getEffectiveIcon(icons, key, isDarkMode) {
+  if (isDarkMode) {
+    const darkKey = key + 'Dark';
+    const darkIcon = icons[darkKey];
+    if (darkIcon) return darkIcon;
+  }
+  return icons[key] ?? DEFAULT_BUTTON_ICONS[key] ?? '';
+}
 
 // Cache for settings to avoid repeated Firestore reads
 let settingsCache = null;

@@ -3,7 +3,7 @@ import './RecipeList.css';
 import { canEditRecipes, getUsers } from '../utils/userManagement';
 import { groupRecipesByParent, sortRecipeVersions } from '../utils/recipeVersioning';
 import { getUserFavorites } from '../utils/userFavorites';
-import { getCustomLists, getButtonIcons, DEFAULT_BUTTON_ICONS, getSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES } from '../utils/customLists';
+import { getCustomLists, getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import SortCarousel from './SortCarousel';
 import { getRecentRecipeCalls } from '../utils/recipeCallsFirestore';
@@ -112,13 +112,8 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
   const [allUsers, setAllUsers] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [customLists, setCustomLists] = useState({ mealCategories: [] });
-  const [buttonIcons, setButtonIcons] = useState({
-    filterButton: DEFAULT_BUTTON_ICONS.filterButton,
-    filterButtonActive: DEFAULT_BUTTON_ICONS.filterButtonActive,
-    addRecipe: DEFAULT_BUTTON_ICONS.addRecipe,
-    addPrivateRecipe: DEFAULT_BUTTON_ICONS.addPrivateRecipe,
-    menuFavoritesButtonActive: DEFAULT_BUTTON_ICONS.menuFavoritesButtonActive,
-  });
+  const [buttonIcons, setButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [sortSettings, setSortSettings] = useState(null);
   const [viewCounts, setViewCounts] = useState(null);
   
@@ -134,6 +129,13 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
       }
     };
     loadButtonIcons();
+  }, []);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   // Persist carousel sort selection
@@ -347,16 +349,16 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                   title="Weitere Filter"
                 >
                   {hasActiveFilters ? (
-                    isBase64Image(buttonIcons.filterButtonActive) ? (
-                      <img src={buttonIcons.filterButtonActive} alt="Filter aktiv" className="button-icon-image" />
+                    isBase64Image(getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)) ? (
+                      <img src={getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)} alt="Filter aktiv" className="button-icon-image" />
                     ) : (
-                      buttonIcons.filterButtonActive
+                      getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)
                     )
                   ) : (
-                    isBase64Image(buttonIcons.filterButton) ? (
-                      <img src={buttonIcons.filterButton} alt="Filter" className="button-icon-image" />
+                    isBase64Image(getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)) ? (
+                      <img src={getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)} alt="Filter" className="button-icon-image" />
                     ) : (
-                      buttonIcons.filterButton
+                      getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)
                     )
                   )}
                 </button>
@@ -376,10 +378,10 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                       title="Rezept hinzufügen"
                       aria-label="Rezept hinzufügen"
                     >
-                      {isBase64Image(buttonIcons.addRecipe) ? (
-                        <img src={buttonIcons.addRecipe} alt="Rezept hinzufügen" className="button-icon-image" />
+                      {isBase64Image(getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)) ? (
+                        <img src={getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)} alt="Rezept hinzufügen" className="button-icon-image" />
                       ) : (
-                        buttonIcons.addRecipe
+                        getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)
                       )}
                     </button>
                   )}
@@ -397,10 +399,10 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                       title="Privates Rezept hinzufügen"
                       aria-label="Privates Rezept hinzufügen"
                     >
-                      {isBase64Image(buttonIcons.addPrivateRecipe) ? (
-                        <img src={buttonIcons.addPrivateRecipe} alt="Privates Rezept hinzufügen" className="button-icon-image" />
+                      {isBase64Image(getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)) ? (
+                        <img src={getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)} alt="Privates Rezept hinzufügen" className="button-icon-image" />
                       ) : (
-                        buttonIcons.addPrivateRecipe
+                        getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)
                       )}
                     </button>
                   )}
@@ -439,7 +441,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                 recipe={recipe}
                 onClick={() => handleRecipeClick(group)}
                 isFavorite={isFavorite}
-                favoriteActiveIcon={buttonIcons.menuFavoritesButtonActive}
+                favoriteActiveIcon={getEffectiveIcon(buttonIcons, 'menuFavoritesButtonActive', isDarkMode)}
                 isNew={isNewRecipe(recipe, sortSettings)}
                 authorName={authorName}
                 versionCount={group.versionCount}

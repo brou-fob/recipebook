@@ -8,6 +8,7 @@ import { isBase64Image } from '../utils/imageUtils';
 import { enableMenuSharing, disableMenuSharing } from '../utils/menuFirestore';
 import { scaleIngredient, combineIngredients, convertIngredientUnits, isWaterIngredient } from '../utils/ingredientUtils';
 import { decodeRecipeLink } from '../utils/recipeLinks';
+import { getDarkModePreference, getEffectiveIcon } from '../utils/customLists';
 import ShoppingListModal from './ShoppingListModal';
 import RecipeCard from './RecipeCard';
 
@@ -21,6 +22,8 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onSe
   const [bringButtonIcon, setBringButtonIcon] = useState('🛍️');
   const [favoritesButtonIcon, setFavoritesButtonIcon] = useState('☆');
   const [favoritesButtonActiveIcon, setFavoritesButtonActiveIcon] = useState('★');
+  const [allButtonIcons, setAllButtonIcons] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareUrlCopied, setShareUrlCopied] = useState(false);
   const [showShoppingListModal, setShowShoppingListModal] = useState(false);
@@ -35,15 +38,29 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onSe
     const loadButtonIcons = async () => {
       const { getButtonIcons, getCustomLists } = require('../utils/customLists');
       const [icons, lists] = await Promise.all([getButtonIcons(), getCustomLists()]);
-      setCloseButtonIcon(icons.menuCloseButton || '✕');
-      setCopyLinkIcon(icons.copyLink || '📋');
-      setShoppingListIcon(icons.shoppingList || '🛒');
-      setBringButtonIcon(icons.bringButton || '🛍️');
-      setFavoritesButtonIcon(icons.menuFavoritesButton || '☆');
-      setFavoritesButtonActiveIcon(icons.menuFavoritesButtonActive || '★');
+      setAllButtonIcons(icons);
       setConversionTable(lists.conversionTable || []);
     };
     loadButtonIcons();
+  }, []);
+
+  // Re-compute icon states when icons or dark mode changes
+  useEffect(() => {
+    if (!allButtonIcons) return;
+    const eff = (key) => getEffectiveIcon(allButtonIcons, key, isDarkMode);
+    setCloseButtonIcon(eff('menuCloseButton') || '✕');
+    setCopyLinkIcon(eff('copyLink') || '📋');
+    setShoppingListIcon(eff('shoppingList') || '🛒');
+    setBringButtonIcon(eff('bringButton') || '🛍️');
+    setFavoritesButtonIcon(eff('menuFavoritesButton') || '☆');
+    setFavoritesButtonActiveIcon(eff('menuFavoritesButtonActive') || '★');
+  }, [allButtonIcons, isDarkMode]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   // Load favorite IDs when user changes

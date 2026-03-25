@@ -13,6 +13,7 @@ import { httpsCallable } from 'firebase/functions';
 import NutritionModal from './NutritionModal';
 import ShoppingListModal from './ShoppingListModal';
 import RatingModal from './RatingModal';
+import { DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import RecipeRating from './RecipeRating';
 import CookDateModal from './CookDateModal';
 
@@ -45,6 +46,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
 
   // Get portion units from custom lists
   const [portionUnits, setPortionUnits] = useState([]);
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [cookingModeIcon, setCookingModeIcon] = useState('👨‍🍳');
   const [cookingModeAltIcon, setCookingModeAltIcon] = useState('👨‍🍳');
   const [closeButtonIcon, setCloseButtonIcon] = useState('✕');
@@ -95,22 +98,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       const lists = await getCustomLists();
       const icons = await getButtonIcons();
       setPortionUnits(lists.portionUnits || []);
-      setCookingModeIcon(icons.cookingMode || '👨‍🍳');
-      setCookingModeAltIcon(icons.cookingModeAlt || icons.cookingMode || '👨‍🍳');
-      setCloseButtonIcon(icons.closeButton || '✕');
-      setCloseButtonAltIcon(icons.closeButtonAlt || icons.closeButton || '✕');
-      setCopyLinkIcon(icons.copyLink || '📋');
-      setNutritionEmptyIcon(icons.nutritionEmpty || '➕');
-      setNutritionFilledIcon(icons.nutritionFilled || '🥦');
-      setShoppingListIcon(icons.shoppingList || '🛒');
-      setBringButtonIcon(icons.bringButton || '🛍️');
-      setTimerStartIcon(icons.timerStart || '⏱');
-      setTimerStopIcon(icons.timerStop || '⏹');
-      setCookDateIcon(icons.cookDate || '📅');
-      setEditRecipeIcon(icons.editRecipe || '✏️');
-      setNewVersionIcon(icons.newVersion || '📝');
-      setFavoritesButtonIcon(icons.menuFavoritesButton || '☆');
-      setFavoritesButtonActiveIcon(icons.menuFavoritesButtonActive || '★');
+      setAllButtonIcons(icons);
       setConversionTable(lists.conversionTable || []);
       const bubbleIcon = await getTimelineBubbleIcon();
       const cookEventBubbleIcon = await getTimelineCookEventBubbleIcon();
@@ -120,6 +108,34 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       setTimelineCookEventDefaultImage(cookEventDefaultImg);
     };
     loadSettings();
+  }, []);
+
+  // Re-compute individual icon states when icons or dark mode changes
+  useEffect(() => {
+    const eff = (key) => getEffectiveIcon(allButtonIcons, key, isDarkMode);
+    setCookingModeIcon(eff('cookingMode') || '👨‍🍳');
+    setCookingModeAltIcon(eff('cookingModeAlt') || eff('cookingMode') || '👨‍🍳');
+    setCloseButtonIcon(eff('closeButton') || '✕');
+    setCloseButtonAltIcon(eff('closeButtonAlt') || eff('closeButton') || '✕');
+    setCopyLinkIcon(eff('copyLink') || '📋');
+    setNutritionEmptyIcon(eff('nutritionEmpty') || '➕');
+    setNutritionFilledIcon(eff('nutritionFilled') || '🥦');
+    setShoppingListIcon(eff('shoppingList') || '🛒');
+    setBringButtonIcon(eff('bringButton') || '🛍️');
+    setTimerStartIcon(eff('timerStart') || '⏱');
+    setTimerStopIcon(eff('timerStop') || '⏹');
+    setCookDateIcon(eff('cookDate') || '📅');
+    setEditRecipeIcon(eff('editRecipe') || '✏️');
+    setNewVersionIcon(eff('newVersion') || '📝');
+    setFavoritesButtonIcon(eff('menuFavoritesButton') || '☆');
+    setFavoritesButtonActiveIcon(eff('menuFavoritesButtonActive') || '★');
+  }, [allButtonIcons, isDarkMode]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   useEffect(() => {

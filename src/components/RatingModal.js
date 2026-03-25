@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './RatingModal.css';
 import { rateRecipe, getUserRatingData, subscribeToRatingSummary, getAllRatings, deleteRating } from '../utils/recipeRatings';
-import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 
 // iOS Safari: reset any zoom triggered by focusing on input fields.
@@ -38,15 +38,29 @@ function RatingModal({ recipeId, currentUser, canDeleteRatings = false, onClose 
   const [allRatings, setAllRatings] = useState([]);
   const [heartEmptyIcon, setHeartEmptyIcon] = useState(DEFAULT_BUTTON_ICONS.ratingHeartEmptyModal);
   const [heartFilledIcon, setHeartFilledIcon] = useState(DEFAULT_BUTTON_ICONS.ratingHeartFilled);
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
 
   const isGuest = !currentUser || currentUser.isGuest;
 
   // Load configurable heart icons
   useEffect(() => {
     getButtonIcons().then((icons) => {
-      setHeartEmptyIcon(icons.ratingHeartEmptyModal || DEFAULT_BUTTON_ICONS.ratingHeartEmptyModal);
-      setHeartFilledIcon(icons.ratingHeartFilled || DEFAULT_BUTTON_ICONS.ratingHeartFilled);
+      setAllButtonIcons(icons);
     });
+  }, []);
+
+  // Re-compute icon states when icons or dark mode changes
+  useEffect(() => {
+    setHeartEmptyIcon(getEffectiveIcon(allButtonIcons, 'ratingHeartEmptyModal', isDarkMode) || DEFAULT_BUTTON_ICONS.ratingHeartEmptyModal);
+    setHeartFilledIcon(getEffectiveIcon(allButtonIcons, 'ratingHeartFilled', isDarkMode) || DEFAULT_BUTTON_ICONS.ratingHeartFilled);
+  }, [allButtonIcons, isDarkMode]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   // Live rating summary subscription
