@@ -41,6 +41,8 @@ jest.mock('../utils/customLists', () => ({
   getButtonIcons: () => Promise.resolve({ menuCloseButton: '✕', copyLink: '📋' }),
   getCustomLists: () => Promise.resolve({ conversionTable: [] }),
   addMissingConversionEntries: jest.fn(() => Promise.resolve()),
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 jest.mock('../utils/userManagement', () => ({

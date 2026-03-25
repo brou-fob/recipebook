@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getAppLogoImageUrl, saveAppLogoImageUrl, getButtonIcons, saveButtonIcons, DEFAULT_BUTTON_ICONS, getTimelineBubbleIcon, saveTimelineBubbleIcon, getTimelineMenuBubbleIcon, saveTimelineMenuBubbleIcon, getTimelineMenuDefaultImage, saveTimelineMenuDefaultImage, getTimelineCookEventBubbleIcon, saveTimelineCookEventBubbleIcon, getTimelineCookEventDefaultImage, saveTimelineCookEventDefaultImage, getAIRecipePrompt, saveAIRecipePrompt, resetAIRecipePrompt, DEFAULT_AI_RECIPE_PROMPT, getTileSizePreference, saveTileSizePreference, applyTileSizePreference, TILE_SIZE_SMALL, TILE_SIZE_MEDIUM, TILE_SIZE_LARGE, getDarkModePreference, saveDarkModePreference, applyDarkModePreference, getSortSettings, saveSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES, getStatusValiditySettings, saveStatusValiditySettings, getGroupStatusThresholds, saveGroupStatusThresholds, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MIN_KANDIDAT, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MAX_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MIN_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MAX_KANDIDAT, getMaxKandidatenSchwelle, saveMaxKandidatenSchwelle } from '../utils/customLists';
+import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getAppLogoImageUrl, saveAppLogoImageUrl, getButtonIcons, saveButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getTimelineBubbleIcon, saveTimelineBubbleIcon, getTimelineMenuBubbleIcon, saveTimelineMenuBubbleIcon, getTimelineMenuDefaultImage, saveTimelineMenuDefaultImage, getTimelineCookEventBubbleIcon, saveTimelineCookEventBubbleIcon, getTimelineCookEventDefaultImage, saveTimelineCookEventDefaultImage, getAIRecipePrompt, saveAIRecipePrompt, resetAIRecipePrompt, DEFAULT_AI_RECIPE_PROMPT, getTileSizePreference, saveTileSizePreference, applyTileSizePreference, TILE_SIZE_SMALL, TILE_SIZE_MEDIUM, TILE_SIZE_LARGE, getDarkModePreference, saveDarkModePreference, applyDarkModePreference, getSortSettings, saveSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES, getStatusValiditySettings, saveStatusValiditySettings, getGroupStatusThresholds, saveGroupStatusThresholds, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MIN_KANDIDAT, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MAX_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MIN_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MAX_KANDIDAT, getMaxKandidatenSchwelle, saveMaxKandidatenSchwelle } from '../utils/customLists';
 import { invalidateUnitsCache } from '../utils/ingredientUtils';
 import { isCurrentUserAdmin, ROLES, getRolePermissions } from '../utils/userManagement';
 import UserManagement from './UserManagement';
@@ -151,6 +151,46 @@ function renderBoldText(text) {
   });
 }
 
+const DARK_MODE_ICON_ROWS = [
+  { key: 'cookingMode', label: 'Kochmodus-Button' },
+  { key: 'cookingModeAlt', label: 'Kochmodus-Alt (helles Bild oben links)' },
+  { key: 'importRecipe', label: 'Import-Button' },
+  { key: 'scanImage', label: 'Bild-scannen-Button' },
+  { key: 'webImport', label: 'Web-Import-Button' },
+  { key: 'closeButton', label: 'Schließen-Button' },
+  { key: 'closeButtonAlt', label: 'Schließen-Alt (helles Bild oben rechts)' },
+  { key: 'menuCloseButton', label: 'Menü-Schließen-Button' },
+  { key: 'filterButton', label: 'Filter-Button' },
+  { key: 'filterButtonActive', label: 'Filter-Button (aktiv)' },
+  { key: 'copyLink', label: 'Link kopieren' },
+  { key: 'nutritionEmpty', label: 'Nährwerte hinzufügen' },
+  { key: 'nutritionFilled', label: 'Nährwerte vorhanden' },
+  { key: 'ratingHeartEmpty', label: 'Bewertung (leer)' },
+  { key: 'ratingHeartEmptyModal', label: 'Bewertung Modal (leer)' },
+  { key: 'ratingHeartFilled', label: 'Bewertung (gefüllt)' },
+  { key: 'privateListBack', label: 'Private Liste zurück' },
+  { key: 'shoppingList', label: 'Einkaufslisten-Button' },
+  { key: 'bringButton', label: 'Bring!-Button' },
+  { key: 'timerStart', label: 'Timer starten' },
+  { key: 'timerStop', label: 'Timer stoppen' },
+  { key: 'cookDate', label: 'Kochdatum' },
+  { key: 'addRecipe', label: 'Rezept hinzufügen' },
+  { key: 'editRecipe', label: 'Rezept bearbeiten' },
+  { key: 'addMenu', label: 'Menü hinzufügen' },
+  { key: 'addPrivateRecipe', label: 'Privates Rezept hinzufügen' },
+  { key: 'saveRecipe', label: 'Rezept speichern' },
+  { key: 'cancelRecipe', label: 'Rezept verwerfen' },
+  { key: 'swipeRight', label: 'Swipe rechts (Ja)' },
+  { key: 'swipeLeft', label: 'Swipe links (Nein)' },
+  { key: 'swipeUp', label: 'Swipe hoch (Favorit)' },
+  { key: 'menuFavoritesButton', label: 'Menü-Favoriten' },
+  { key: 'menuFavoritesButtonActive', label: 'Menü-Favoriten (aktiv)' },
+  { key: 'tagesmenuFilterButton', label: 'Tagesmenü-Filter' },
+  { key: 'tagesmenuZumTagesMenu', label: 'Zum Tagesmenü' },
+  { key: 'tagesmenuMeineAuswahl', label: 'Meine Auswahl' },
+  { key: 'newVersion', label: 'Neue Version' },
+];
+
 function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdateRecipe }) {
   const [lists, setLists] = useState({
     cuisineTypes: [],
@@ -200,40 +240,7 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   const [uploadingAppLogo, setUploadingAppLogo] = useState(false);
 
   // Button icons state
-  const [buttonIcons, setButtonIcons] = useState({
-    cookingMode: '👨‍🍳',
-    cookingModeAlt: '👨‍🍳',
-    importRecipe: '📥',
-    scanImage: '📷',
-    webImport: '🌐',
-    closeButton: '✕',
-    closeButtonAlt: '✕',
-    menuCloseButton: '✕',
-    filterButton: '⚙',
-    copyLink: '📋',
-    nutritionEmpty: '➕',
-    nutritionFilled: '🥦',
-    ratingHeartEmpty: '🤍',
-    ratingHeartEmptyModal: '♡',
-    ratingHeartFilled: '♥',
-    privateListBack: '✕',
-    shoppingList: '🛒',
-    bringButton: '🛍️',
-    timerStart: '⏱',
-    timerStop: '⏹',
-    cookDate: '📅',
-    addRecipe: '➕',
-    editRecipe: '✏️',
-    addPrivateRecipe: '🔒',
-    swipeRight: '👍',
-    swipeLeft: '👎',
-    swipeUp: '⭐',
-    menuFavoritesButton: '☆',
-    menuFavoritesButtonActive: '★',
-    tagesmenuFilterButton: '☰',
-    tagesmenuZumTagesMenu: '🗓️',
-    newVersion: '📝'
-  });
+  const [buttonIcons, setButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
   const [uploadingButtonIcon, setUploadingButtonIcon] = useState(null);
 
   // Timeline bubble icon state
@@ -3424,6 +3431,91 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                   </div>
                   <p className="input-hint">Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB)</p>
                 </div>
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Darkmode-Icon-Alternativen</h3>
+              <p className="section-description">
+                Legen Sie für jeden Button eine alternative Icon-Version für den Dunkelmodus fest.
+                Ist keine Dunkelmodusvariante gespeichert, wird das normale Icon auch im Dunkelmodus angezeigt.
+                Unterstützte Formate: Emoji, kurzer Text (max. 10 Zeichen) oder Bild (PNG, JPG, SVG, max. 5MB).
+              </p>
+              <div className="dark-icon-config">
+                <div className="dark-icon-header-row">
+                  <span className="dark-icon-col-label">Button</span>
+                  <span className="dark-icon-col-normal">☀️ Normal</span>
+                  <span className="dark-icon-col-dark">🌙 Dunkel-Variante</span>
+                </div>
+                {DARK_MODE_ICON_ROWS.map(({ key, label }) => {
+                  const darkKey = key + 'Dark';
+                  return (
+                    <div className="dark-icon-row" key={key}>
+                      <span className="dark-icon-col-label">{label}</span>
+                      <div className="dark-icon-col-normal">
+                        <div className="dark-icon-preview">
+                          {isBase64Image(buttonIcons[key]) ? (
+                            <img src={buttonIcons[key]} alt={label} className="icon-image" />
+                          ) : (
+                            <span>{buttonIcons[key]}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="dark-icon-col-dark">
+                        <div className="dark-icon-input-group">
+                          {!isBase64Image(buttonIcons[darkKey]) ? (
+                            <input
+                              type="text"
+                              value={buttonIcons[darkKey] || ''}
+                              onChange={(e) => setButtonIcons({ ...buttonIcons, [darkKey]: e.target.value })}
+                              placeholder="–"
+                              maxLength={10}
+                              className="dark-icon-text-input"
+                            />
+                          ) : (
+                            <span className="dark-icon-image-info">Bild</span>
+                          )}
+                          <label
+                            htmlFor={`${darkKey}File`}
+                            className="upload-icon-btn"
+                            title="Bild hochladen"
+                          >
+                            {uploadingButtonIcon === darkKey ? '⏳' : '📷'}
+                          </label>
+                          <input
+                            type="file"
+                            id={`${darkKey}File`}
+                            accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                            onChange={(e) => handleButtonIconImageUpload(darkKey, e)}
+                            style={{ display: 'none' }}
+                            disabled={uploadingButtonIcon === darkKey}
+                          />
+                          {buttonIcons[darkKey] ? (
+                            <button
+                              type="button"
+                              className="reset-icon-btn"
+                              onClick={() => setButtonIcons({ ...buttonIcons, [darkKey]: '' })}
+                              title="Dunkel-Variante entfernen"
+                            >
+                              ✕
+                            </button>
+                          ) : null}
+                          <div className="dark-icon-preview">
+                            {isBase64Image(buttonIcons[darkKey]) ? (
+                              <img src={buttonIcons[darkKey]} alt="Dunkel" className="icon-image" />
+                            ) : buttonIcons[darkKey] ? (
+                              <span>{buttonIcons[darkKey]}</span>
+                            ) : (
+                              <span className="dark-icon-fallback">
+                                {isBase64Image(buttonIcons[key]) ? '↑' : buttonIcons[key]}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

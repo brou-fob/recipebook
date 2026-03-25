@@ -1064,6 +1064,126 @@
   display: none;
 }
 
+/* Dark mode icon alternatives */
+.dark-icon-config {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dark-icon-header-row,
+.dark-icon-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #eee;
+}
+
+.dark-icon-header-row {
+  background: #f0f0f0;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.dark-icon-row:last-child {
+  border-bottom: none;
+}
+
+.dark-icon-row:nth-child(even) {
+  background: #fafafa;
+}
+
+.dark-icon-col-label {
+  font-size: 0.82rem;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark-icon-col-normal,
+.dark-icon-col-dark {
+  display: flex;
+  align-items: center;
+}
+
+.dark-icon-col-normal {
+  justify-content: center;
+}
+
+.dark-icon-preview {
+  min-width: 32px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  overflow: hidden;
+}
+
+.dark-icon-preview .icon-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.dark-icon-fallback {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.dark-icon-input-group {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  width: 100%;
+}
+
+.dark-icon-text-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: border-color 0.2s ease;
+}
+
+.dark-icon-text-input:focus {
+  outline: none;
+  border-color: #402C1C;
+}
+
+.dark-icon-image-info {
+  flex: 1;
+  padding: 0.25rem 0.4rem;
+  background: #e8f5e9;
+  border: 1px solid #4CAF50;
+  border-radius: 4px;
+  color: #2e7d32;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .dark-icon-header-row,
+  .dark-icon-row {
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 0.3rem;
+    padding: 0.35rem 0.4rem;
+  }
+
+  .dark-icon-col-label {
+    font-size: 0.75rem;
+  }
+}
+
 @media (max-width: 768px) {
   .button-icons-config {
     grid-template-columns: 1fr;

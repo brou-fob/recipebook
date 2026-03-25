@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import './Tagesmenu.css';
 import { setRecipeSwipeFlag, getActiveSwipeFlags, getAllMembersSwipeFlags, computeGroupRecipeStatus, clearExpiryForArchivedRecipe } from '../utils/recipeSwipeFlags';
-import { getStatusValiditySettings, getGroupStatusThresholds, getButtonIcons, DEFAULT_BUTTON_ICONS, getMaxKandidatenSchwelle } from '../utils/customLists';
+import { getStatusValiditySettings, getGroupStatusThresholds, getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getMaxKandidatenSchwelle } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import TagesmenuFilterOverlay from './TagesmenuFilterOverlay';
 
@@ -97,6 +97,10 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
   // Configurable "Meine Auswahl" button icon loaded from settings
   const [meineAuswahlIcon, setMeineAuswahlIcon] = useState(DEFAULT_BUTTON_ICONS.tagesmenuMeineAuswahl);
 
+  // Full icons object and dark mode state for dark mode icon variants
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
+
   // When true, jump directly to the results view (used by the "Zum Tagesmenü" button)
   const [forceShowResults, setForceShowResults] = useState(false);
 
@@ -149,15 +153,28 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
   // Load configurable swipe icons once on mount
   useEffect(() => {
     getButtonIcons().then((icons) => {
-      setSwipeIcons({
-        swipeRight: icons.swipeRight ?? DEFAULT_BUTTON_ICONS.swipeRight,
-        swipeLeft: icons.swipeLeft ?? DEFAULT_BUTTON_ICONS.swipeLeft,
-        swipeUp: icons.swipeUp ?? DEFAULT_BUTTON_ICONS.swipeUp,
-      });
-      setFilterButtonIcon(icons.tagesmenuFilterButton ?? DEFAULT_BUTTON_ICONS.tagesmenuFilterButton);
-      setZumTagesMenuIcon(icons.tagesmenuZumTagesMenu ?? DEFAULT_BUTTON_ICONS.tagesmenuZumTagesMenu);
-      setMeineAuswahlIcon(icons.tagesmenuMeineAuswahl ?? DEFAULT_BUTTON_ICONS.tagesmenuMeineAuswahl);
+      setAllButtonIcons(icons);
     }).catch(() => {});
+  }, []);
+
+  // Re-compute individual icon states when icons or dark mode changes
+  useEffect(() => {
+    const eff = (key) => getEffectiveIcon(allButtonIcons, key, isDarkMode);
+    setSwipeIcons({
+      swipeRight: eff('swipeRight'),
+      swipeLeft: eff('swipeLeft'),
+      swipeUp: eff('swipeUp'),
+    });
+    setFilterButtonIcon(eff('tagesmenuFilterButton'));
+    setZumTagesMenuIcon(eff('tagesmenuZumTagesMenu'));
+    setMeineAuswahlIcon(eff('tagesmenuMeineAuswahl'));
+  }, [allButtonIcons, isDarkMode]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   // Load active swipe flags from Firestore when user or selected list changes

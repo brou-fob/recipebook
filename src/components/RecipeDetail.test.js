@@ -40,6 +40,7 @@ jest.mock('../utils/customLists', () => ({
     cuisineTypes: [],
     mealCategories: [],
     units: [],
+    conversionTable: [],
   }),
   getButtonIcons: () => Promise.resolve({
     cookingMode: '👨‍🍳',
@@ -48,6 +49,12 @@ jest.mock('../utils/customLists', () => ({
     closeButton: '✕',
     copyLink: '📋'
   }),
+  getTimelineBubbleIcon: () => Promise.resolve(null),
+  getTimelineCookEventBubbleIcon: () => Promise.resolve(null),
+  getTimelineCookEventDefaultImage: () => Promise.resolve(null),
+  DEFAULT_BUTTON_ICONS: { cookingMode: '👨‍🍳', closeButton: '✕' },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 describe('RecipeDetail - Portion Controller', () => {

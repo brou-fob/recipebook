@@ -3,7 +3,7 @@ import './RecipeForm.css';
 import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
 import { fileToBase64, isBase64Image, analyzeImageBrightness } from '../utils/imageUtils';
 import { uploadRecipeImage, deleteRecipeImage } from '../utils/storageUtils';
-import { getCustomLists, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { getCustomLists, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { addCuisineProposal } from '../utils/cuisineProposalsFirestore';
 import { getUsers, isCurrentUserAdmin, getUserAiOcrScanCount } from '../utils/userManagement';
 import { getImageForCategories } from '../utils/categoryImages';
@@ -315,13 +315,8 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const [newCuisineDuplicateError, setNewCuisineDuplicateError] = useState(false);
   const [newCuisineLoading, setNewCuisineLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
-  const [buttonIcons, setButtonIcons] = useState({
-    importRecipe: DEFAULT_BUTTON_ICONS.importRecipe,
-    scanImage: DEFAULT_BUTTON_ICONS.scanImage,
-    webImport: DEFAULT_BUTTON_ICONS.webImport,
-    saveRecipe: DEFAULT_BUTTON_ICONS.saveRecipe,
-    cancelRecipe: DEFAULT_BUTTON_ICONS.cancelRecipe
-  });
+  const [buttonIcons, setButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [showTypeahead, setShowTypeahead] = useState(false);
   const [typeaheadIngredientIndex, setTypeaheadIngredientIndex] = useState(null);
   // Private checkbox state - only visible to admins
@@ -455,17 +450,18 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     const loadButtonIcons = async () => {
       const { getButtonIcons } = await import('../utils/customLists');
       const icons = await getButtonIcons();
-      setButtonIcons({
-        importRecipe: icons.importRecipe || DEFAULT_BUTTON_ICONS.importRecipe,
-        scanImage: icons.scanImage || DEFAULT_BUTTON_ICONS.scanImage,
-        webImport: icons.webImport || DEFAULT_BUTTON_ICONS.webImport,
-        saveRecipe: icons.saveRecipe || DEFAULT_BUTTON_ICONS.saveRecipe,
-        cancelRecipe: icons.cancelRecipe || DEFAULT_BUTTON_ICONS.cancelRecipe
-      });
+      setButtonIcons(icons);
     };
     loadCustomLists();
     loadUsers();
     loadButtonIcons();
+  }, []);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   useEffect(() => {
@@ -984,10 +980,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
                 aria-label="Webimport"
                 disabled={aiOcrLimitReached}
               >
-                {isBase64Image(buttonIcons.webImport) ? (
-                  <img src={buttonIcons.webImport} alt="Webimport" className="button-icon-img" />
+                {isBase64Image(getEffectiveIcon(buttonIcons, 'webImport', isDarkMode)) ? (
+                  <img src={getEffectiveIcon(buttonIcons, 'webImport', isDarkMode)} alt="Webimport" className="button-icon-img" />
                 ) : (
-                  buttonIcons.webImport
+                  getEffectiveIcon(buttonIcons, 'webImport', isDarkMode)
                 )}
               </button>
             )}
@@ -1008,10 +1004,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
                     }
                   }}
                 >
-                  {isBase64Image(buttonIcons.scanImage) ? (
-                    <img src={buttonIcons.scanImage} alt="Scan" className="button-icon-img" />
+                  {isBase64Image(getEffectiveIcon(buttonIcons, 'scanImage', isDarkMode)) ? (
+                    <img src={getEffectiveIcon(buttonIcons, 'scanImage', isDarkMode)} alt="Scan" className="button-icon-img" />
                   ) : (
-                    buttonIcons.scanImage
+                    getEffectiveIcon(buttonIcons, 'scanImage', isDarkMode)
                   )}
                 </label>
                 <input
@@ -1033,10 +1029,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
                 title="Rezept aus externer Quelle importieren"
                 aria-label="Rezept importieren"
               >
-                {isBase64Image(buttonIcons.importRecipe) ? (
-                  <img src={buttonIcons.importRecipe} alt="Import" className="button-icon-img" />
+                {isBase64Image(getEffectiveIcon(buttonIcons, 'importRecipe', isDarkMode)) ? (
+                  <img src={getEffectiveIcon(buttonIcons, 'importRecipe', isDarkMode)} alt="Import" className="button-icon-img" />
                 ) : (
-                  buttonIcons.importRecipe
+                  getEffectiveIcon(buttonIcons, 'importRecipe', isDarkMode)
                 )}
               </button>
             )}
@@ -1429,10 +1425,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         title="Abbrechen"
         aria-label="Rezeptbearbeitung abbrechen"
       >
-        {isBase64Image(buttonIcons.cancelRecipe) ? (
-          <img src={buttonIcons.cancelRecipe} alt="Abbrechen" className="button-icon-image" />
+        {isBase64Image(getEffectiveIcon(buttonIcons, 'cancelRecipe', isDarkMode)) ? (
+          <img src={getEffectiveIcon(buttonIcons, 'cancelRecipe', isDarkMode)} alt="Abbrechen" className="button-icon-image" />
         ) : (
-          buttonIcons.cancelRecipe
+          getEffectiveIcon(buttonIcons, 'cancelRecipe', isDarkMode)
         )}
       </button>
 
@@ -1483,10 +1479,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         aria-label={recipe ? 'Rezept aktualisieren' : 'Rezept speichern'}
         title={recipe ? 'Rezept aktualisieren' : 'Rezept speichern'}
       >
-        {isBase64Image(buttonIcons.saveRecipe) ? (
-          <img src={buttonIcons.saveRecipe} alt="Speichern" className="button-icon-image" />
+        {isBase64Image(getEffectiveIcon(buttonIcons, 'saveRecipe', isDarkMode)) ? (
+          <img src={getEffectiveIcon(buttonIcons, 'saveRecipe', isDarkMode)} alt="Speichern" className="button-icon-image" />
         ) : (
-          buttonIcons.saveRecipe
+          getEffectiveIcon(buttonIcons, 'saveRecipe', isDarkMode)
         )}
       </button>
     </div>

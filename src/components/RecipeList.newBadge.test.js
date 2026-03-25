@@ -20,6 +20,8 @@ jest.mock('../utils/customLists', () => ({
     ratingMinVotes: 5,
   }),
   DEFAULT_BUTTON_ICONS: { filterButton: '⚙' },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
   DEFAULT_TRENDING_DAYS: 30,
   DEFAULT_TRENDING_MIN_VIEWS: 5,
   DEFAULT_NEW_RECIPE_DAYS: 30,
