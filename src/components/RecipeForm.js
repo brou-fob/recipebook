@@ -1047,7 +1047,6 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
       {isCreatingVersion && (
         <div className="version-info-banner">
           <div className="version-info-text">
-            <strong>Eigene Version erstellen</strong>
             <p>Du erstellst eine neue Version von "{recipe?.title}".</p>
           </div>
         </div>
