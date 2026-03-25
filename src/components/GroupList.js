@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './GroupList.css';
 import GroupCreateDialog from './GroupCreateDialog';
-import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import { LIST_KIND_OPTIONS } from '../utils/groupFirestore';
 
@@ -20,11 +20,23 @@ import { LIST_KIND_OPTIONS } from '../utils/groupFirestore';
 function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup, onBack }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [closeIcon, setCloseIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
 
   useEffect(() => {
     getButtonIcons().then((icons) => {
-      setCloseIcon(icons.privateListBack || DEFAULT_BUTTON_ICONS.privateListBack);
+      setAllButtonIcons(icons);
     });
+  }, []);
+
+  useEffect(() => {
+    setCloseIcon(getEffectiveIcon(allButtonIcons, 'privateListBack', isDarkMode) || DEFAULT_BUTTON_ICONS.privateListBack);
+  }, [allButtonIcons, isDarkMode]);
+
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   const getOwnerName = (group) => {

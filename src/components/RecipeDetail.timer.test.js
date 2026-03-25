@@ -44,6 +44,8 @@ jest.mock('../utils/customLists', () => ({
     ratingHeartEmptyModal: '♡',
     ratingHeartFilled: '♥',
   },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 jest.mock('../utils/recipeLinks', () => ({

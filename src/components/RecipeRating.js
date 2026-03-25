@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './RecipeRating.css';
 import { rateRecipe, getUserRating, subscribeToRatingSummary } from '../utils/recipeRatings';
-import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 
 /**
@@ -38,13 +38,27 @@ function RecipeRating({ recipeId, ratingAvg: initialAvg, ratingCount: initialCou
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heartEmptyIcon, setHeartEmptyIcon] = useState(DEFAULT_BUTTON_ICONS.ratingHeartEmpty);
   const [heartFilledIcon, setHeartFilledIcon] = useState(DEFAULT_BUTTON_ICONS.ratingHeartFilled);
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
 
   // Load configurable heart icons
   useEffect(() => {
     getButtonIcons().then((icons) => {
-      setHeartEmptyIcon(icons.ratingHeartEmpty || DEFAULT_BUTTON_ICONS.ratingHeartEmpty);
-      setHeartFilledIcon(icons.ratingHeartFilled || DEFAULT_BUTTON_ICONS.ratingHeartFilled);
+      setAllButtonIcons(icons);
     });
+  }, []);
+
+  // Re-compute icon states when icons or dark mode changes
+  useEffect(() => {
+    setHeartEmptyIcon(getEffectiveIcon(allButtonIcons, 'ratingHeartEmpty', isDarkMode) || DEFAULT_BUTTON_ICONS.ratingHeartEmpty);
+    setHeartFilledIcon(getEffectiveIcon(allButtonIcons, 'ratingHeartFilled', isDarkMode) || DEFAULT_BUTTON_ICONS.ratingHeartFilled);
+  }, [allButtonIcons, isDarkMode]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   // Non-interactive: sync with prop changes

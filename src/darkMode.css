@@ -1287,6 +1287,35 @@
   background: #e8e8e8;
 }
 
+/* ---- Dark mode icon alternatives section ---- */
+[data-theme="dark"] .dark-icon-config {
+  border-color: #3d3d3d;
+}
+
+[data-theme="dark"] .dark-icon-header-row {
+  background: #2a2a2a;
+  color: #aaa;
+}
+
+[data-theme="dark"] .dark-icon-row:nth-child(even) {
+  background: #1e1e1e;
+}
+
+[data-theme="dark"] .dark-icon-col-label {
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .dark-icon-preview {
+  background: #2a2a2a;
+  border-color: #555;
+}
+
+[data-theme="dark"] .dark-icon-text-input {
+  background: #2a2a2a;
+  color: #e8e8e8;
+  border-color: #555;
+}
+
 /* ---- Tagesmenu additional ---- */
 [data-theme="dark"] .tagesmenu-card-no-image {
   background: #2a2a2a;
@@ -2471,4 +2500,12 @@
 
 [data-theme="dark"] .recipe-typeahead-result-meta {
   color: #aaa;
+}
+
+[data-theme="dark"] .dark-icon-text-input:focus {
+  border-color: #DF7A00;
+}
+
+[data-theme="dark"] .dark-icon-row {
+  border-bottom-color: #3d3d3d;
 }

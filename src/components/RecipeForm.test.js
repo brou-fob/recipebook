@@ -62,7 +62,9 @@ jest.mock('../utils/customLists', () => ({
     swipeUp: '⭐',
     menuFavoritesButton: '★',
     tagesmenuFilterButton: '☰'
-  }
+  },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 jest.mock('../utils/userManagement', () => ({

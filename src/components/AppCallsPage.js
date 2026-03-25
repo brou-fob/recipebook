@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './AppCallsPage.css';
 import { getAppCalls } from '../utils/appCallsFirestore';
 import { getRecipeCalls } from '../utils/recipeCallsFirestore';
-import { getButtonIcons, DEFAULT_BUTTON_ICONS, getCustomLists, saveCustomLists } from '../utils/customLists';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getCustomLists, saveCustomLists } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import { enableRecipeSharing } from '../utils/recipeFirestore';
 import {
@@ -18,6 +18,8 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('app');
   const [closeIcon, setCloseIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [creatingShareIds, setCreatingShareIds] = useState({});
   const [sharedRecipeIds, setSharedRecipeIds] = useState(new Set());
   const [shareLinkErrors, setShareLinkErrors] = useState({});
@@ -44,7 +46,7 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
     };
     loadData();
     getButtonIcons().then((icons) => {
-      setCloseIcon(icons.privateListBack || DEFAULT_BUTTON_ICONS.privateListBack);
+      setAllButtonIcons(icons);
     });
     // Load cuisine data (groups + proposals)
     getCustomLists().then((lists) => {
@@ -53,6 +55,16 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
     getCuisineProposals().then((proposals) => {
       setCuisineProposals(proposals);
     }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setCloseIcon(getEffectiveIcon(allButtonIcons, 'privateListBack', isDarkMode) || DEFAULT_BUTTON_ICONS.privateListBack);
+  }, [allButtonIcons, isDarkMode]);
+
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   const recipesWithoutLink = useMemo(

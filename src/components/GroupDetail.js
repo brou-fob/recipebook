@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './GroupDetail.css';
-import { getButtonIcons, DEFAULT_BUTTON_ICONS } from '../utils/customLists';
+import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import { isWaterIngredient } from '../utils/ingredientUtils';
 import { sendGroupInvitation } from '../utils/groupFirestore';
@@ -25,6 +25,8 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   const [saving, setSaving] = useState(false);
   const [backIcon, setBackIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
   const [shoppingListIcon, setShoppingListIcon] = useState(DEFAULT_BUTTON_ICONS.shoppingList || '🛒');
+  const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
+  const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [showShoppingListModal, setShowShoppingListModal] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [addMemberIds, setAddMemberIds] = useState([]);
@@ -35,10 +37,20 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   useEffect(() => {
     const loadIcons = async () => {
       const icons = await getButtonIcons();
-      setBackIcon(icons.privateListBack || DEFAULT_BUTTON_ICONS.privateListBack);
-      setShoppingListIcon(icons.shoppingList || DEFAULT_BUTTON_ICONS.shoppingList || '🛒');
+      setAllButtonIcons(icons);
     };
     loadIcons();
+  }, []);
+
+  useEffect(() => {
+    setBackIcon(getEffectiveIcon(allButtonIcons, 'privateListBack', isDarkMode) || DEFAULT_BUTTON_ICONS.privateListBack);
+    setShoppingListIcon(getEffectiveIcon(allButtonIcons, 'shoppingList', isDarkMode) || DEFAULT_BUTTON_ICONS.shoppingList || '🛒');
+  }, [allButtonIcons, isDarkMode]);
+
+  useEffect(() => {
+    const handler = (e) => setIsDarkMode(e.detail.isDark);
+    window.addEventListener('darkModeChange', handler);
+    return () => window.removeEventListener('darkModeChange', handler);
   }, []);
 
   if (!group) return null;

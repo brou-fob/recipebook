@@ -6,6 +6,8 @@ import GroupDetail from './GroupDetail';
 jest.mock('../utils/customLists', () => ({
   getButtonIcons: () => Promise.resolve({ privateListBack: '←' }),
   DEFAULT_BUTTON_ICONS: { privateListBack: '←' },
+  getEffectiveIcon: (icons, key) => icons[key] ?? '',
+  getDarkModePreference: () => false,
 }));
 
 // Mock imageUtils
