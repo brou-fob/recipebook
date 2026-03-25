@@ -323,10 +323,15 @@
     flex-shrink: 0;
   }
 
-  .shopping-list-trigger-button,
+  .shopping-list-trigger-button {
+    width: 48px;
+    flex-shrink: 0;
+  }
+
   .share-copy-url-button {
     width: 48px;
     flex-shrink: 0;
+    margin-left: auto;
   }
 
   .edit-button,
