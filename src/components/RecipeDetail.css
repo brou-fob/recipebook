@@ -391,7 +391,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
-  //Linie unterhalb von Titelt, Autor und Erstellt am
+  /*Linie unterhalb von Titelt, Autor und Erstellt am*/
   border-bottom: 1px solid #f0f0f0;
 }
 
