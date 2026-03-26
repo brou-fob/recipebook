@@ -767,6 +767,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   
     try {
       if (!alarmCtxRef.current) {
+        // Fallback: context was not pre-created in startTimer (e.g. in tests / non-iOS).
+        // On iOS this path will likely be blocked by the browser's autoplay policy.
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) throw new Error('AudioContext not supported');
         alarmCtxRef.current = new AudioCtx();
@@ -842,6 +844,24 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
 
   function startTimer(stepKey, timerIndex, totalSeconds, label) {
     requestNotificationPermission();
+
+    // Initialize AudioContext here (direct user gesture) so iOS allows audio playback later.
+    if (!alarmCtxRef.current) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          alarmCtxRef.current = new AudioCtx();
+        }
+      } catch (e) {
+        console.warn('AudioContext creation failed:', e);
+      }
+    }
+
+    // Resume the context in case iOS suspended it.
+    if (alarmCtxRef.current && alarmCtxRef.current.state === 'suspended') {
+      alarmCtxRef.current.resume().catch(e => console.warn('AudioContext resume failed:', e));
+    }
+
     setActiveTimers(prev => ({
       ...prev,
       [stepKey]: {
