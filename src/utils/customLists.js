@@ -920,15 +920,21 @@ export async function getButtonIcons() {
  * @returns {Promise<void>}
  */
 export async function saveButtonIcons(buttonIcons) {
+  // Optimistic cache update so components mounting immediately after this call
+  // (e.g. when Settings closes) already see the new icons without waiting for
+  // the Firestore round-trip to complete.
+  const previousButtonIcons = settingsCache?.buttonIcons;
+  if (settingsCache) {
+    settingsCache.buttonIcons = buttonIcons;
+  }
   try {
     const settingsRef = doc(db, 'settings', 'app');
     await updateDoc(settingsRef, { buttonIcons });
-    
-    // Update cache
-    if (settingsCache) {
-      settingsCache.buttonIcons = buttonIcons;
-    }
   } catch (error) {
+    // Revert optimistic cache update on failure to avoid inconsistent state
+    if (settingsCache) {
+      settingsCache.buttonIcons = previousButtonIcons;
+    }
     console.error('Error saving button icons:', error);
     throw error;
   }

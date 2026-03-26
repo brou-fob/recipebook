@@ -558,7 +558,7 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
         }
       }
 
-      saveButtonIcons(buttonIcons);
+      await saveButtonIcons(buttonIcons);
       saveTimelineBubbleIcon(timelineBubbleIcon);
       saveTimelineMenuBubbleIcon(timelineMenuBubbleIcon);
       saveTimelineMenuDefaultImage(timelineMenuDefaultImage);
