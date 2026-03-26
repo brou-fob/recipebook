@@ -10,6 +10,7 @@ jest.mock('firebase/firestore', () => ({
   getDoc: jest.fn(),
   setDoc: jest.fn(),
   updateDoc: jest.fn(),
+  deleteField: jest.fn(() => ({ _methodName: 'FieldValue.delete' })),
 }));
 
 import {
@@ -25,7 +26,7 @@ import {
   expandCuisineSelection,
   getParentCuisineNames,
 } from './customLists';
-import { getDoc, updateDoc, doc } from 'firebase/firestore';
+import { getDoc, updateDoc, setDoc, doc } from 'firebase/firestore';
 
 const mockGetDoc = getDoc;
 const mockUpdateDoc = updateDoc;
@@ -35,6 +36,7 @@ beforeEach(() => {
   // the doc() implementation which is needed by the module under test
   getDoc.mockClear();
   updateDoc.mockClear();
+  setDoc.mockClear();
   // Restore doc() implementation in case it was wiped by a previous reset
   doc.mockImplementation((...args) => ({ path: args.slice(1).join('/') }));
   clearSettingsCache();
@@ -316,5 +318,114 @@ describe('getParentCuisineNames', () => {
 
   test('returns empty set when cuisineGroups is null', () => {
     expect(getParentCuisineNames(null)).toEqual(new Set());
+  });
+});
+
+describe('getSettings – settings/images document split', () => {
+  test('reads image data from settings/images when available', async () => {
+    getDoc.mockImplementation((docRef) => {
+      if (docRef.path === 'settings/images') {
+        return Promise.resolve({
+          exists: () => true,
+          data: () => ({
+            faviconImage: 'data:image/png;base64,abc123',
+            appLogoImage: null,
+            buttonIcons: { cookingMode: '🍳' },
+            timelineBubbleIcon: 'data:image/png;base64,bubble',
+          }),
+        });
+      }
+      return Promise.resolve({
+        exists: () => true,
+        data: () => ({ aiRecipePrompt: DEFAULT_AI_RECIPE_PROMPT }),
+      });
+    });
+
+    const settings = await getSettings();
+
+    expect(settings.faviconImage).toBe('data:image/png;base64,abc123');
+    expect(settings.appLogoImage).toBeNull();
+    expect(settings.buttonIcons.cookingMode).toBe('🍳');
+    expect(settings.timelineBubbleIcon).toBe('data:image/png;base64,bubble');
+  });
+
+  test('returns null image defaults when settings/images does not exist', async () => {
+    getDoc.mockImplementation((docRef) => {
+      if (docRef.path === 'settings/images') {
+        return Promise.resolve({ exists: () => false });
+      }
+      return Promise.resolve({
+        exists: () => true,
+        data: () => ({ aiRecipePrompt: DEFAULT_AI_RECIPE_PROMPT }),
+      });
+    });
+
+    const settings = await getSettings();
+
+    expect(settings.faviconImage).toBeNull();
+    expect(settings.appLogoImage).toBeNull();
+    expect(settings.buttonIcons).toEqual(expect.objectContaining({ cookingMode: '👨‍🍳' }));
+  });
+
+  test('migrates image fields from settings/app to settings/images', async () => {
+    const faviconBase64 = 'data:image/png;base64,migrated';
+    const mockButtonIcons = { cookingMode: '🍳' };
+
+    getDoc.mockImplementation((docRef) => {
+      if (docRef.path === 'settings/images') {
+        return Promise.resolve({ exists: () => false });
+      }
+      return Promise.resolve({
+        exists: () => true,
+        data: () => ({
+          aiRecipePrompt: DEFAULT_AI_RECIPE_PROMPT,
+          faviconImage: faviconBase64,
+          buttonIcons: mockButtonIcons,
+        }),
+      });
+    });
+    setDoc.mockResolvedValue(undefined);
+    updateDoc.mockResolvedValue(undefined);
+
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const settings = await getSettings();
+    logSpy.mockRestore();
+
+    // Image data should appear in the returned settings
+    expect(settings.faviconImage).toBe(faviconBase64);
+    expect(settings.buttonIcons.cookingMode).toBe('🍳');
+
+    // setDoc should have been called to create settings/images with the migrated data
+    expect(setDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'settings/images' }),
+      expect.objectContaining({ faviconImage: faviconBase64, buttonIcons: mockButtonIcons })
+    );
+
+    // updateDoc should have been called to remove image fields from settings/app
+    const updateCalls = updateDoc.mock.calls;
+    const appDeleteCall = updateCalls.find(call => call[0]?.path === 'settings/app');
+    expect(appDeleteCall).toBeDefined();
+    expect(Object.keys(appDeleteCall[1])).toContain('faviconImage');
+    expect(Object.keys(appDeleteCall[1])).toContain('buttonIcons');
+  });
+
+  test('does not migrate when no image fields are present in settings/app', async () => {
+    getDoc.mockImplementation((docRef) => {
+      if (docRef.path === 'settings/images') {
+        return Promise.resolve({ exists: () => false });
+      }
+      return Promise.resolve({
+        exists: () => true,
+        data: () => ({ aiRecipePrompt: DEFAULT_AI_RECIPE_PROMPT }),
+      });
+    });
+
+    const settings = await getSettings();
+
+    // No migration calls
+    expect(setDoc).not.toHaveBeenCalled();
+    // updateDoc not called (no AI prompt migration and no image migration)
+    expect(updateDoc).not.toHaveBeenCalled();
+    expect(settings.faviconImage).toBeNull();
   });
 });
