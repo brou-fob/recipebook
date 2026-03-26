@@ -410,8 +410,8 @@ export async function buildMenuGridImage(imageUrls, options = {}) {
 
   const {
     width = 600,
-    height = 400,
-    gap = 4,
+    height = 300,
+    gap = 0,
     quality = 0.8,
   } = options;
 
