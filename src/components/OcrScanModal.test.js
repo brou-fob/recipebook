@@ -51,8 +51,8 @@ describe('OcrScanModal', () => {
 
     expect(screen.getByText('Rezept scannen')).toBeInTheDocument();
     expect(screen.getByText(/Fotografieren Sie ein Rezept/i)).toBeInTheDocument();
-    expect(screen.getByText('📷 Kamera starten')).toBeInTheDocument();
-    expect(screen.getByText('📁 Bild(er) hochladen')).toBeInTheDocument();
+    expect(screen.getByText('Kamera starten')).toBeInTheDocument();
+    expect(screen.getByText('Bild(er) hochladen')).toBeInTheDocument();
   });
 
   test('cancel button calls onCancel', () => {
@@ -67,7 +67,7 @@ describe('OcrScanModal', () => {
   test('close button calls onCancel', () => {
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const closeButton = screen.getByText('✕');
+    const closeButton = screen.getByText('×');
     fireEvent.click(closeButton);
 
     expect(mockOnCancel).toHaveBeenCalledTimes(1);
@@ -87,7 +87,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
 
     fireEvent.change(fileInput, { target: { files: [file] } });
@@ -110,10 +110,10 @@ describe('OcrScanModal', () => {
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
     // Language selector should be visible on upload step
-    expect(screen.getByText('🇩🇪 Deutsch')).toBeInTheDocument();
-    expect(screen.getByText('🇬🇧 English')).toBeInTheDocument();
+    expect(screen.getByText('Deutsch')).toBeInTheDocument();
+    expect(screen.getByText('English')).toBeInTheDocument();
 
-    const englishButton = screen.getByText('🇬🇧 English');
+    const englishButton = screen.getByText('English');
     fireEvent.click(englishButton);
 
     // Check that English tab is now active
@@ -138,7 +138,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -181,7 +181,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -225,7 +225,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -259,7 +259,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -277,7 +277,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -305,7 +305,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -347,7 +347,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -386,7 +386,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -426,7 +426,7 @@ describe('OcrScanModal', () => {
     );
 
     // Should skip upload step and start scanning immediately
-    expect(screen.queryByText('📁 Bild(er) hochladen')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bild(er) hochladen')).not.toBeInTheDocument();
     
     // Wait for OCR to be called with the initial image
     await waitFor(() => {
@@ -449,7 +449,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -474,7 +474,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -494,7 +494,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -527,7 +527,7 @@ describe('OcrScanModal', () => {
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
     // Upload file
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -566,7 +566,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -617,7 +617,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -661,7 +661,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -703,7 +703,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -739,7 +739,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -763,7 +763,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -794,7 +794,7 @@ describe('OcrScanModal', () => {
 
     render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-    const fileInput = screen.getByLabelText('📁 Bild(er) hochladen');
+    const fileInput = screen.getByLabelText('Bild(er) hochladen');
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -850,7 +850,7 @@ describe('OcrScanModal', () => {
     test('camera start button activates camera', async () => {
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
@@ -861,14 +861,14 @@ describe('OcrScanModal', () => {
     test('capturing a photo keeps camera active and shows thumbnail', async () => {
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
-        expect(screen.getByText('📸 Foto aufnehmen')).toBeInTheDocument();
+        expect(screen.getByText('Foto aufnehmen')).toBeInTheDocument();
       });
 
-      const captureButton = screen.getByText('📸 Foto aufnehmen');
+      const captureButton = screen.getByText('Foto aufnehmen');
       fireEvent.click(captureButton);
 
       await waitFor(() => {
@@ -883,15 +883,15 @@ describe('OcrScanModal', () => {
     test('capturing multiple photos shows correct count and thumbnails', async () => {
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
-        expect(screen.getByText('📸 Foto aufnehmen')).toBeInTheDocument();
+        expect(screen.getByText('Foto aufnehmen')).toBeInTheDocument();
       });
 
       // Take first photo
-      fireEvent.click(screen.getByText('📸 Foto aufnehmen'));
+      fireEvent.click(screen.getByText('Foto aufnehmen'));
 
       await waitFor(() => {
         expect(screen.getByText(/1 Foto aufgenommen/i)).toBeInTheDocument();
@@ -910,18 +910,18 @@ describe('OcrScanModal', () => {
     test('analyse starten button appears after first photo', async () => {
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
-        expect(screen.getByText('📸 Foto aufnehmen')).toBeInTheDocument();
+        expect(screen.getByText('Foto aufnehmen')).toBeInTheDocument();
       });
 
       // No analyse button before any photo
       expect(screen.queryByText(/Analyse starten/i)).not.toBeInTheDocument();
 
       // Take first photo
-      fireEvent.click(screen.getByText('📸 Foto aufnehmen'));
+      fireEvent.click(screen.getByText('Foto aufnehmen'));
 
       await waitFor(() => {
         expect(screen.getByText(/Analyse starten \(1\)/i)).toBeInTheDocument();
@@ -931,15 +931,15 @@ describe('OcrScanModal', () => {
     test('letztes löschen button removes last photo', async () => {
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
-        expect(screen.getByText('📸 Foto aufnehmen')).toBeInTheDocument();
+        expect(screen.getByText('Foto aufnehmen')).toBeInTheDocument();
       });
 
       // Take two photos
-      fireEvent.click(screen.getByText('📸 Foto aufnehmen'));
+      fireEvent.click(screen.getByText('Foto aufnehmen'));
       await waitFor(() => {
         expect(screen.getByText(/1 Foto aufgenommen/i)).toBeInTheDocument();
       });
@@ -950,7 +950,7 @@ describe('OcrScanModal', () => {
       });
 
       // Remove last photo
-      fireEvent.click(screen.getByText(/Letztes löschen/i));
+      fireEvent.click(screen.getByText('Löschen'));
 
       await waitFor(() => {
         expect(screen.getByText(/1 Foto aufgenommen/i)).toBeInTheDocument();
@@ -961,26 +961,26 @@ describe('OcrScanModal', () => {
     test('abbrechen button stops camera and discards photos', async () => {
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
-        expect(screen.getByText('📸 Foto aufnehmen')).toBeInTheDocument();
+        expect(screen.getByText('Foto aufnehmen')).toBeInTheDocument();
       });
 
       // Take a photo
-      fireEvent.click(screen.getByText('📸 Foto aufnehmen'));
+      fireEvent.click(screen.getByText('Foto aufnehmen'));
       await waitFor(() => {
         expect(screen.getByText(/1 Foto aufgenommen/i)).toBeInTheDocument();
       });
 
       // Cancel camera
-      const abortButton = screen.getByText('✕ Abbrechen');
+      const abortButton = screen.getByText('× Abbrechen');
       fireEvent.click(abortButton);
 
       await waitFor(() => {
         // Should return to upload step with camera inactive
-        expect(screen.getByText('📷 Kamera starten')).toBeInTheDocument();
+        expect(screen.getByText('Kamera starten')).toBeInTheDocument();
         expect(screen.queryByText(/aufgenommen/i)).not.toBeInTheDocument();
       });
     });
@@ -996,15 +996,15 @@ describe('OcrScanModal', () => {
 
       render(<OcrScanModal onImport={mockOnImport} onCancel={mockOnCancel} />);
 
-      const cameraButton = screen.getByText('📷 Kamera starten');
+      const cameraButton = screen.getByText('Kamera starten');
       fireEvent.click(cameraButton);
 
       await waitFor(() => {
-        expect(screen.getByText('📸 Foto aufnehmen')).toBeInTheDocument();
+        expect(screen.getByText('Foto aufnehmen')).toBeInTheDocument();
       });
 
       // Take a photo
-      fireEvent.click(screen.getByText('📸 Foto aufnehmen'));
+      fireEvent.click(screen.getByText('Foto aufnehmen'));
       await waitFor(() => {
         expect(screen.getByText(/Analyse starten \(1\)/i)).toBeInTheDocument();
       });

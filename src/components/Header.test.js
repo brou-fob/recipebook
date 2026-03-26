@@ -287,9 +287,9 @@ describe('Header - Erscheinungsbild (themeToggle) permission', () => {
     );
 
     fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    expect(screen.getByText(/☀️ Hell/)).toBeInTheDocument();
-    expect(screen.getByText(/🌙 Dunkel/)).toBeInTheDocument();
-    expect(screen.getByText(/⚙️ Automatisch/)).toBeInTheDocument();
+    expect(screen.getByText(/Hell/)).toBeInTheDocument();
+    expect(screen.getByText(/Dunkel/)).toBeInTheDocument();
+    expect(screen.getByText(/Automatisch/)).toBeInTheDocument();
   });
 
   test('clicking Automatisch calls saveDarkModePreference and applyDarkModePreference with "auto"', () => {
@@ -308,7 +308,7 @@ describe('Header - Erscheinungsbild (themeToggle) permission', () => {
     );
 
     fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    fireEvent.click(screen.getByText(/⚙️ Automatisch/));
+    fireEvent.click(screen.getByText(/Automatisch/));
 
     expect(saveDarkModePreference).toHaveBeenCalledWith('auto');
     expect(applyDarkModePreference).toHaveBeenCalledWith('auto');
@@ -330,7 +330,7 @@ describe('Header - Erscheinungsbild (themeToggle) permission', () => {
     );
 
     fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    fireEvent.click(screen.getByText(/☀️ Hell/));
+    fireEvent.click(screen.getByText(/Hell/));
 
     expect(saveDarkModePreference).toHaveBeenCalledWith('light');
     expect(applyDarkModePreference).toHaveBeenCalledWith('light');
@@ -352,7 +352,7 @@ describe('Header - Erscheinungsbild (themeToggle) permission', () => {
     );
 
     fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    fireEvent.click(screen.getByText(/🌙 Dunkel/));
+    fireEvent.click(screen.getByText(/Dunkel/));
 
     expect(saveDarkModePreference).toHaveBeenCalledWith('dark');
     expect(applyDarkModePreference).toHaveBeenCalledWith('dark');
