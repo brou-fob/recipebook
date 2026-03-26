@@ -1074,7 +1074,7 @@
 .dark-icon-header-row,
 .dark-icon-row {
   display: grid;
-  grid-template-columns: 1fr 60px 1fr;
+  grid-template-columns: minmax(80px, 1fr) 2fr 2fr;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.6rem;
@@ -1108,10 +1108,6 @@
 .dark-icon-col-dark {
   display: flex;
   align-items: center;
-}
-
-.dark-icon-col-normal {
-  justify-content: center;
 }
 
 .dark-icon-preview {
@@ -1174,7 +1170,7 @@
 @media (max-width: 768px) {
   .dark-icon-header-row,
   .dark-icon-row {
-    grid-template-columns: 1fr 40px 1fr;
+    grid-template-columns: minmax(60px, 0.8fr) 1.5fr 1.5fr;
     gap: 0.3rem;
     padding: 0.35rem 0.4rem;
   }
