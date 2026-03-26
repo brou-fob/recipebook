@@ -2,7 +2,7 @@
  * Default configuration values for customizable lists
  */
 import { db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteField } from 'firebase/firestore';
 
 export const DEFAULT_CUISINE_TYPES = [
   'Italian',
@@ -391,8 +391,24 @@ export function getEffectiveIcon(icons, key, isDarkMode) {
 let settingsCache = null;
 
 
+// Image field names that live in settings/images (not settings/app)
+const IMAGE_FIELD_NAMES = [
+  'faviconImage',
+  'appLogoImage',
+  'appLogoImageUrl',
+  'buttonIcons',
+  'timelineBubbleIcon',
+  'timelineMenuBubbleIcon',
+  'timelineCookEventBubbleIcon',
+  'timelineRecipeDefaultImage',
+  'timelineMenuDefaultImage',
+  'timelineCookEventDefaultImage',
+];
+
 /**
- * Get settings from Firestore or return defaults
+ * Get settings from Firestore or return defaults.
+ * Text configuration is read from settings/app; image data from settings/images.
+ * Automatically migrates any image fields still stored in settings/app to settings/images.
  * @returns {Promise<Object>} Promise resolving to settings object
  */
 export async function getSettings() {
@@ -402,10 +418,39 @@ export async function getSettings() {
   }
   
   try {
-    const settingsDoc = await getDoc(doc(db, 'settings', 'app'));
+    const [settingsDoc, imagesDoc] = await Promise.all([
+      getDoc(doc(db, 'settings', 'app')),
+      getDoc(doc(db, 'settings', 'images')),
+    ]);
     
     if (settingsDoc.exists()) {
       const settings = settingsDoc.data();
+      const imagesData = imagesDoc.exists() ? imagesDoc.data() : {};
+
+      // One-time migration: move any image fields still in settings/app → settings/images
+      const fieldsFoundInApp = IMAGE_FIELD_NAMES.filter(f => f in settings);
+      if (fieldsFoundInApp.length > 0) {
+        try {
+          const migratedImageData = {};
+          const deleteUpdate = {};
+          for (const field of fieldsFoundInApp) {
+            migratedImageData[field] = settings[field];
+            deleteUpdate[field] = deleteField();
+          }
+          const imagesRef = doc(db, 'settings', 'images');
+          if (imagesDoc.exists()) {
+            await updateDoc(imagesRef, migratedImageData);
+          } else {
+            await setDoc(imagesRef, migratedImageData);
+          }
+          await updateDoc(doc(db, 'settings', 'app'), deleteUpdate);
+          // Merge migrated data into imagesData so this load sees it
+          Object.assign(imagesData, migratedImageData);
+          console.log('Migrated image fields from settings/app to settings/images:', fieldsFoundInApp);
+        } catch (migrationError) {
+          console.error('Failed to migrate image fields to settings/images:', migrationError);
+        }
+      }
 
       let aiRecipePrompt = settings.aiRecipePrompt || DEFAULT_AI_RECIPE_PROMPT;
 
@@ -427,6 +472,7 @@ export async function getSettings() {
 
       // Ensure all fields exist for backward compatibility
       settingsCache = {
+        // Text configuration from settings/app
         cuisineTypes: settings.cuisineTypes || DEFAULT_CUISINE_TYPES,
         cuisineGroups: settings.cuisineGroups || DEFAULT_CUISINE_GROUPS,
         mealCategories: settings.mealCategories || DEFAULT_MEAL_CATEGORIES,
@@ -436,15 +482,6 @@ export async function getSettings() {
         customUnits: settings.customUnits || [],
         headerSlogan: settings.headerSlogan || DEFAULT_SLOGAN,
         faviconText: settings.faviconText || DEFAULT_FAVICON_TEXT,
-        faviconImage: settings.faviconImage || null,
-        appLogoImage: settings.appLogoImage || null,
-        buttonIcons: { ...DEFAULT_BUTTON_ICONS, ...(settings.buttonIcons || {}) },
-        timelineBubbleIcon: settings.timelineBubbleIcon || null,
-        timelineMenuBubbleIcon: settings.timelineMenuBubbleIcon || null,
-        timelineCookEventBubbleIcon: settings.timelineCookEventBubbleIcon || null,
-        timelineRecipeDefaultImage: settings.timelineRecipeDefaultImage || null,
-        timelineMenuDefaultImage: settings.timelineMenuDefaultImage || null,
-        timelineCookEventDefaultImage: settings.timelineCookEventDefaultImage || null,
         aiRecipePrompt,
         autoShareOnCreate: settings.autoShareOnCreate ?? false,
         trendingDays: settings.trendingDays ?? DEFAULT_TRENDING_DAYS,
@@ -459,12 +496,23 @@ export async function getSettings() {
         groupThresholdArchivMinArchiv: settings.groupThresholdArchivMinArchiv ?? DEFAULT_GROUP_THRESHOLD_ARCHIV_MIN_ARCHIV,
         groupThresholdArchivMaxKandidat: settings.groupThresholdArchivMaxKandidat ?? DEFAULT_GROUP_THRESHOLD_ARCHIV_MAX_KANDIDAT,
         maxKandidatenSchwelle: settings.maxKandidatenSchwelle ?? DEFAULT_MAX_KANDIDATEN_SCHWELLE,
+        // Image data from settings/images
+        faviconImage: imagesData.faviconImage || null,
+        appLogoImage: imagesData.appLogoImage || null,
+        appLogoImageUrl: imagesData.appLogoImageUrl || null,
+        buttonIcons: { ...DEFAULT_BUTTON_ICONS, ...(imagesData.buttonIcons || {}) },
+        timelineBubbleIcon: imagesData.timelineBubbleIcon || null,
+        timelineMenuBubbleIcon: imagesData.timelineMenuBubbleIcon || null,
+        timelineCookEventBubbleIcon: imagesData.timelineCookEventBubbleIcon || null,
+        timelineRecipeDefaultImage: imagesData.timelineRecipeDefaultImage || null,
+        timelineMenuDefaultImage: imagesData.timelineMenuDefaultImage || null,
+        timelineCookEventDefaultImage: imagesData.timelineCookEventDefaultImage || null,
       };
       
       return settingsCache;
     }
     
-    // No settings document exists, return and create defaults
+    // No settings document exists, return and create defaults (text config only)
     const defaultSettings = {
       cuisineTypes: DEFAULT_CUISINE_TYPES,
       cuisineGroups: DEFAULT_CUISINE_GROUPS,
@@ -474,15 +522,6 @@ export async function getSettings() {
       conversionTable: DEFAULT_CONVERSION_TABLE,
       headerSlogan: DEFAULT_SLOGAN,
       faviconText: DEFAULT_FAVICON_TEXT,
-      faviconImage: null,
-      appLogoImage: null,
-      buttonIcons: DEFAULT_BUTTON_ICONS,
-      timelineBubbleIcon: null,
-      timelineMenuBubbleIcon: null,
-      timelineCookEventBubbleIcon: null,
-      timelineRecipeDefaultImage: null,
-      timelineMenuDefaultImage: null,
-      timelineCookEventDefaultImage: null,
       aiRecipePrompt: DEFAULT_AI_RECIPE_PROMPT,
       autoShareOnCreate: false,
       trendingDays: DEFAULT_TRENDING_DAYS,
@@ -499,11 +538,24 @@ export async function getSettings() {
       maxKandidatenSchwelle: DEFAULT_MAX_KANDIDATEN_SCHWELLE,
     };
     
-    // Create the settings document
+    // Create the settings/app document with text config only
     await setDoc(doc(db, 'settings', 'app'), defaultSettings);
-    settingsCache = defaultSettings;
+    settingsCache = {
+      ...defaultSettings,
+      // Image defaults (settings/images is created lazily on first image save)
+      faviconImage: null,
+      appLogoImage: null,
+      appLogoImageUrl: null,
+      buttonIcons: DEFAULT_BUTTON_ICONS,
+      timelineBubbleIcon: null,
+      timelineMenuBubbleIcon: null,
+      timelineCookEventBubbleIcon: null,
+      timelineRecipeDefaultImage: null,
+      timelineMenuDefaultImage: null,
+      timelineCookEventDefaultImage: null,
+    };
     
-    return defaultSettings;
+    return settingsCache;
   } catch (error) {
     console.error('Error getting settings:', error);
     
@@ -519,6 +571,7 @@ export async function getSettings() {
       faviconText: DEFAULT_FAVICON_TEXT,
       faviconImage: null,
       appLogoImage: null,
+      appLogoImageUrl: null,
       buttonIcons: DEFAULT_BUTTON_ICONS,
       timelineBubbleIcon: null,
       timelineMenuBubbleIcon: null,
@@ -706,28 +759,18 @@ export async function getFaviconImage() {
 }
 
 /**
- * Save the favicon image to Firestore
+ * Save the favicon image to Firestore (settings/images)
  * @param {string} imageBase64 - Base64 encoded image
  * @returns {Promise<void>}
  */
 export async function saveFaviconImage(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { faviconImage: imageBase64 || null }, { merge: true });
     
-    if (imageBase64) {
-      await updateDoc(settingsRef, { faviconImage: imageBase64 });
-      
-      // Update cache
-      if (settingsCache) {
-        settingsCache.faviconImage = imageBase64;
-      }
-    } else {
-      await updateDoc(settingsRef, { faviconImage: null });
-      
-      // Update cache
-      if (settingsCache) {
-        settingsCache.faviconImage = null;
-      }
+    // Update cache
+    if (settingsCache) {
+      settingsCache.faviconImage = imageBase64 || null;
     }
   } catch (error) {
     console.error('Error saving favicon image:', error);
@@ -745,28 +788,18 @@ export async function getAppLogoImage() {
 }
 
 /**
- * Save the app logo image to Firestore
+ * Save the app logo image to Firestore (settings/images)
  * @param {string} imageBase64 - Base64 encoded image
  * @returns {Promise<void>}
  */
 export async function saveAppLogoImage(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { appLogoImage: imageBase64 || null }, { merge: true });
     
-    if (imageBase64) {
-      await updateDoc(settingsRef, { appLogoImage: imageBase64 });
-      
-      // Update cache
-      if (settingsCache) {
-        settingsCache.appLogoImage = imageBase64;
-      }
-    } else {
-      await updateDoc(settingsRef, { appLogoImage: null });
-      
-      // Update cache
-      if (settingsCache) {
-        settingsCache.appLogoImage = null;
-      }
+    // Update cache
+    if (settingsCache) {
+      settingsCache.appLogoImage = imageBase64 || null;
     }
   } catch (error) {
     console.error('Error saving app logo image:', error);
@@ -784,14 +817,14 @@ export async function getAppLogoImageUrl() {
 }
 
 /**
- * Save the public app logo URL to Firestore.
+ * Save the public app logo URL to Firestore (settings/images).
  * @param {string|null} url - Public HTTPS URL (from Firebase Storage) or null to clear
  * @returns {Promise<void>}
  */
 export async function saveAppLogoImageUrl(url) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { appLogoImageUrl: url || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { appLogoImageUrl: url || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
@@ -915,7 +948,7 @@ export async function getButtonIcons() {
 }
 
 /**
- * Save the button icons to Firestore
+ * Save the button icons to Firestore (settings/images)
  * @param {Object} buttonIcons - Button icons object
  * @returns {Promise<void>}
  */
@@ -932,8 +965,8 @@ export async function saveButtonIcons(buttonIcons) {
     settingsCache.buttonIcons = completeIcons;
   }
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { buttonIcons: completeIcons });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { buttonIcons: completeIcons }, { merge: true });
   } catch (error) {
     // Revert optimistic cache update on failure to avoid inconsistent state
     if (settingsCache) {
@@ -945,7 +978,7 @@ export async function saveButtonIcons(buttonIcons) {
 }
 
 /**
- * Save a single button icon to Firestore (incremental update)
+ * Save a single button icon to Firestore/settings/images (incremental update)
  * @param {string} iconKey - The icon key (e.g. 'cookingMode' or 'cookingModeDark')
  * @param {string} iconValue - The icon value (emoji, text, or base64 image)
  * @returns {Promise<void>}
@@ -960,13 +993,29 @@ export async function saveButtonIcon(iconKey, iconValue) {
     settingsCache.buttonIcons[iconKey] = iconValue;
   }
 
+  const imagesRef = doc(db, 'settings', 'images');
   try {
-    const settingsRef = doc(db, 'settings', 'app');
     // Use dot notation to update only one field in the buttonIcons object
-    await updateDoc(settingsRef, {
+    await updateDoc(imagesRef, {
       [`buttonIcons.${iconKey}`]: iconValue
     });
   } catch (error) {
+    if (error.code === 'not-found') {
+      // settings/images doesn't exist yet – create it with the full icons object.
+      // Ensure the new icon value is always included, even if the cache is null.
+      try {
+        const baseIcons = settingsCache?.buttonIcons || DEFAULT_BUTTON_ICONS;
+        const iconsToSave = { ...baseIcons, [iconKey]: iconValue };
+        await setDoc(imagesRef, { buttonIcons: iconsToSave });
+        return;
+      } catch (createError) {
+        if (settingsCache?.buttonIcons) {
+          settingsCache.buttonIcons[iconKey] = previousValue;
+        }
+        console.error(`Error creating settings/images for button icon '${iconKey}':`, createError);
+        throw createError;
+      }
+    }
     // Revert optimistic cache update on failure
     if (settingsCache?.buttonIcons) {
       settingsCache.buttonIcons[iconKey] = previousValue;
@@ -995,14 +1044,14 @@ export async function getTimelineBubbleIcon() {
 }
 
 /**
- * Save the timeline bubble icon to Firestore
+ * Save the timeline bubble icon to Firestore (settings/images)
  * @param {string|null} imageBase64 - Base64 encoded image or null to remove
  * @returns {Promise<void>}
  */
 export async function saveTimelineBubbleIcon(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { timelineBubbleIcon: imageBase64 || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { timelineBubbleIcon: imageBase64 || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
@@ -1024,14 +1073,14 @@ export async function getTimelineMenuBubbleIcon() {
 }
 
 /**
- * Save the timeline menu bubble icon to Firestore
+ * Save the timeline menu bubble icon to Firestore (settings/images)
  * @param {string|null} imageBase64 - Base64 encoded image or null to remove
  * @returns {Promise<void>}
  */
 export async function saveTimelineMenuBubbleIcon(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { timelineMenuBubbleIcon: imageBase64 || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { timelineMenuBubbleIcon: imageBase64 || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
@@ -1053,14 +1102,14 @@ export async function getTimelineRecipeDefaultImage() {
 }
 
 /**
- * Save the default recipe image for the timeline to Firestore
+ * Save the default recipe image for the timeline to Firestore (settings/images)
  * @param {string|null} imageBase64 - Base64 encoded image or null to remove
  * @returns {Promise<void>}
  */
 export async function saveTimelineRecipeDefaultImage(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { timelineRecipeDefaultImage: imageBase64 || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { timelineRecipeDefaultImage: imageBase64 || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
@@ -1082,14 +1131,14 @@ export async function getTimelineMenuDefaultImage() {
 }
 
 /**
- * Save the default menu image for the timeline to Firestore
+ * Save the default menu image for the timeline to Firestore (settings/images)
  * @param {string|null} imageBase64 - Base64 encoded image or null to remove
  * @returns {Promise<void>}
  */
 export async function saveTimelineMenuDefaultImage(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { timelineMenuDefaultImage: imageBase64 || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { timelineMenuDefaultImage: imageBase64 || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
@@ -1111,14 +1160,14 @@ export async function getTimelineCookEventBubbleIcon() {
 }
 
 /**
- * Save the timeline cook event bubble icon to Firestore
+ * Save the timeline cook event bubble icon to Firestore (settings/images)
  * @param {string|null} imageBase64 - Base64 encoded image or null to remove
  * @returns {Promise<void>}
  */
 export async function saveTimelineCookEventBubbleIcon(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { timelineCookEventBubbleIcon: imageBase64 || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { timelineCookEventBubbleIcon: imageBase64 || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
@@ -1140,14 +1189,14 @@ export async function getTimelineCookEventDefaultImage() {
 }
 
 /**
- * Save the default cook event image for the timeline to Firestore
+ * Save the default cook event image for the timeline to Firestore (settings/images)
  * @param {string|null} imageBase64 - Base64 encoded image or null to remove
  * @returns {Promise<void>}
  */
 export async function saveTimelineCookEventDefaultImage(imageBase64) {
   try {
-    const settingsRef = doc(db, 'settings', 'app');
-    await updateDoc(settingsRef, { timelineCookEventDefaultImage: imageBase64 || null });
+    const imagesRef = doc(db, 'settings', 'images');
+    await setDoc(imagesRef, { timelineCookEventDefaultImage: imageBase64 || null }, { merge: true });
 
     // Update cache
     if (settingsCache) {
