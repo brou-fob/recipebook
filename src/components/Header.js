@@ -236,7 +236,7 @@ const Header = forwardRef(function Header({
                         onClick={handleSearchClear}
                         aria-label="Suche löschen"
                       >
-                        ✕
+                        ×
                       </button>
                     )}
                   </div>
@@ -370,7 +370,7 @@ const Header = forwardRef(function Header({
                 onClick={() => setFaqModalOpen(false)}
                 aria-label="Kochschule schließen"
               >
-                ✕
+                ×
               </button>
             </div>
             <div className="faq-modal-body">

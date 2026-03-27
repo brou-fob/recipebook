@@ -93,7 +93,7 @@ describe('RecipeTypeahead', () => {
       />
     );
 
-    const closeButton = screen.getByText('✕');
+    const closeButton = screen.getByText('×');
     fireEvent.click(closeButton);
     expect(mockOnCancel).toHaveBeenCalled();
   });
