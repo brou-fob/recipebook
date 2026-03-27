@@ -106,7 +106,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       const [lists, icons, catImages] = await Promise.all([
         getCustomLists(),
         getButtonIcons(),
-        Promise.resolve(getCategoryImages()).catch(() => []),
+        Promise.resolve(getCategoryImages()).catch((err) => { console.error('Error loading category images:', err); return []; }),
       ]);
       setPortionUnits(lists.portionUnits || []);
       setAllButtonIcons(icons);
@@ -1611,7 +1611,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                     </>
                   )}
                   {isMobile && (
-                    <div className="image-overlay-actions" style={categoryImageSetLoaded ? undefined : { visibility: 'hidden' }}>
+                    <div className={`image-overlay-actions${categoryImageSetLoaded ? '' : ' image-overlay-actions--hidden'}`}>
                       <div 
                         className="overlay-cooking-mode-static" 
                         onClick={toggleCookingMode} 
