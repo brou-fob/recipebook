@@ -30,13 +30,13 @@
   flex-shrink: 0;
 }
 
-.close-button:hover {
+/*.close-button:hover {
   background: #e0e0e0;
-}
+}*/
 
 .close-button-icon-img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1rem;
+  height: 1rem;
   object-fit: contain;
 }
 
