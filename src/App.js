@@ -540,9 +540,13 @@ function App() {
     // selectedMenu state is preserved, so if it's set, we'll return to MenuDetail
   };
 
-  // Restore recipe list scroll position after returning from recipe detail
+  // Restore recipe list scroll position after returning from recipe detail.
+  // Skip restoration when isFormOpen is true: this happens when handleEditRecipe
+  // calls setSelectedRecipe(null) while simultaneously opening the form, and we
+  // must not clear the saved position in that case so it can still be restored
+  // once the user fully returns to the recipe list.
   useEffect(() => {
-    if (!selectedRecipe && shouldRestoreRecipeListScrollRef.current) {
+    if (!selectedRecipe && !isFormOpen && shouldRestoreRecipeListScrollRef.current) {
       shouldRestoreRecipeListScrollRef.current = false;
       const savedPosition = recipeListScrollPositionRef.current;
       // Double rAF ensures the RecipeList has fully re-rendered before
@@ -554,7 +558,7 @@ function App() {
         });
       });
     }
-  }, [selectedRecipe]);
+  }, [selectedRecipe, isFormOpen]);
 
   const handleAddRecipe = (groupId = null) => {
     setActiveGroupId(groupId);
@@ -569,6 +573,9 @@ function App() {
     setIsCreatingVersion(false);
     setIsFormOpen(true);
     setSelectedRecipe(null);
+    // Always start the edit form at the top of the page, regardless of the
+    // previous scroll position in the recipe list or recipe detail view.
+    window.scrollTo(0, 0);
   };
 
   const handleCreateVersion = (recipe) => {
@@ -576,6 +583,8 @@ function App() {
     setIsCreatingVersion(true);
     setIsFormOpen(true);
     setSelectedRecipe(null);
+    // Start the new-version form at the top of the page.
+    window.scrollTo(0, 0);
   };
 
   const handleSaveRecipe = async (recipe) => {
