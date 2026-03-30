@@ -34,10 +34,10 @@
   z-index: 1;
 }
 
-.group-back-icon-btn:hover {
+/*.group-back-icon-btn:hover {
   opacity: 0.7;
   background: rgba(64, 44, 28, 0.08);
-}
+}*/
 
 .group-back-icon-img {
   width: 1.1rem;
@@ -142,10 +142,10 @@
   height: 1.5rem;
 }
 
-.group-header-actions .shopping-list-trigger-button:hover {
+/*.group-header-actions .shopping-list-trigger-button:hover {
   background: transparent;
   border: none;
-}
+}*/
 
 .shopping-list-icon-img {
   width: 1.5rem;
