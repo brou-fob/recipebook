@@ -1697,6 +1697,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                         role="button" 
                         tabIndex="0" 
                         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleCookingMode()}
+                        onContextMenu={(e) => e.preventDefault()}
                         aria-label="Kochmodus aktivieren"
                       >
                         {/* Use default-category-image icon when the displayed image is a category image,
