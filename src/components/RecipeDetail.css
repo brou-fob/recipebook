@@ -192,10 +192,10 @@
   border-color: #DF7A00 !important;
 }
 
-.favorite-button--active:hover {
+/*.favorite-button--active:hover {
   background: #c96d00;
   border-color: #c96d00;
-}
+}*/
 
 .cook-date-button {
   width: 48px;
@@ -222,10 +222,10 @@
     transform 0.15s ease;
 }
 
-.cook-date-button:hover {
+/*.cook-date-button:hover {
   background: rgba(223, 122, 0, 0.08);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
+}*/
 
 .cook-date-icon-img {
   width: 1.4rem;
