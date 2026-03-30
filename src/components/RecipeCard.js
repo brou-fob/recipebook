@@ -42,7 +42,7 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
         <div className="recipe-favorite-badge">
           {favoriteActiveIcon ? (
             isBase64Image(favoriteActiveIcon) ? (
-              <img src={favoriteActiveIcon} alt="Favorit" className="button-icon-image" />
+              <img src={favoriteActiveIcon} alt="Favorit" className="button-icon-image" draggable="false" />
             ) : (
               favoriteActiveIcon
             )
