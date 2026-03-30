@@ -226,6 +226,11 @@
   appearance: none !important;
 }
 
+.cook-date-button:focus, 
+.cook-date-button:focus-visible { 
+  outline: none; 
+}
+
 /*.cook-date-button:hover {
   background: rgba(223, 122, 0, 0.08);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
