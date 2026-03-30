@@ -1380,13 +1380,13 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
               >
                 {isFavorite ? (
                   isBase64Image(favoritesButtonActiveIcon) ? (
-                    <img src={favoritesButtonActiveIcon} alt="Favorit aktiv" className="button-icon-image" />
+                    <img src={favoritesButtonActiveIcon} alt="Favorit aktiv" className="button-icon-image" draggable="false" />
                   ) : (
                     favoritesButtonActiveIcon
                   )
                 ) : (
                   isBase64Image(favoritesButtonIcon) ? (
-                    <img src={favoritesButtonIcon} alt="Favorit" className="button-icon-image" />
+                    <img src={favoritesButtonIcon} alt="Favorit" className="button-icon-image" draggable="false" />
                   ) : (
                     favoritesButtonIcon
                   )
@@ -1745,13 +1745,13 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                 >
                   {isFavorite ? (
                     isBase64Image(favoritesButtonActiveIcon) ? (
-                      <img src={favoritesButtonActiveIcon} alt="Favorit aktiv" className="button-icon-image" />
+                      <img src={favoritesButtonActiveIcon} alt="Favorit aktiv" className="button-icon-image" draggable="false" />
                     ) : (
                       favoritesButtonActiveIcon
                     )
                   ) : (
                     isBase64Image(favoritesButtonIcon) ? (
-                      <img src={favoritesButtonIcon} alt="Favorit" className="button-icon-image" />
+                      <img src={favoritesButtonIcon} alt="Favorit" className="button-icon-image" draggable="false" />
                     ) : (
                       favoritesButtonIcon
                     )
@@ -2203,7 +2203,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           aria-label="Rezept bearbeiten"
         >
           {isBase64Image(editRecipeIcon) ? (
-            <img src={editRecipeIcon} alt="Bearbeiten" className="button-icon-image" />
+            <img src={editRecipeIcon} alt="Bearbeiten" className="button-icon-image" draggable="false" />
           ) : (
             editRecipeIcon
           )}
@@ -2224,7 +2224,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           aria-label="Eigene Version erstellen"
         >
           {isBase64Image(newVersionIcon) ? (
-            <img src={newVersionIcon} alt="Neue Version" className="button-icon-image" />
+            <img src={newVersionIcon} alt="Neue Version" className="button-icon-image" draggable="false" />
           ) : (
             newVersionIcon
           )}

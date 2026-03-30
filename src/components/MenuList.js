@@ -144,7 +144,7 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
                   {isFavorite && (
                     <div className="menu-favorite-badge favorite-active">
                       {isBase64Image(buttonIcons.menuFavoritesButtonActive) ? (
-                        <img src={buttonIcons.menuFavoritesButtonActive} alt="Favorit" className="button-icon-image" />
+                        <img src={buttonIcons.menuFavoritesButtonActive} alt="Favorit" className="button-icon-image" draggable="false" />
                       ) : (
                         buttonIcons.menuFavoritesButtonActive
                       )}
@@ -179,7 +179,7 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
         aria-label="Menü erstellen"
       >
         {isBase64Image(getEffectiveIcon(buttonIcons, 'addMenu', isDarkMode)) ? (
-          <img src={getEffectiveIcon(buttonIcons, 'addMenu', isDarkMode)} alt="Menü erstellen" className="button-icon-image" />
+          <img src={getEffectiveIcon(buttonIcons, 'addMenu', isDarkMode)} alt="Menü erstellen" className="button-icon-image" draggable="false" />
         ) : (
           getEffectiveIcon(buttonIcons, 'addMenu', isDarkMode)
         )}
@@ -198,13 +198,13 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
       >
         {showFavoritesOnly ? (
           isBase64Image(getEffectiveIcon(buttonIcons, 'menuFavoritesButtonActive', isDarkMode)) ? (
-            <img src={getEffectiveIcon(buttonIcons, 'menuFavoritesButtonActive', isDarkMode)} alt="Favoriten aktiv" className="button-icon-image" />
+            <img src={getEffectiveIcon(buttonIcons, 'menuFavoritesButtonActive', isDarkMode)} alt="Favoriten aktiv" className="button-icon-image" draggable="false" />
           ) : (
             getEffectiveIcon(buttonIcons, 'menuFavoritesButtonActive', isDarkMode)
           )
         ) : (
           isBase64Image(getEffectiveIcon(buttonIcons, 'menuFavoritesButton', isDarkMode)) ? (
-            <img src={getEffectiveIcon(buttonIcons, 'menuFavoritesButton', isDarkMode)} alt="Favoriten" className="button-icon-image" />
+            <img src={getEffectiveIcon(buttonIcons, 'menuFavoritesButton', isDarkMode)} alt="Favoriten" className="button-icon-image" draggable="false" />
           ) : (
             getEffectiveIcon(buttonIcons, 'menuFavoritesButton', isDarkMode)
           )

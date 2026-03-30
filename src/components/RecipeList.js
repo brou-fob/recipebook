@@ -350,13 +350,13 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                 >
                   {hasActiveFilters ? (
                     isBase64Image(getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)) ? (
-                      <img src={getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)} alt="Filter aktiv" className="button-icon-image" />
+                      <img src={getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)} alt="Filter aktiv" className="button-icon-image" draggable="false" />
                     ) : (
                       getEffectiveIcon(buttonIcons, 'filterButtonActive', isDarkMode)
                     )
                   ) : (
                     isBase64Image(getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)) ? (
-                      <img src={getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)} alt="Filter" className="button-icon-image" />
+                      <img src={getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)} alt="Filter" className="button-icon-image" draggable="false" />
                     ) : (
                       getEffectiveIcon(buttonIcons, 'filterButton', isDarkMode)
                     )
@@ -379,7 +379,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                       aria-label="Rezept hinzufügen"
                     >
                       {isBase64Image(getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)) ? (
-                        <img src={getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)} alt="Rezept hinzufügen" className="button-icon-image" />
+                        <img src={getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)} alt="Rezept hinzufügen" className="button-icon-image" draggable="false" />
                       ) : (
                         getEffectiveIcon(buttonIcons, 'addRecipe', isDarkMode)
                       )}
@@ -400,7 +400,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                       aria-label="Privates Rezept hinzufügen"
                     >
                       {isBase64Image(getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)) ? (
-                        <img src={getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)} alt="Privates Rezept hinzufügen" className="button-icon-image" />
+                        <img src={getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)} alt="Privates Rezept hinzufügen" className="button-icon-image" draggable="false" />
                       ) : (
                         getEffectiveIcon(buttonIcons, 'addPrivateRecipe', isDarkMode)
                       )}

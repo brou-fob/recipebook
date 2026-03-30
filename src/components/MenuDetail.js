@@ -346,13 +346,13 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onSe
           >
             {isFavorite ? (
               isBase64Image(favoritesButtonActiveIcon) ? (
-                <img src={favoritesButtonActiveIcon} alt="Favorit aktiv" className="button-icon-image" />
+                <img src={favoritesButtonActiveIcon} alt="Favorit aktiv" className="button-icon-image" draggable="false" />
               ) : (
                 favoritesButtonActiveIcon
               )
             ) : (
               isBase64Image(favoritesButtonIcon) ? (
-                <img src={favoritesButtonIcon} alt="Favorit" className="button-icon-image" />
+                <img src={favoritesButtonIcon} alt="Favorit" className="button-icon-image" draggable="false" />
               ) : (
                 favoritesButtonIcon
               )
@@ -602,7 +602,7 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onSe
           aria-label="Menü bearbeiten"
         >
           {isBase64Image(editMenuIcon) ? (
-            <img src={editMenuIcon} alt="Bearbeiten" className="button-icon-image" />
+            <img src={editMenuIcon} alt="Bearbeiten" className="button-icon-image" draggable="false" />
           ) : (
             editMenuIcon
           )}

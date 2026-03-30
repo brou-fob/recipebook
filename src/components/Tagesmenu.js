@@ -1044,7 +1044,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
           title="Listen filtern"
         >
           {isBase64Image(filterButtonIcon) ? (
-            <img src={filterButtonIcon} alt="Listen filtern" className="button-icon-image" />
+            <img src={filterButtonIcon} alt="Listen filtern" className="button-icon-image" draggable="false" />
           ) : (
             <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{filterButtonIcon}</span>
           )}
@@ -1060,7 +1060,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
           title="Meine Auswahl"
         >
           {isBase64Image(meineAuswahlIcon) ? (
-            <img src={meineAuswahlIcon} alt="Meine Auswahl" className="button-icon-image" />
+            <img src={meineAuswahlIcon} alt="Meine Auswahl" className="button-icon-image" draggable="false" />
           ) : (
             <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{meineAuswahlIcon}</span>
           )}
@@ -1076,7 +1076,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
           title="Zum Tagesmenü"
         >
           {isBase64Image(zumTagesMenuIcon) ? (
-            <img src={zumTagesMenuIcon} alt="Zum Tagesmenü" className="button-icon-image" />
+            <img src={zumTagesMenuIcon} alt="Zum Tagesmenü" className="button-icon-image" draggable="false" />
           ) : (
             <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{zumTagesMenuIcon}</span>
           )}
