@@ -23,8 +23,14 @@
   line-height: 1;
 }
 
-.recipe-rating-detail-summary:hover {
+/*.recipe-rating-detail-summary:hover {
   background: rgba(223, 122, 0, 0.08);
+}*/
+
+.recipe-rating-detail-summary:active {
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  opacity: 0.2;
 }
 
 .recipe-rating-detail-summary .rating-heart-icon {
