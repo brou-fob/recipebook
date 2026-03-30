@@ -192,6 +192,7 @@ const DARK_MODE_ICON_ROWS = [
   { key: 'tagesmenuMeineAuswahl', label: 'Meine Auswahl' },
   { key: 'newVersion', label: 'Neue Version' },
   { key: 'publishRecipe', label: 'Rezept veröffentlichen' },
+  { key: 'deleteRecipe', label: 'Rezept löschen' },
 ];
 
 function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdateRecipe }) {

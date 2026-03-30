@@ -87,6 +87,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const [newVersionFabPressed, setNewVersionFabPressed] = useState(false);
   const [publishRecipeIcon, setPublishRecipeIcon] = useState('↑');
   const [publishFabPressed, setPublishFabPressed] = useState(false);
+  const [deleteRecipeIcon, setDeleteRecipeIcon] = useState('🗑');
+  const [deleteFabPressed, setDeleteFabPressed] = useState(false);
   const [conversionTable, setConversionTable] = useState([]);
   const [showCookDateModal, setShowCookDateModal] = useState(false);
   const [cookDateModalPrefillToday, setCookDateModalPrefillToday] = useState(false);
@@ -139,8 +141,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       setFavoritesButtonIcon(eff('menuFavoritesButton') || '☆');
       setFavoritesButtonActiveIcon(eff('menuFavoritesButtonActive') || '★');
       setPublishRecipeIcon(eff('publishRecipe') || '↑');
+      setDeleteRecipeIcon(eff('deleteRecipe') || '🗑');
       setPortionUnits(lists.portionUnits || []);
-      setAllButtonIcons(icons);
       setButtonIconsLoaded(true);
       setConversionTable(lists.conversionTable || []);
       setCategoryImageSet(new Set((catImages || []).map(ci => ci.image).filter(Boolean)));
@@ -177,6 +179,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     setFavoritesButtonIcon(eff('menuFavoritesButton') || '☆');
     setFavoritesButtonActiveIcon(eff('menuFavoritesButtonActive') || '★');
     setPublishRecipeIcon(eff('publishRecipe') || '↑');
+    setDeleteRecipeIcon(eff('deleteRecipe') || '🗑');
   }, [allButtonIcons, isDarkMode]);
 
   // Listen for dark mode changes
@@ -1368,11 +1371,6 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
                 Eigene Version erstellen
               </button>
             )}
-            {userCanDelete && (
-              <button className="delete-button" onClick={handleDelete}>
-                Löschen
-              </button>
-            )}
             {onToggleFavorite && (
               <button 
                 className={`favorite-button ${isFavorite ? 'favorite-button--active' : ''}`}
@@ -2224,6 +2222,27 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
             <img src={newVersionIcon} alt="Neue Version" className="button-icon-image" draggable="false" />
           ) : (
             newVersionIcon
+          )}
+        </button>
+      )}
+      {userCanDelete && onDelete && !cookingMode && (
+        <button
+          className={`delete-fab-button${deleteFabPressed ? ' pressed' : ''}`}
+          style={{ visibility: buttonIconsLoaded ? 'visible' : 'hidden' }}
+          onClick={handleDelete}
+          onTouchStart={() => setDeleteFabPressed(true)}
+          onTouchEnd={() => setDeleteFabPressed(false)}
+          onTouchCancel={() => setDeleteFabPressed(false)}
+          onMouseDown={() => setDeleteFabPressed(true)}
+          onMouseUp={() => setDeleteFabPressed(false)}
+          onMouseLeave={() => setDeleteFabPressed(false)}
+          title="Rezept löschen"
+          aria-label="Rezept löschen"
+        >
+          {isBase64Image(deleteRecipeIcon) ? (
+            <img src={deleteRecipeIcon} alt="Löschen" className="button-icon-image" draggable="false" />
+          ) : (
+            deleteRecipeIcon
           )}
         </button>
       )}
