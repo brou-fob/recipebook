@@ -16,6 +16,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   animation: slideDown 0.3s ease-out;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes slideDown {
@@ -74,11 +75,11 @@
   line-height: 1;
 }
 
-.cooking-mode-exit:hover {
+/*.cooking-mode-exit:hover {
   background: rgba(255, 255, 255, 0.3);
   border-color: white;
   transform: scale(1.1);
-}
+}*/
 
 @keyframes pulse {
   0%, 100% {
