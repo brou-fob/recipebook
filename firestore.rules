@@ -123,7 +123,19 @@ service cloud.firestore {
     // Settings collection
     match /settings/{settingId} {
       allow read: if isAnyUser();
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      // Admins may update any settings document.
+      // edit/moderator users may update only the list fields in settings/app
+      // (cuisineTypes, cuisineGroups, mealCategories, units, portionUnits,
+      //  conversionTable, customUnits) – all other fields remain admin-only.
+      allow update: if isAdmin()
+                 || (
+                      isEditOrAdmin()
+                      && settingId == 'app'
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['cuisineTypes', 'cuisineGroups', 'mealCategories',
+                                     'units', 'portionUnits', 'conversionTable', 'customUnits'])
+                    );
     }
 
     // Button icons collection – each document stores one icon (key = iconKey, value = emoji/base64)
