@@ -173,22 +173,64 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
       // Mark proposal as released in Firestore
       await releaseCuisineProposal(proposal.id);
 
+      // The name originally added to cuisineTypes (may differ if the proposal was renamed)
+      const originalName = proposal.originalName || proposal.name;
+      const wasRenamed = originalName.toLowerCase() !== proposal.name.toLowerCase();
+
+      // Normalize a recipe's kulinarik field to an array
+      const toKulinarikArray = (kulinarik) =>
+        Array.isArray(kulinarik) ? kulinarik : kulinarik ? [kulinarik] : [];
+
       // Add to the main cuisineTypes list and optionally to a cuisineGroup
       const lists = await getCustomLists();
-      const updatedTypes = lists.cuisineTypes.some(t => t.toLowerCase() === proposal.name.toLowerCase())
-        ? lists.cuisineTypes
-        : [...lists.cuisineTypes, proposal.name];
+      let updatedTypes;
+      if (wasRenamed && lists.cuisineTypes.some(t => t.toLowerCase() === originalName.toLowerCase())) {
+        // Replace the original name with the new name in the types list
+        updatedTypes = lists.cuisineTypes.map(t =>
+          t.toLowerCase() === originalName.toLowerCase() ? proposal.name : t
+        );
+      } else {
+        updatedTypes = lists.cuisineTypes.some(t => t.toLowerCase() === proposal.name.toLowerCase())
+          ? lists.cuisineTypes
+          : [...lists.cuisineTypes, proposal.name];
+      }
 
       let updatedGroups = lists.cuisineGroups || [];
       if (proposal.groupName) {
-        updatedGroups = updatedGroups.map(g =>
-          g.name === proposal.groupName && !g.children.includes(proposal.name)
-            ? { ...g, children: [...g.children, proposal.name] }
-            : g
-        );
+        updatedGroups = updatedGroups.map(g => {
+          if (g.name !== proposal.groupName) return g;
+          // Replace originalName with new name (or just add if not present)
+          const filteredChildren = wasRenamed
+            ? g.children.filter(c => c.toLowerCase() !== originalName.toLowerCase())
+            : g.children;
+          return !filteredChildren.some(c => c.toLowerCase() === proposal.name.toLowerCase())
+            ? { ...g, children: [...filteredChildren, proposal.name] }
+            : { ...g, children: filteredChildren };
+        });
+      } else if (wasRenamed) {
+        // Update originalName → new name inside any group children
+        updatedGroups = updatedGroups.map(g => ({
+          ...g,
+          children: g.children.map(c =>
+            c.toLowerCase() === originalName.toLowerCase() ? proposal.name : c
+          ),
+        }));
       }
 
       await saveCustomLists({ cuisineTypes: updatedTypes, cuisineGroups: updatedGroups });
+
+      // Propagate rename to all recipes that reference the original name
+      if (wasRenamed && onUpdateRecipe) {
+        const affectedRecipes = recipes.filter(r =>
+          toKulinarikArray(r.kulinarik).some(k => k.toLowerCase() === originalName.toLowerCase())
+        );
+        for (const recipe of affectedRecipes) {
+          const updatedKulinarik = toKulinarikArray(recipe.kulinarik).map(k =>
+            k.toLowerCase() === originalName.toLowerCase() ? proposal.name : k
+          );
+          await onUpdateRecipe(recipe.id, { kulinarik: updatedKulinarik });
+        }
+      }
 
       // Remove released proposal from local state
       setCuisineProposals(prev => prev.filter(p => p.id !== proposal.id));

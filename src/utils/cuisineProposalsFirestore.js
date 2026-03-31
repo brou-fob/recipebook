@@ -3,12 +3,13 @@
  * Handles creation, editing, and release of user-proposed cuisine types.
  *
  * Data model: cuisineProposals/{proposalId}
- *   - name:       string  – proposed cuisine type name
- *   - groupName:  string | null – Kulinarikgruppe the type should be assigned to
- *   - released:   boolean – true once the type has been "freigegeben" (approved)
- *   - createdAt:  serverTimestamp
- *   - createdBy:  string – userId of the proposing user
- *   - source:     string – origin of the proposal ('recipe_form' | 'manual')
+ *   - name:         string  – proposed cuisine type name (may be edited before release)
+ *   - originalName: string  – name as first submitted; used to detect renames on release
+ *   - groupName:    string | null – Kulinarikgruppe the type should be assigned to
+ *   - released:     boolean – true once the type has been "freigegeben" (approved)
+ *   - createdAt:    serverTimestamp
+ *   - createdBy:    string – userId of the proposing user
+ *   - source:       string – origin of the proposal ('recipe_form' | 'manual')
  */
 
 import { db } from '../firebase';
@@ -53,8 +54,10 @@ export const getCuisineProposals = async () => {
  * @returns {Promise<string>} ID of the created document
  */
 export const addCuisineProposal = async ({ name, groupName = null, createdBy, source = 'manual' }) => {
+  const trimmedName = name.trim();
   const docRef = await addDoc(collection(db, 'cuisineProposals'), {
-    name: name.trim(),
+    name: trimmedName,
+    originalName: trimmedName,
     groupName: groupName || null,
     released: false,
     createdAt: serverTimestamp(),
