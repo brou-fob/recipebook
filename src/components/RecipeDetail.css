@@ -289,14 +289,8 @@
   height: 1.5rem;
 }
 
-/*.share-copy-url-button:hover {
-  background: transparent;
-  border: none;
-}*/
-
 .share-copy-url-button:active {
   transform: scale(1.1);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   opacity: 0.2;
 }
 
@@ -479,7 +473,7 @@
   gap: 1rem;
   align-items: center;
   /*Linie unterhalb von Titel, Autor und Erstellt am*/
-  border-bottom: 1px solid #f0f0f0;
+  /*border-bottom: 1px solid #f0f0f0;*/
 }
 
 .version-navigation {
@@ -768,7 +762,7 @@
   flex: 1;
   width: 100%;
   /*Linie unterhalb der Buttonreihe*/
-  border-bottom: 1px solid #f0f0f0;
+  /*border-bottom: 1px solid #f0f0f0;*/
 }
 
 .recipe-title-row {
@@ -1149,7 +1143,8 @@
   overflow-y: auto;
   padding: 1.5rem;
   background: white;
-  border-bottom: 2px solid #f0f0f0;
+  /*border-bottom: 2px solid #f0f0f0;*/
+  border-bottom: none;
 }
 
 .cooking-mode-ingredients .ingredients-list {
@@ -1553,7 +1548,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  /*border-bottom: 1px solid #eee;*/
+  border-bottom: none;
 }
 
 .portion-selector-title {
@@ -1588,7 +1584,8 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f0f0f0;
+  /*border-bottom: 1px solid #f0f0f0;*/
+  border-bottom: none;
 }
 
 .portion-selector-item:last-child {
