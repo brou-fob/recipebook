@@ -561,6 +561,7 @@
     min-width: 56px;
     max-width: 56px;
     opacity: 0.85;
-    right: 86px;
+    right: auto;
+    left: 20px;
   }
 }
