@@ -564,3 +564,29 @@
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
+
+.recipe-card-list-select {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  border-radius: 12px;
+}
+
+.recipe-card-list-select select {
+  width: 80%;
+  max-width: 240px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  background: white;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
