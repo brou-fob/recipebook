@@ -77,7 +77,7 @@ export const subscribeToMenus = (userId, isAdmin, callback) => {
         id: doc.id,
         ...doc.data()
       };
-      // Include menu if it's public OR if it's private and (user is admin OR menu author)
+      // Include menu if privat is false/undefined (public) OR user is admin OR menu author
       if (!menu.privat || isAdmin || menu.authorId === userId) {
         menus.push(menu);
       }
