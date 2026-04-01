@@ -695,11 +695,18 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     const fontFamily = format?.fontFamily || "Georgia, 'Times New Roman', serif";
     const elementOrder = format?.elementOrder || ['images', 'ingredients', 'steps'];
     const orientation = format?.orientation || 'portrait';
+    const imageWidth = format?.imageWidth != null ? format.imageWidth : 100;
+    const imageAlign = format?.imageAlign || 'center';
+    const imageColumns = format?.imageColumns || 'auto';
+
+    const alignSelfMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
 
     root.style.setProperty('--print-font-family', fontFamily);
     root.style.setProperty('--print-images-order', String(elementOrder.indexOf('images') + 1));
     root.style.setProperty('--print-ingredients-order', String(elementOrder.indexOf('ingredients') + 1));
     root.style.setProperty('--print-steps-order', String(elementOrder.indexOf('steps') + 1));
+    root.style.setProperty('--print-image-width', `${imageWidth}%`);
+    root.style.setProperty('--print-image-align-self', alignSelfMap[imageAlign] || 'center');
 
     // Inject a @page orientation rule
     let pageStyle = document.getElementById('print-page-format');
@@ -710,13 +717,32 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     }
     pageStyle.textContent = `@page { size: ${orientation}; }`;
 
-    // Clean up CSS variables and the injected style after printing
+    // Inject image column override when a fixed column count is configured
+    let columnStyle = document.getElementById('print-image-columns');
+    if (!columnStyle) {
+      columnStyle = document.createElement('style');
+      columnStyle.id = 'print-image-columns';
+      document.head.appendChild(columnStyle);
+    }
+    if (imageColumns !== 'auto') {
+      // imageColumns is a numeric string ('1' or '2'); build the matching grid template
+      const colCount = parseInt(imageColumns, 10);
+      const cols = Array.from({ length: colCount }, () => '1fr').join(' ');
+      columnStyle.textContent = `@media print { .carousel-track, .carousel-track[data-image-count] { grid-template-columns: ${cols} !important; } }`;
+    } else {
+      columnStyle.textContent = '';
+    }
+
+    // Clean up CSS variables and the injected styles after printing
     const cleanup = () => {
       root.style.removeProperty('--print-font-family');
       root.style.removeProperty('--print-images-order');
       root.style.removeProperty('--print-ingredients-order');
       root.style.removeProperty('--print-steps-order');
+      root.style.removeProperty('--print-image-width');
+      root.style.removeProperty('--print-image-align-self');
       if (pageStyle.parentNode) pageStyle.parentNode.removeChild(pageStyle);
+      if (columnStyle.parentNode) columnStyle.parentNode.removeChild(columnStyle);
     };
     // afterprint fires when the print dialog closes (including cancellation in most browsers)
     window.addEventListener('afterprint', cleanup, { once: true });

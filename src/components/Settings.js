@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Settings.css';
-import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getAppLogoImageUrl, saveAppLogoImageUrl, getButtonIcons, saveButtonIcon, DEFAULT_BUTTON_ICONS, getTimelineBubbleIcon, saveTimelineBubbleIcon, getTimelineMenuBubbleIcon, saveTimelineMenuBubbleIcon, getTimelineMenuDefaultImage, saveTimelineMenuDefaultImage, getTimelineCookEventBubbleIcon, saveTimelineCookEventBubbleIcon, getTimelineCookEventDefaultImage, saveTimelineCookEventDefaultImage, getAIRecipePrompt, saveAIRecipePrompt, resetAIRecipePrompt, DEFAULT_AI_RECIPE_PROMPT, getTileSizePreference, saveTileSizePreference, applyTileSizePreference, TILE_SIZE_SMALL, TILE_SIZE_MEDIUM, TILE_SIZE_LARGE, getDarkModePreference, getDarkModeMode, saveDarkModePreference, applyDarkModePreference, getSortSettings, saveSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES, getStatusValiditySettings, saveStatusValiditySettings, getGroupStatusThresholds, saveGroupStatusThresholds, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MIN_KANDIDAT, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MAX_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MIN_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MAX_KANDIDAT, getMaxKandidatenSchwelle, saveMaxKandidatenSchwelle, getPrintFormats, savePrintFormats, DEFAULT_PRINT_FORMATS, PRINT_FONT_OPTIONS } from '../utils/customLists';
+import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getAppLogoImageUrl, saveAppLogoImageUrl, getButtonIcons, saveButtonIcon, DEFAULT_BUTTON_ICONS, getTimelineBubbleIcon, saveTimelineBubbleIcon, getTimelineMenuBubbleIcon, saveTimelineMenuBubbleIcon, getTimelineMenuDefaultImage, saveTimelineMenuDefaultImage, getTimelineCookEventBubbleIcon, saveTimelineCookEventBubbleIcon, getTimelineCookEventDefaultImage, saveTimelineCookEventDefaultImage, getAIRecipePrompt, saveAIRecipePrompt, resetAIRecipePrompt, DEFAULT_AI_RECIPE_PROMPT, getTileSizePreference, saveTileSizePreference, applyTileSizePreference, TILE_SIZE_SMALL, TILE_SIZE_MEDIUM, TILE_SIZE_LARGE, getDarkModePreference, getDarkModeMode, saveDarkModePreference, applyDarkModePreference, getSortSettings, saveSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES, getStatusValiditySettings, saveStatusValiditySettings, getGroupStatusThresholds, saveGroupStatusThresholds, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MIN_KANDIDAT, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MAX_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MIN_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MAX_KANDIDAT, getMaxKandidatenSchwelle, saveMaxKandidatenSchwelle, getPrintFormats, savePrintFormats, DEFAULT_PRINT_FORMATS, PRINT_FONT_OPTIONS, PRINT_IMAGE_ALIGN_OPTIONS, PRINT_IMAGE_COLUMNS_OPTIONS } from '../utils/customLists';
 import { invalidateUnitsCache } from '../utils/ingredientUtils';
 import { isCurrentUserAdmin, ROLES, getRolePermissions } from '../utils/userManagement';
 import UserManagement from './UserManagement';
@@ -2056,9 +2056,9 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
             <div className="settings-section">
               <h3>Druckformate</h3>
               <p className="section-description">
-                Konfigurieren Sie die Dokumentenformatierung für den Druck von Rezepten. Für jedes Format können Sie
-                Seitenausrichtung, Schriftart und die Reihenfolge der Elemente (Bilder, Zutaten, Zubereitungsschritte)
-                festlegen. Die Anzahl der Fotos bestimmt, welches Format angewendet wird.
+                Konfigurieren Sie die Dokumentenvorlage für den Druck von Rezepten. Für jedes Format können Sie
+                Seitenausrichtung, Schriftart, die Reihenfolge der Elemente sowie Bildgröße, Bildausrichtung und
+                Spaltenanzahl der Bilder festlegen. Die Anzahl der Fotos bestimmt, welches Format angewendet wird.
               </p>
 
               {printFormats.map((fmt, fmtIdx) => (
@@ -2232,6 +2232,75 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                         })}
                       </div>
                     </div>
+
+                    {/* Image width */}
+                    <div className="sort-settings-field">
+                      <label>Bildbreite:</label>
+                      <div className="print-format-image-width-row">
+                        <input
+                          type="range"
+                          className="print-format-image-width-slider"
+                          min="25"
+                          max="100"
+                          step="5"
+                          value={fmt.imageWidth != null ? fmt.imageWidth : 100}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            const updated = printFormats.map((f, i) =>
+                              i === fmtIdx ? { ...f, imageWidth: val } : f
+                            );
+                            setPrintFormats(updated);
+                          }}
+                        />
+                        <span className="print-format-image-width-label">
+                          {fmt.imageWidth != null ? fmt.imageWidth : 100} %
+                        </span>
+                      </div>
+                      <span className="sort-settings-hint">Breite des Bildbereichs relativ zur Seitenbreite.</span>
+                    </div>
+
+                    {/* Image alignment */}
+                    <div className="sort-settings-field">
+                      <label>Bildausrichtung:</label>
+                      <select
+                        className="print-format-select"
+                        value={fmt.imageAlign || 'center'}
+                        onChange={(e) => {
+                          const updated = printFormats.map((f, i) =>
+                            i === fmtIdx ? { ...f, imageAlign: e.target.value } : f
+                          );
+                          setPrintFormats(updated);
+                        }}
+                      >
+                        {PRINT_IMAGE_ALIGN_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Image columns */}
+                    <div className="sort-settings-field">
+                      <label>Bildspalten:</label>
+                      <select
+                        className="print-format-select"
+                        value={fmt.imageColumns || 'auto'}
+                        onChange={(e) => {
+                          const updated = printFormats.map((f, i) =>
+                            i === fmtIdx ? { ...f, imageColumns: e.target.value } : f
+                          );
+                          setPrintFormats(updated);
+                        }}
+                      >
+                        {PRINT_IMAGE_COLUMNS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="sort-settings-hint">Anzahl der Spalten für die Bilddarstellung beim Drucken.</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -2248,6 +2317,9 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                       orientation: 'portrait',
                       elementOrder: ['images', 'ingredients', 'steps'],
                       fontFamily: "Georgia, 'Times New Roman', serif",
+                      imageWidth: 100,
+                      imageAlign: 'center',
+                      imageColumns: 'auto',
                     };
                     setPrintFormats([...printFormats, newFormat]);
                   }}
