@@ -2086,9 +2086,12 @@
     page-break-inside: avoid;
   }
 
-  /* Configurable element order for images, ingredients, and steps */
+  /* Configurable element order, width and alignment for images, ingredients, and steps */
   .recipe-section--images {
     order: var(--print-images-order, 1) !important;
+    width: var(--print-image-width, 100%) !important;
+    max-width: var(--print-image-width, 100%) !important;
+    align-self: var(--print-image-align-self, center) !important;
   }
 
   .recipe-section--ingredients {

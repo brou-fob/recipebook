@@ -84,6 +84,20 @@ export const PRINT_FONT_OPTIONS = [
   { label: 'Courier New (Monospace)', value: "'Courier New', Courier, monospace" },
 ];
 
+/** Available image alignment options for print formats */
+export const PRINT_IMAGE_ALIGN_OPTIONS = [
+  { label: 'Zentriert', value: 'center' },
+  { label: 'Linksbündig', value: 'left' },
+  { label: 'Rechtsbündig', value: 'right' },
+];
+
+/** Available image column layout options for print formats */
+export const PRINT_IMAGE_COLUMNS_OPTIONS = [
+  { label: 'Automatisch (nach Anzahl)', value: 'auto' },
+  { label: '1 Spalte', value: '1' },
+  { label: '2 Spalten', value: '2' },
+];
+
 /**
  * Default print formats.  Each format can have:
  *   id {string}            - Unique identifier
@@ -92,6 +106,9 @@ export const PRINT_FONT_OPTIONS = [
  *   orientation {string}   - 'portrait' | 'landscape'
  *   elementOrder {string[]}- Ordered array of 'images', 'ingredients', 'steps'
  *   fontFamily {string}    - CSS font-family string
+ *   imageWidth {number}    - Image section width as a percentage of the page (25–100)
+ *   imageAlign {string}    - Horizontal alignment of the image section: 'left' | 'center' | 'right'
+ *   imageColumns {string}  - Number of image columns: 'auto' | '1' | '2'
  */
 export const DEFAULT_PRINT_FORMATS = [
   {
@@ -101,6 +118,9 @@ export const DEFAULT_PRINT_FORMATS = [
     orientation: 'portrait',
     elementOrder: ['images', 'ingredients', 'steps'],
     fontFamily: "Georgia, 'Times New Roman', serif",
+    imageWidth: 100,
+    imageAlign: 'center',
+    imageColumns: 'auto',
   },
 ];
 

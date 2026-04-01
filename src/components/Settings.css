@@ -1984,3 +1984,23 @@
   margin-top: 0.5rem;
   flex-wrap: wrap;
 }
+
+.print-format-image-width-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.print-format-image-width-slider {
+  flex: 1;
+  accent-color: #8b5e3c;
+}
+
+.print-format-image-width-label {
+  min-width: 3.5rem;
+  text-align: right;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5a3e2b;
+}
