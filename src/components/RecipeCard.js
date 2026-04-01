@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import './RecipeList.css';
 import RecipeImageCarousel from './RecipeImageCarousel';
 import RecipeRating from './RecipeRating';
 import { isBase64Image } from '../utils/imageUtils';
+
+const LONG_PRESS_DELAY_MS = 500;
+const LONG_PRESS_CLICK_SUPPRESSION_MS = 500;
 
 const MAX_KULINARIK_TAGS = 5;
 
@@ -24,7 +27,76 @@ function renderKulinarikTags(kulinarik) {
   );
 }
 
-function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, authorName, versionCount, currentUser }) {
+function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, authorName, versionCount, currentUser, privateLists, onAddToPrivateList, onRemoveFromPrivateList }) {
+  const [showListSelect, setShowListSelect] = useState(false);
+  const longPressTimer = useRef(null);
+  const longPressed = useRef(false);
+  const longPressJustFired = useRef(false);
+
+  const handleTouchStart = () => {
+    longPressed.current = false;
+    longPressTimer.current = setTimeout(() => {
+      if (privateLists && privateLists.length > 0) {
+        longPressed.current = true;
+        setShowListSelect(true);
+      }
+    }, LONG_PRESS_DELAY_MS);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    longPressed.current = false;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (longPressed.current) {
+      longPressed.current = false;
+      longPressJustFired.current = true;
+      e.preventDefault();
+      setTimeout(() => { longPressJustFired.current = false; }, LONG_PRESS_CLICK_SUPPRESSION_MS);
+    }
+  };
+
+  const handleTouchCancel = () => {
+    cancelLongPress();
+  };
+
+  const handleCardClick = (e) => {
+    if (longPressJustFired.current) {
+      longPressJustFired.current = false;
+      return;
+    }
+    if (showListSelect) return;
+    onClick?.(e);
+  };
+
+  const handleListSelect = (e) => {
+    const listId = e.target.value;
+    if (!listId) {
+      setShowListSelect(false);
+      return;
+    }
+    const list = privateLists.find(l => l.id === listId);
+    if (!list) {
+      setShowListSelect(false);
+      return;
+    }
+    const isInList = list.recipeIds?.includes(recipe.id);
+    if (isInList) {
+      onRemoveFromPrivateList?.(listId, recipe.id);
+    } else {
+      onAddToPrivateList?.(listId, recipe.id);
+    }
+    setShowListSelect(false);
+  };
+
   const allImages = Array.isArray(recipe.images) && recipe.images.length > 0
     ? recipe.images
     : recipe.image
@@ -37,7 +109,28 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
   const hasImages = orderedImages.length > 0;
 
   return (
-    <div className="recipe-card" onClick={onClick}>
+    <div
+      className="recipe-card"
+      onClick={handleCardClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+    >
+      {showListSelect && privateLists && privateLists.length > 0 && (
+        <div className="recipe-card-list-select" onClick={(e) => e.stopPropagation()}>
+          <select onChange={handleListSelect} defaultValue="">
+            <option value="">-- Liste auswählen --</option>
+            {privateLists.map(list => {
+              const isInList = list.recipeIds?.includes(recipe.id);
+              return (
+                <option key={list.id} value={list.id}>
+                  {isInList ? '✓ ' : ''}{list.name}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
       {isFavorite && (
         <div className="recipe-favorite-badge">
           {favoriteActiveIcon ? (

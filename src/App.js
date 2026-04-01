@@ -256,6 +256,11 @@ function App() {
   // IDs of groups the current user belongs to – used to filter group-scoped recipes
   const userGroupIds = useMemo(() => groups.map((g) => g.id), [groups]);
 
+  // Private lists the current user can manage recipes in
+  const privateListsForUser = useMemo(() => groups.filter(
+    g => g.type === 'private' && (g.ownerId === currentUser?.id || (Array.isArray(g.memberIds) && g.memberIds.includes(currentUser?.id)))
+  ), [groups, currentUser?.id]);
+
   // Name of the currently selected private list filter (if any).
   // Falls back to the single selectedPrivateList from the search overlay when no group filter is set.
   const activePrivateListName = useMemo(() => {
@@ -1359,6 +1364,9 @@ function App() {
             onClearAllFilters={handleClearAllFilters}
             showFavoritesOnly={showFavoritesOnly}
             onShowFavoritesOnlyChange={setShowFavoritesOnly}
+            privateLists={privateListsForUser}
+            onAddToPrivateList={handleAddRecipeToPrivateList}
+            onRemoveFromPrivateList={handleRemoveRecipeFromPrivateList}
           />
         </>
       )}
