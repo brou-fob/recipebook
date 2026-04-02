@@ -471,3 +471,81 @@ describe('MenuDetail - Shopping List with Linked Recipes', () => {
     expect(texts).toContain('200 g Zucker');
   });
 });
+
+describe('MenuDetail - Edit Button visibility during shopping list planning', () => {
+  const simpleMenu = {
+    id: 'menu-simple',
+    name: 'Einfaches Menü',
+    recipeIds: ['recipe-a'],
+  };
+
+  const simpleRecipe = {
+    id: 'recipe-a',
+    title: 'Pasta',
+    portionen: 4,
+    ingredients: ['200 g Nudeln'],
+  };
+
+  test('edit FAB button is visible initially', () => {
+    render(
+      <MenuDetail
+        menu={simpleMenu}
+        recipes={[simpleRecipe]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onSelectRecipe={() => {}}
+        onToggleMenuFavorite={() => Promise.resolve()}
+        currentUser={{ id: 'user-1' }}
+        allUsers={[]}
+      />
+    );
+
+    expect(screen.getByTitle('Menü bearbeiten')).toBeInTheDocument();
+  });
+
+  test('edit FAB button is hidden when portion selector is open', () => {
+    render(
+      <MenuDetail
+        menu={simpleMenu}
+        recipes={[simpleRecipe]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onSelectRecipe={() => {}}
+        onToggleMenuFavorite={() => Promise.resolve()}
+        currentUser={{ id: 'user-1' }}
+        allUsers={[]}
+      />
+    );
+
+    expect(screen.getByTitle('Menü bearbeiten')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+    expect(screen.getByText('Portionen für Einkaufsliste')).toBeInTheDocument();
+
+    expect(screen.queryByTitle('Menü bearbeiten')).not.toBeInTheDocument();
+  });
+
+  test('edit FAB button reappears when portion selector is closed', () => {
+    render(
+      <MenuDetail
+        menu={simpleMenu}
+        recipes={[simpleRecipe]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onSelectRecipe={() => {}}
+        onToggleMenuFavorite={() => Promise.resolve()}
+        currentUser={{ id: 'user-1' }}
+        allUsers={[]}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+    expect(screen.queryByTitle('Menü bearbeiten')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Portionsauswahl schließen'));
+    expect(screen.getByTitle('Menü bearbeiten')).toBeInTheDocument();
+  });
+});

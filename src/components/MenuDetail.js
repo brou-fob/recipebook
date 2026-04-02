@@ -661,7 +661,7 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onPu
           </div>
         </div>
       )}
-      {canEditMenu(currentUser, menu) && onEdit && (
+      {canEditMenu(currentUser, menu) && onEdit && !showShoppingListModal && !showPortionSelector && (
         <button
           className={`edit-fab-button${editFabPressed ? ' pressed' : ''}`}
           onClick={handleEditFabClick}

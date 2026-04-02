@@ -1722,3 +1722,79 @@ describe('RecipeDetail - Dark mode icon persistence', () => {
     expect(cookingModeImg.src).toContain('darkCookingModeIcon');
   });
 });
+
+describe('RecipeDetail - Edit Button visibility during shopping list planning', () => {
+  const recipeWithLink = {
+    id: 'recipe-main',
+    title: 'Hauptrezept',
+    authorId: 'user-1',
+    portionen: 4,
+    ingredients: ['#recipe:recipe-linked:Pizzateig'],
+    steps: ['Step 1'],
+  };
+
+  const linkedRecipe = {
+    id: 'recipe-linked',
+    title: 'Pizzateig',
+    authorId: 'user-1',
+    portionen: 4,
+    ingredients: ['500g Mehl'],
+    steps: ['Mischen'],
+  };
+
+  const currentUser = { id: 'user-1', vorname: 'Test', nachname: 'User' };
+
+  test('edit FAB button is visible initially', () => {
+    render(
+      <RecipeDetail
+        recipe={recipeWithLink}
+        allRecipes={[linkedRecipe]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.getByTitle('Rezept bearbeiten')).toBeInTheDocument();
+  });
+
+  test('edit FAB button is hidden when portion selector is open', () => {
+    render(
+      <RecipeDetail
+        recipe={recipeWithLink}
+        allRecipes={[linkedRecipe]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    expect(screen.getByTitle('Rezept bearbeiten')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+    expect(screen.getByText('Portionen für Einkaufsliste')).toBeInTheDocument();
+
+    expect(screen.queryByTitle('Rezept bearbeiten')).not.toBeInTheDocument();
+  });
+
+  test('edit FAB button reappears when portion selector is closed', () => {
+    render(
+      <RecipeDetail
+        recipe={recipeWithLink}
+        allRecipes={[linkedRecipe]}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+    expect(screen.queryByTitle('Rezept bearbeiten')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Portionsauswahl schließen'));
+    expect(screen.getByTitle('Rezept bearbeiten')).toBeInTheDocument();
+  });
+});
