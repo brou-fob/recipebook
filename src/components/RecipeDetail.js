@@ -1437,7 +1437,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           </button>
           
           <div className="action-buttons" style={{ visibility: buttonIconsLoaded ? 'visible' : 'hidden' }}>
-            {userCanDirectlyEdit && (
+            {userCanDirectlyEdit && !showShoppingListModal && !showPortionSelector && (
               <button className="edit-button" onClick={() => onEdit(recipe)}>
                 Bearbeiten
               </button>
@@ -2291,7 +2291,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           </div>
         </div>
       )}
-      {userCanDirectlyEdit && onEdit && !cookingMode && (
+      {userCanDirectlyEdit && onEdit && !cookingMode && !showShoppingListModal && !showPortionSelector && (
         <button
           className={`edit-fab-button${editFabPressed ? ' pressed' : ''}`}
           style={{ visibility: buttonIconsLoaded ? 'visible' : 'hidden' }}
