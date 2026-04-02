@@ -68,33 +68,48 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
     cancelLongPress();
   };
 
+  const handleTouchMove = () => {
+    cancelLongPress();
+  };
+
   const handleCardClick = (e) => {
     if (longPressJustFired.current) {
       longPressJustFired.current = false;
       return;
     }
-    if (showListSelect) return;
+    
+    if (showListSelect) {
+      e.stopPropagation(); 
+      return;
+    }
     onClick?.(e);
   };
 
-  const handleListSelect = (e) => {
-    const listId = e.target.value;
+  const closeListMenu = () => {
+    setShowListSelect(false);
+  };
+  
+  const handleListAction = (listId) => {
     if (!listId) {
-      setShowListSelect(false);
+      closeListMenu();
       return;
     }
-    const list = privateLists.find(l => l.id === listId);
+  
+    const list = privateLists.find((l) => l.id === listId);
     if (!list) {
-      setShowListSelect(false);
+      closeListMenu();
       return;
     }
+  
     const isInList = list.recipeIds?.includes(recipe.id);
+  
     if (isInList) {
       onRemoveFromPrivateList?.(listId, recipe.id);
     } else {
       onAddToPrivateList?.(listId, recipe.id);
     }
-    setShowListSelect(false);
+  
+    closeListMenu();
   };
 
   const allImages = Array.isArray(recipe.images) && recipe.images.length > 0
@@ -115,20 +130,52 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
+      onTouchMove={handleTouchMove}
     >
       {showListSelect && privateLists && privateLists.length > 0 && (
-        <div className="recipe-card-list-select" onClick={(e) => e.stopPropagation()}>
-          <select onChange={handleListSelect} defaultValue="">
-            <option value="">-- Liste auswählen --</option>
-            {privateLists.map(list => {
+        <div
+          className="recipe-card-list-menu-overlay"
+          onClick={(e) => {
+            e.stopPropagation();
+            closeListMenu();
+          }}
+        >
+          <div
+            className="recipe-card-list-menu"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="recipe-card-list-menu-title">
+              Liste auswählen
+            </div>
+      
+            {privateLists.map((list) => {
               const isInList = list.recipeIds?.includes(recipe.id);
+      
               return (
-                <option key={list.id} value={list.id}>
-                  {isInList ? '✓ ' : ''}{list.name}
-                </option>
+                <button
+                  key={list.id}
+                  type="button"
+                  className="recipe-card-list-menu-item"
+                  onClick={() => handleListAction(list.id)}
+                >
+                  <span className="recipe-card-list-menu-check">
+                    {isInList ? '✓' : ''}
+                  </span>
+                  <span className="recipe-card-list-menu-label">
+                    {list.name}
+                  </span>
+                </button>
               );
             })}
-          </select>
+      
+            <button
+              type="button"
+              className="recipe-card-list-menu-cancel"
+              onClick={closeListMenu}
+            >
+              Abbrechen
+            </button>
+          </div>
         </div>
       )}
       {isFavorite && (
