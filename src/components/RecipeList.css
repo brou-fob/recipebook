@@ -209,6 +209,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .recipe-card {
@@ -219,6 +221,8 @@
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .recipe-favorite-badge {
@@ -291,6 +295,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  max-width: 100%;
 }
 
 .recipe-kulinarik {
