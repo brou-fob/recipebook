@@ -6,12 +6,15 @@ import './RecipeImageCarousel.css';
  * Supports lazy loading via IntersectionObserver (with native loading="lazy" as enhancement).
  *
  * Props:
- *   images      - Array of image objects with at least a `url` property (required)
- *   altText     - Alt text for the images (required)
- *   className   - Additional CSS class(es) for the wrapper div (optional)
- *   onImageClick - Callback when a slide image is clicked (optional)
+ *   images        - Array of image objects with at least a `url` property (required).
+ *                   Objects may also carry a `thumbnailUrl` for faster list-view loading.
+ *   altText       - Alt text for the images (required)
+ *   className     - Additional CSS class(es) for the wrapper div (optional)
+ *   onImageClick  - Callback when a slide image is clicked (optional)
+ *   useThumbnails - When true, prefer `thumbnailUrl` over `url` for each slide (optional,
+ *                   default false).  Use in list/overview contexts for faster loading.
  */
-function RecipeImageCarousel({ images, altText, className = '', onImageClick }) {
+function RecipeImageCarousel({ images, altText, className = '', onImageClick, useThumbnails = false }) {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState({});
   const [isVisible, setIsVisible] = useState(false);
@@ -107,7 +110,7 @@ function RecipeImageCarousel({ images, altText, className = '', onImageClick }) 
             <div className={`ric-placeholder${loadedImages[idx] ? ' ric-placeholder--hidden' : ''}`} />
             {isVisible && (
               <img
-                src={img.url}
+                src={useThumbnails && img.thumbnailUrl ? img.thumbnailUrl : img.url}
                 alt={altText}
                 loading="lazy"
                 className={`ric-image${loadedImages[idx] ? ' ric-image--loaded' : ''}`}

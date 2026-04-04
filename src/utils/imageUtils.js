@@ -207,6 +207,70 @@ export function analyzeImageBrightness(imageSrc) {
 }
 
 /**
+ * Generate a thumbnail Blob from an image File using the browser canvas API.
+ * The resulting JPEG is resized to fit within maxWidth × maxHeight while
+ * preserving the original aspect ratio.
+ *
+ * @param {File} file - The source image file.
+ * @param {number} [maxWidth=400]  - Maximum thumbnail width in pixels.
+ * @param {number} [maxHeight=300] - Maximum thumbnail height in pixels.
+ * @param {number} [quality=0.75]  - JPEG encoding quality (0–1).
+ * @returns {Promise<Blob>} A JPEG Blob of the resized thumbnail.
+ */
+export function generateThumbnailBlob(file, maxWidth = 400, maxHeight = 300, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('generateThumbnailBlob: no file provided'));
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      try {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('generateThumbnailBlob: canvas.toBlob returned null'));
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('generateThumbnailBlob: failed to load image'));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+/**
  * Get the default display image URL for a recipe.
  * Prefers the image flagged as default in the images array, then falls back to
  * the legacy single `image` field.

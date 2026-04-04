@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './RecipeForm.css';
 import { removeEmojis, containsEmojis } from '../utils/emojiUtils';
-import { fileToBase64, isBase64Image, analyzeImageBrightness } from '../utils/imageUtils';
-import { uploadRecipeImage, deleteRecipeImage } from '../utils/storageUtils';
+import { fileToBase64, isBase64Image, analyzeImageBrightness, generateThumbnailBlob } from '../utils/imageUtils';
+import { uploadRecipeImage, deleteRecipeImage, uploadRecipeThumbnail } from '../utils/storageUtils';
 import { getCustomLists, saveCustomLists, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { addCuisineProposal } from '../utils/cuisineProposalsFirestore';
 import { getUsers, isCurrentUserAdmin, getUserAiOcrScanCount } from '../utils/userManagement';
@@ -667,8 +667,25 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
     setImageError(false);
 
     try {
-      // Upload to Firebase Storage and get download URL
-      const downloadURL = await uploadRecipeImage(file);
+      // Upload original image and generate thumbnail in parallel
+      const [downloadURL, thumbnailBlob] = await Promise.all([
+        uploadRecipeImage(file),
+        generateThumbnailBlob(file).catch((err) => {
+          console.warn('Thumbnail generation failed (non-critical):', err);
+          return null;
+        }),
+      ]);
+
+      // Upload thumbnail if generated successfully
+      let thumbnailUrl = null;
+      if (thumbnailBlob) {
+        try {
+          thumbnailUrl = await uploadRecipeThumbnail(thumbnailBlob);
+        } catch (thumbUploadErr) {
+          // Thumbnail upload is non-critical – continue without it
+          console.warn('Thumbnail upload failed (non-critical):', thumbUploadErr);
+        }
+      }
 
       // Analyze brightness using a local object URL (avoids CORS restrictions)
       let imageBrightness = null;
@@ -683,7 +700,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
       // Add to images array; first image is default, others are not
       setImages(prev => {
         const isFirst = prev.length === 0;
-        return [...prev, { url: downloadURL, isDefault: isFirst, imageBrightness }];
+        return [...prev, { url: downloadURL, thumbnailUrl, isDefault: isFirst, imageBrightness }];
       });
       // Keep legacy image field in sync with default image
       setImage(prev => prev || downloadURL);
@@ -788,8 +805,8 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
 
     // Build final images array, ensuring default is correct
     const finalImages = images.length > 0
-      ? images.map(img => ({ url: img.url, isDefault: img.url === finalImage, imageBrightness: img.imageBrightness || null }))
-      : (finalImage ? [{ url: finalImage, isDefault: true }] : []);
+      ? images.map(img => ({ url: img.url, thumbnailUrl: img.thumbnailUrl || null, isDefault: img.url === finalImage, imageBrightness: img.imageBrightness || null }))
+      : (finalImage ? [{ url: finalImage, thumbnailUrl: null, isDefault: true }] : []);
 
     // Filter out empty items and convert to storage format
     const filteredIngredients = ingredients.filter(i => i.text.trim() !== '');

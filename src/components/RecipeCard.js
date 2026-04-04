@@ -201,6 +201,7 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
             images={orderedImages}
             altText={recipe.title}
             onImageClick={onClick}
+            useThumbnails={true}
           />
         </div>
       )}
