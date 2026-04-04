@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './AppCallsPage.css';
 import { getAppCalls } from '../utils/appCallsFirestore';
 import { getRecipeCalls } from '../utils/recipeCallsFirestore';
@@ -24,6 +24,9 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
   const [sharedRecipeIds, setSharedRecipeIds] = useState(new Set());
   const [shareLinkErrors, setShareLinkErrors] = useState({});
   const [abortingCalcId, setAbortingCalcId] = useState(null);
+  const [expandedAppCallId, setExpandedAppCallId] = useState(null);
+  const [expandedRecipeCallId, setExpandedRecipeCallId] = useState(null);
+  const tabsRef = useRef(null);
 
   // Kulinariktypen state
   const [cuisineProposals, setCuisineProposals] = useState([]);
@@ -292,7 +295,7 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
           )}
         </button>
       </div>
-      <div className="app-calls-tabs">
+      <div className="app-calls-tabs" ref={tabsRef}>
         <button
           className={`app-calls-tab${activeTab === 'app' ? ' active' : ''}`}
           onClick={() => setActiveTab('app')}
@@ -345,23 +348,46 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
                         <th>Datum &amp; Uhrzeit</th>
                         <th>Vorname</th>
                         <th>Nachname</th>
-                        <th>E-Mail</th>
-                        <th>Art</th>
+                        <th className="app-calls-col-desktop">E-Mail</th>
+                        <th className="app-calls-col-desktop">Art</th>
+                        <th className="app-calls-col-mobile">Info</th>
                       </tr>
                     </thead>
                     <tbody>
                       {appCalls.map((call) => (
-                        <tr key={call.id}>
-                          <td>
-                            {call.timestamp?.toDate
-                              ? call.timestamp.toDate().toLocaleString('de-DE')
-                              : '–'}
-                          </td>
-                          <td>{call.userVorname}</td>
-                          <td>{call.userNachname}</td>
-                          <td>{call.userEmail}</td>
-                          <td>{call.isGuest ? 'Gast' : 'Angemeldet'}</td>
-                        </tr>
+                        <React.Fragment key={call.id}>
+                          <tr>
+                            <td>
+                              {call.timestamp?.toDate
+                                ? call.timestamp.toDate().toLocaleString('de-DE')
+                                : '–'}
+                            </td>
+                            <td>{call.userVorname}</td>
+                            <td>{call.userNachname}</td>
+                            <td className="app-calls-col-desktop">{call.userEmail}</td>
+                            <td className="app-calls-col-desktop">{call.isGuest ? 'Gast' : 'Angemeldet'}</td>
+                            <td className="app-calls-col-mobile">
+                              <button
+                                className={`app-calls-info-btn${expandedAppCallId === call.id ? ' active' : ''}`}
+                                onClick={() => setExpandedAppCallId(expandedAppCallId === call.id ? null : call.id)}
+                                aria-label="Details anzeigen"
+                                title="Details anzeigen"
+                              >
+                                ⓘ
+                              </button>
+                            </td>
+                          </tr>
+                          {expandedAppCallId === call.id && (
+                            <tr className="app-calls-detail-row">
+                              <td colSpan={6}>
+                                <div className="app-calls-detail-content">
+                                  <span><strong>E-Mail:</strong> {call.userEmail || '–'}</span>
+                                  <span><strong>Art:</strong> {call.isGuest ? 'Gast' : 'Angemeldet'}</span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -392,24 +418,47 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
                         <th>Rezept</th>
                         <th>Vorname</th>
                         <th>Nachname</th>
-                        <th>E-Mail</th>
-                        <th>Art</th>
+                        <th className="app-calls-col-desktop">E-Mail</th>
+                        <th className="app-calls-col-desktop">Art</th>
+                        <th className="app-calls-col-mobile">Info</th>
                       </tr>
                     </thead>
                     <tbody>
                       {recipeCalls.map((call) => (
-                        <tr key={call.id}>
-                          <td>
-                            {call.timestamp?.toDate
-                              ? call.timestamp.toDate().toLocaleString('de-DE')
-                              : '–'}
-                          </td>
-                          <td>{call.recipeTitle}</td>
-                          <td>{call.userVorname}</td>
-                          <td>{call.userNachname}</td>
-                          <td>{call.userEmail}</td>
-                          <td>{call.isGuest ? 'Gast' : 'Angemeldet'}</td>
-                        </tr>
+                        <React.Fragment key={call.id}>
+                          <tr>
+                            <td>
+                              {call.timestamp?.toDate
+                                ? call.timestamp.toDate().toLocaleString('de-DE')
+                                : '–'}
+                            </td>
+                            <td>{call.recipeTitle}</td>
+                            <td>{call.userVorname}</td>
+                            <td>{call.userNachname}</td>
+                            <td className="app-calls-col-desktop">{call.userEmail}</td>
+                            <td className="app-calls-col-desktop">{call.isGuest ? 'Gast' : 'Angemeldet'}</td>
+                            <td className="app-calls-col-mobile">
+                              <button
+                                className={`app-calls-info-btn${expandedRecipeCallId === call.id ? ' active' : ''}`}
+                                onClick={() => setExpandedRecipeCallId(expandedRecipeCallId === call.id ? null : call.id)}
+                                aria-label="Details anzeigen"
+                                title="Details anzeigen"
+                              >
+                                ⓘ
+                              </button>
+                            </td>
+                          </tr>
+                          {expandedRecipeCallId === call.id && (
+                            <tr className="app-calls-detail-row">
+                              <td colSpan={7}>
+                                <div className="app-calls-detail-content">
+                                  <span><strong>E-Mail:</strong> {call.userEmail || '–'}</span>
+                                  <span><strong>Art:</strong> {call.isGuest ? 'Gast' : 'Angemeldet'}</span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -514,43 +563,9 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
         ) : (
           <>
             <p className="app-calls-info-text">
-              Hier können neue Kulinariktypen angelegt, bestehenden Kulinarikgruppen zugeordnet und bearbeitet werden.
+              Hier können neue Kulinariktypen bestehenden Kulinarikgruppen zugeordnet, bearbeitet und freigegeben werden.
               Freigegebene Kulinariktypen werden in der Hauptliste der Einstellungen ergänzt und erscheinen nicht mehr hier.
             </p>
-            <div className="cuisine-proposal-form">
-              <input
-                type="text"
-                className="cuisine-proposal-input"
-                value={newCuisineName}
-                onChange={(e) => { setNewCuisineName(e.target.value); setNewCuisineDuplicateError(false); }}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddCuisineProposal()}
-                placeholder="Neuen Kulinariktyp eingeben…"
-                aria-label="Name des neuen Kulinariktyps"
-              />
-              <select
-                className="cuisine-proposal-group-select"
-                value={newCuisineGroup}
-                onChange={(e) => setNewCuisineGroup(e.target.value)}
-                aria-label="Kulinarikgruppe auswählen"
-              >
-                <option value="">Keine Gruppe</option>
-                {cuisineGroups.map(g => (
-                  <option key={g.name} value={g.name}>{g.name}</option>
-                ))}
-              </select>
-              <button
-                className="app-calls-share-btn"
-                onClick={handleAddCuisineProposal}
-                disabled={cuisineLoading || !newCuisineName.trim()}
-              >
-                Hinzufügen
-              </button>
-            </div>
-            {newCuisineDuplicateError && (
-              <p className="cuisine-proposal-duplicate-error">
-                Dieser Kulinariktyp ist bereits in der Liste vorhanden.
-              </p>
-            )}
             {cuisineProposals.length === 0 ? (
               <div className="app-calls-empty">Keine offenen Kulinariktypen vorhanden.</div>
             ) : (
