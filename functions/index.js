@@ -3415,3 +3415,144 @@ exports.notifyPrivateListMembers = onCall(
       return {success: true, sent: sentCount};
     },
 );
+
+/**
+ * Backfills thumbnails for all existing recipes that have images but lack
+ * a `thumbnailUrl` on one or more of their image entries.
+ *
+ * The function processes up to `batchSize` (default 50) recipes per invocation
+ * to stay within Cloud Functions time limits. Call it multiple times if needed.
+ *
+ * For each image without a `thumbnailUrl`:
+ *  1. Downloads the full image from Firebase Storage (or from a public URL).
+ *  2. Resizes it to at most 400 × 300 px using sharp.
+ *  3. Uploads the thumbnail to `thumbnails/recipe-thumb-{recipeId}-{idx}.jpg`.
+ *  4. Updates the Firestore document with the new `thumbnailUrl` values.
+ *
+ * Only callable by admin users.
+ */
+exports.backfillRecipeThumbnails = onCall(
+    {
+      memory: '1GiB',
+      timeoutSeconds: 540,
+      maxInstances: 1,
+    },
+    async (request) => {
+      // Only admins may trigger backfill
+      const callerUid = request.auth?.uid;
+      if (!callerUid) {
+        throw new HttpsError('unauthenticated', 'Authentication required.');
+      }
+      const callerDoc = await admin.firestore().doc(`users/${callerUid}`).get();
+      if (!callerDoc.exists || callerDoc.data().role !== 'admin') {
+        throw new HttpsError('permission-denied', 'Admin role required.');
+      }
+
+      const {batchSize = 50} = request.data || {};
+      const db = admin.firestore();
+      const bucket = admin.storage().bucket();
+
+      // Fetch recipes in batches
+      const snapshot = await db.collection('recipes').limit(batchSize).get();
+      const results = {processed: 0, updated: 0, skipped: 0, errors: []};
+
+      for (const doc of snapshot.docs) {
+        results.processed++;
+        const data = doc.data();
+
+        // Build images list from the `images` array or from the legacy `image` field
+        let images = Array.isArray(data.images) && data.images.length > 0
+          ? data.images
+          : (data.image ? [{url: data.image, isDefault: true}] : []);
+
+        if (images.length === 0) {
+          results.skipped++;
+          continue;
+        }
+
+        // Check if any image is missing a thumbnailUrl
+        const needsUpdate = images.some(
+            (img) => img.url && !img.thumbnailUrl,
+        );
+        if (!needsUpdate) {
+          results.skipped++;
+          continue;
+        }
+
+        try {
+          const updatedImages = await Promise.all(
+              images.map(async (img, idx) => {
+                if (!img.url || img.thumbnailUrl) {
+                  return img; // Already has thumbnail or has no URL
+                }
+
+                try {
+                  let imageBuffer;
+
+                  if (img.url.startsWith('data:image/')) {
+                    const matches = img.url.match(/^data:image\/\w+;base64,(.+)$/s);
+                    if (!matches) return img;
+                    imageBuffer = Buffer.from(matches[1], 'base64');
+                  } else {
+                    const response = await fetch(img.url);
+                    if (!response.ok) {
+                      throw new Error(`HTTP ${response.status}`);
+                    }
+                    const arrayBuffer = await response.arrayBuffer();
+                    imageBuffer = Buffer.from(arrayBuffer);
+                  }
+
+                  const thumbnailBuffer = await sharp(imageBuffer)
+                      .resize(400, 300, {fit: 'inside', withoutEnlargement: true})
+                      .jpeg({quality: 75})
+                      .toBuffer();
+
+                  const fileName =
+                    `thumbnails/recipe-thumb-${doc.id}-${idx}.jpg`;
+                  const file = bucket.file(fileName);
+
+                  await file.save(thumbnailBuffer, {
+                    metadata: {
+                      contentType: 'image/jpeg',
+                      cacheControl: 'public, max-age=31536000',
+                    },
+                  });
+                  await file.makePublic();
+
+                  const thumbnailUrl =
+                    `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                  return {...img, thumbnailUrl};
+                } catch (imgErr) {
+                  console.warn(
+                      `backfillRecipeThumbnails: failed for recipe ` +
+                      `${doc.id} image ${idx}:`, imgErr.message,
+                  );
+                  return img; // Leave unchanged on error
+                }
+              }),
+          );
+
+          // Persist updates to Firestore
+          const updatePayload = {images: updatedImages};
+          // Also update top-level image if the default image gained a thumbnail
+          const defaultImg = updatedImages.find((i) => i.isDefault) ||
+            updatedImages[0];
+          if (defaultImg?.thumbnailUrl && !data.imageThumbnail) {
+            updatePayload.imageThumbnail = defaultImg.thumbnailUrl;
+          }
+
+          await doc.ref.update(updatePayload);
+          results.updated++;
+        } catch (docErr) {
+          console.error(
+              `backfillRecipeThumbnails: error processing recipe ${doc.id}:`,
+              docErr,
+          );
+          results.errors.push({recipeId: doc.id, error: docErr.message});
+        }
+      }
+
+      console.log('backfillRecipeThumbnails complete:', results);
+      return results;
+    },
+);

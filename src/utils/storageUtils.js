@@ -71,6 +71,37 @@ export async function uploadRecipeImage(file) {
 }
 
 /**
+ * Upload a recipe image thumbnail Blob to Firebase Storage.
+ * Thumbnails are stored under the `thumbnails/` prefix with a unique filename.
+ *
+ * @param {Blob} thumbnailBlob - The thumbnail Blob (typically JPEG).
+ * @returns {Promise<string>} Download URL of the uploaded thumbnail.
+ */
+export async function uploadRecipeThumbnail(thumbnailBlob) {
+  if (!thumbnailBlob) {
+    throw new Error('No thumbnail blob provided');
+  }
+
+  try {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 15);
+    const filename = `recipe-thumb-${timestamp}-${randomStr}.jpg`;
+    const storageRef = ref(storage, `thumbnails/${filename}`);
+
+    const snapshot = await uploadBytes(storageRef, thumbnailBlob, {
+      contentType: 'image/jpeg',
+      cacheControl: 'public, max-age=31536000',
+    });
+
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading recipe thumbnail to Firebase Storage:', error);
+    throw new Error('Failed to upload thumbnail. Please try again.');
+  }
+}
+
+/**
  * Delete a recipe image from Firebase Storage
  * @param {string} imageUrl - The download URL or path of the image to delete
  * @returns {Promise<void>}
