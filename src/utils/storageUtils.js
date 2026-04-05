@@ -265,6 +265,33 @@ export async function uploadMenuGridImage(base64Image, menuId) {
   }
 }
 
+export async function uploadMenuGridImageDark(base64Image, menuId) {
+  if (!base64Image || !menuId) {
+    throw new Error('No image or menu ID provided');
+  }
+
+  try {
+    // Convert the data-URL to a Blob for upload
+    const response = await fetch(base64Image);
+    const blob = await response.blob();
+
+    // Generate filename: recipes/menu-grid-dark-{menuId}.jpg
+    const filename = `menu-grid-dark-${menuId}.jpg`;
+    const storageRef = ref(storage, `recipes/${filename}`);
+
+    const snapshot = await uploadBytes(storageRef, blob, {
+      contentType: 'image/jpeg',
+      cacheControl: 'public, max-age=86400',
+    });
+
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading dark menu grid image to Firebase Storage:', error);
+    throw new Error('Failed to upload dark menu grid image. Please try again.');
+  }
+}
+
 /**
  * Delete a menu grid image from Firebase Storage.
  * Errors are logged but not re-thrown so that deletion never blocks saving.
@@ -294,6 +321,38 @@ export async function deleteMenuGridImage(imageUrl) {
     console.log('[deleteMenuGridImage] Deleted old grid image:', path);
   } catch (error) {
     console.error('Error deleting menu grid image from Firebase Storage:', error);
+  }
+}
+
+/**
+ * Delete a dark menu grid image from Firebase Storage.
+ * Errors are logged but not re-thrown so that deletion never blocks saving.
+ *
+ * @param {string} imageUrl - The download URL of the dark grid image to delete
+ * @returns {Promise<void>}
+ */
+export async function deleteMenuGridImageDark(imageUrl) {
+  if (!imageUrl || !isStorageUrl(imageUrl)) {
+    return;
+  }
+
+  try {
+    const url = new URL(imageUrl);
+    const pathMatch = url.pathname.match(/\/o\/(.+)/);
+
+    if (!pathMatch || !pathMatch[1]) {
+      console.warn('Could not extract path from Storage URL:', imageUrl);
+      return;
+    }
+
+    const encodedPath = pathMatch[1];
+    const path = decodeURIComponent(encodedPath);
+
+    const storageRef = ref(storage, path);
+    await deleteObject(storageRef);
+    console.log('[deleteMenuGridImageDark] Deleted old dark grid image:', path);
+  } catch (error) {
+    console.error('Error deleting dark menu grid image from Firebase Storage:', error);
   }
 }
 

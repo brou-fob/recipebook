@@ -477,6 +477,8 @@ export async function buildMenuGridImage(imageUrls, options = {}) {
     height = 400,
     gap = 4,
     quality = 0.8,
+    backgroundColor = '#e8e8e8',
+    placeholderColor = '#d0d0d0',
   } = options;
 
   if (!imageUrls || imageUrls.length === 0) {
@@ -521,7 +523,7 @@ export async function buildMenuGridImage(imageUrls, options = {}) {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#e8e8e8';
+  ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
   const loadImage = (src, index) =>
@@ -588,7 +590,7 @@ export async function buildMenuGridImage(imageUrls, options = {}) {
 
     if (!img) {
       // Draw a slightly lighter placeholder for cells where the image failed to load.
-      ctx.fillStyle = '#d0d0d0';
+      ctx.fillStyle = placeholderColor;
       ctx.fillRect(x, y, cellW, cellH);
       console.log('[buildMenuGridImage] [%d] Drew placeholder at (%.0f,%.0f)', i, x, y);
       continue;

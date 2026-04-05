@@ -4,7 +4,7 @@ import { getUserFavorites } from '../utils/userFavorites';
 import { getSavedSections, saveSectionNames, createMenuSection } from '../utils/menuSections';
 import { fuzzyFilter } from '../utils/fuzzySearch';
 import { fileToBase64, compressImage, selectMenuGridImages, buildMenuGridImage, isBase64Image } from '../utils/imageUtils';
-import { uploadMenuGridImage, deleteMenuGridImage, isStorageUrl } from '../utils/storageUtils';
+import { uploadMenuGridImage, uploadMenuGridImageDark, deleteMenuGridImage, deleteMenuGridImageDark, isStorageUrl } from '../utils/storageUtils';
 import { DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getButtonIcons } from '../utils/customLists';
 import { getCategoryImages } from '../utils/categoryImages';
 import {
@@ -491,6 +491,7 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
       // ALWAYS auto-generate a grid image from recipe title images to ensure changes are reflected.
       // Note: menu.image (manual upload) is preserved separately and takes precedence in display.
       let gridImage = null;
+      let gridImageDark = null;
       try {
         console.log('[MenuForm:handleSubmit] Fetching category images...');
         const tCat = performance.now();
@@ -504,6 +505,9 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
         console.log('[MenuForm:handleSubmit] selectMenuGridImages() done in %.1fms → %d URLs',
           performance.now() - tSel, selectedUrls.length,
           selectedUrls.map((u, i) => `[${i}] ${u.substring(0, 60)}`));
+
+        // Use existing menu ID or generate temporary ID for new menus (shared for both uploads)
+        const uploadMenuId = menu?.id || `temp-${Date.now()}`;
 
         if (selectedUrls.length > 0) {
           console.log('[MenuForm:handleSubmit] Calling buildMenuGridImage...');
@@ -531,8 +535,6 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
             try {
               console.log('[MenuForm:handleSubmit] Uploading grid image to Firebase Storage...');
               const tUpload = performance.now();
-              // Use existing menu ID or generate temporary ID for new menus
-              const uploadMenuId = menu?.id || `temp-${Date.now()}`;
               gridImage = await uploadMenuGridImage(gridImageBase64, uploadMenuId);
               console.log('[MenuForm:handleSubmit] Grid image uploaded in %.1fms → URL: %s',
                 performance.now() - tUpload, gridImage.substring(0, 80));
@@ -540,6 +542,39 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
               console.error('[MenuForm:handleSubmit] Failed to upload grid image:', uploadErr);
               // Fall back to null if upload fails — don't block menu save
               gridImage = null;
+            }
+          }
+
+          // Dark variant
+          const gridImageDarkBase64 = await buildMenuGridImage(selectedUrls, {
+            width: 600,
+            height: 300,
+            gap: 0,
+            quality: 0.8,
+            backgroundColor: '#1e1e1e',
+            placeholderColor: '#2a2a2a',
+          });
+
+          if (gridImageDarkBase64) {
+            // Delete old dark grid image from Firebase Storage if updating an existing menu
+            if (menu?.gridImageDark && isStorageUrl(menu.gridImageDark)) {
+              try {
+                await deleteMenuGridImageDark(menu.gridImageDark);
+              } catch (err) {
+                console.warn('[MenuForm:handleSubmit] Could not delete old dark grid image:', err);
+              }
+            }
+
+            // Upload dark grid image to Firebase Storage
+            try {
+              console.log('[MenuForm:handleSubmit] Uploading dark grid image to Firebase Storage...');
+              const tUploadDark = performance.now();
+              gridImageDark = await uploadMenuGridImageDark(gridImageDarkBase64, uploadMenuId);
+              console.log('[MenuForm:handleSubmit] Dark grid image uploaded in %.1fms → URL: %s',
+                performance.now() - tUploadDark, gridImageDark.substring(0, 80));
+            } catch (uploadErr) {
+              console.error('[MenuForm:handleSubmit] Failed to upload dark grid image:', uploadErr);
+              gridImageDark = null;
             }
           }
         } else {
@@ -556,6 +591,7 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
         menuDate: menuDate,
         image: menuImage,
         gridImage: gridImage || null,
+        gridImageDark: gridImageDark || null,
         createdBy: menu?.createdBy || currentUser?.id,
         sections: sections,
         recipeIds: allRecipeIds // Keep for backward compatibility
@@ -566,6 +602,7 @@ function MenuForm({ menu, recipes, onSave, onCancel, currentUser }) {
         name: menuData.name,
         hasImage: Boolean(menuData.image),
         hasGridImage: Boolean(menuData.gridImage),
+        hasGridImageDark: Boolean(menuData.gridImageDark),
         sectionsCount: menuData.sections.length,
         recipeIdsCount: menuData.recipeIds.length,
       });
