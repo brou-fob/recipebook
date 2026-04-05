@@ -55,6 +55,16 @@ jest.mock('../utils/customLists', () => ({
   DEFAULT_BUTTON_ICONS: { cookingMode: '👨‍🍳', closeButton: '✕' },
   getEffectiveIcon: (icons, key) => icons[key] ?? '',
   getDarkModePreference: () => false,
+  ALARM_SOUNDS: [
+    { key: 'radar',   label: 'Radar' },
+    { key: 'chime',   label: 'Glockenspiel' },
+    { key: 'beep',    label: 'Piepton' },
+    { key: 'crystal', label: 'Kristall' },
+    { key: 'alert',   label: 'Alarm' },
+  ],
+  DEFAULT_ALARM_SOUND: 'radar',
+  getAlarmSoundPreference: () => 'radar',
+  saveAlarmSoundPreference: () => {},
 }));
 
 jest.mock('../utils/categoryImages', () => ({

@@ -13,7 +13,7 @@ import { httpsCallable } from 'firebase/functions';
 import NutritionModal from './NutritionModal';
 import ShoppingListModal from './ShoppingListModal';
 import RatingModal from './RatingModal';
-import { DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, DEFAULT_PRINT_FORMATS, selectPrintFormat, mergePrintElementsWithDefaults } from '../utils/customLists';
+import { DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, DEFAULT_PRINT_FORMATS, selectPrintFormat, mergePrintElementsWithDefaults, ALARM_SOUNDS, DEFAULT_ALARM_SOUND, getAlarmSoundPreference, saveAlarmSoundPreference } from '../utils/customLists';
 import RecipeRating from './RecipeRating';
 import CookDateModal from './CookDateModal';
 
@@ -112,6 +112,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
   const alarmIntervalRef = useRef(null);
   const alarmCtxRef = useRef(null);
   const notifyTimerDoneRef = useRef(null);
+  const [alarmSoundKey, setAlarmSoundKey] = useState(() => getAlarmSoundPreference());
+  const [showCookingModeSettings, setShowCookingModeSettings] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -986,6 +988,124 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     }
   }
 
+  function playChimePattern(ctx) {
+    try {
+      const now = ctx.currentTime;
+      // Gentle bell: sine wave with fast attack and slow exponential decay
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1047, now); // C6
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.7, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+      osc.start(now);
+      osc.stop(now + 0.9);
+      // Higher harmonic for richness
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(2093, now); // C7
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.3, now + 0.02);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc2.start(now);
+      osc2.stop(now + 0.6);
+    } catch (_) {
+      // Audio API not available – silently ignore
+    }
+  }
+
+  function playBeepPattern(ctx) {
+    try {
+      const now = ctx.currentTime;
+      // Three short square-wave beeps
+      for (let i = 0; i < 3; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, now + i * 0.22);
+        gain.gain.setValueAtTime(0.5, now + i * 0.22);
+        gain.gain.setValueAtTime(0.5, now + i * 0.22 + 0.1);
+        gain.gain.linearRampToValueAtTime(0, now + i * 0.22 + 0.13);
+        osc.start(now + i * 0.22);
+        osc.stop(now + i * 0.22 + 0.15);
+      }
+    } catch (_) {
+      // Audio API not available – silently ignore
+    }
+  }
+
+  function playCrystalPattern(ctx) {
+    try {
+      const now = ctx.currentTime;
+      // High-pitched crystal bell: sine wave with very fast attack, long decay
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2093, now); // C7
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.5, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+      osc.start(now);
+      osc.stop(now + 1.1);
+      // Sub-tone for body
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1568, now); // G6
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.25, now + 0.01);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+      osc2.start(now);
+      osc2.stop(now + 0.7);
+    } catch (_) {
+      // Audio API not available – silently ignore
+    }
+  }
+
+  function playAlertPattern(ctx) {
+    try {
+      const now = ctx.currentTime;
+      // Two ascending sawtooth tones – urgent feel
+      for (let i = 0; i < 2; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440 + i * 220, now + i * 0.27);
+        osc.frequency.linearRampToValueAtTime(880 + i * 220, now + i * 0.27 + 0.22);
+        gain.gain.setValueAtTime(0.55, now + i * 0.27);
+        gain.gain.linearRampToValueAtTime(0, now + i * 0.27 + 0.22);
+        osc.start(now + i * 0.27);
+        osc.stop(now + i * 0.27 + 0.25);
+      }
+    } catch (_) {
+      // Audio API not available – silently ignore
+    }
+  }
+
+  function playAlarmPattern(ctx, soundKey) {
+    switch (soundKey) {
+      case 'chime':   playChimePattern(ctx);   break;
+      case 'beep':    playBeepPattern(ctx);    break;
+      case 'crystal': playCrystalPattern(ctx); break;
+      case 'alert':   playAlertPattern(ctx);   break;
+      default:        playRadarPattern(ctx);   break;
+    }
+  }
+
   /*function startAlarmLoop(label) {
     // Only one alarm at a time
     if (alarmIntervalRef.current) return;
@@ -1026,6 +1146,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       }
   
       const ctx = alarmCtxRef.current;
+      const soundKey = alarmSoundKey;
   
       // Auf manchen Mobilgeräten startet der Context suspended
       if (ctx.state === 'suspended') {
@@ -1033,7 +1154,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       }
   
       // Sofort einmal abspielen
-      playRadarPattern(ctx);
+      playAlarmPattern(ctx, soundKey);
   
       // Dann wiederholen bis OK gedrückt wird
       alarmIntervalRef.current = setInterval(async () => {
@@ -1041,7 +1162,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           if (ctx.state === 'suspended') {
             await ctx.resume();
           }
-          playRadarPattern(ctx);
+          playAlarmPattern(ctx, soundKey);
         } catch (_) {
           // ignorieren
         }
@@ -1081,6 +1202,22 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     // Das ist stabiler als bei jedem Alarm einen neuen anzulegen.
     setAlarmRunning(false);
     setAlarmLabel('');
+  }
+
+  async function previewAlarmSound(soundKey) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      playAlarmPattern(ctx, soundKey);
+      // Close temporary context after the sound has faded out
+      setTimeout(() => { try { ctx.close(); } catch (_) {} }, 1500);
+    } catch (_) {
+      // Audio API nicht verfügbar – ignorieren
+    }
   }
   
   function notifyTimerDone(label) {
@@ -1540,6 +1677,15 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
               )}
             </span>
             <span className="cooking-mode-text">Kochmodus aktiv</span>
+            <button
+              className={`cooking-mode-settings-btn${showCookingModeSettings ? ' active' : ''}`}
+              onClick={() => setShowCookingModeSettings(prev => !prev)}
+              title="Alarmton einstellen"
+              aria-label="Alarmton einstellen"
+              aria-expanded={showCookingModeSettings}
+            >
+              ⚙
+            </button>
             <button 
               className="cooking-mode-exit"
               onClick={toggleCookingMode}
@@ -1548,6 +1694,39 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
               ×
             </button>
           </div>
+          {showCookingModeSettings && (
+            <div className="cooking-mode-settings-panel" role="region" aria-label="Alarmton-Einstellungen">
+              <p className="cooking-mode-settings-title">Alarmton</p>
+              <div className="alarm-sound-options">
+                {ALARM_SOUNDS.map(sound => (
+                  <div key={sound.key} className="alarm-sound-option">
+                    <label className="alarm-sound-label">
+                      <input
+                        type="radio"
+                        name="alarmSound"
+                        value={sound.key}
+                        checked={alarmSoundKey === sound.key}
+                        onChange={() => {
+                          setAlarmSoundKey(sound.key);
+                          saveAlarmSoundPreference(sound.key);
+                        }}
+                      />
+                      <span>{sound.label}</span>
+                    </label>
+                    <button
+                      className="alarm-sound-preview-btn"
+                      onClick={() => previewAlarmSound(sound.key)}
+                      title={`${sound.label} abspielen`}
+                      aria-label={`${sound.label} abspielen`}
+                      type="button"
+                    >
+                      ▶
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       
@@ -1696,7 +1875,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
         </div>
       )}
 
-      <div className={`recipe-detail-content ${cookingMode ? 'cooking-mode-active' : ''} ${cookingMode && isMobileLandscape ? 'cooking-mode-landscape' : ''}`} ref={contentRef}>
+      <div className={`recipe-detail-content ${cookingMode ? 'cooking-mode-active' : ''} ${cookingMode && isMobileLandscape ? 'cooking-mode-landscape' : ''} ${cookingMode && showCookingModeSettings ? 'cooking-mode-settings-open' : ''}`} ref={contentRef}>
         {cookingMode ? (
           // Cooking mode layout
           <>
