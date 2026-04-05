@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './PersonalDataPage.css';
 import { updateUserProfile, changePassword } from '../utils/userManagement';
+import { ALARM_SOUNDS, getAlarmSoundPreference, saveAlarmSoundPreference } from '../utils/customLists';
+import { previewAlarmSound } from '../utils/alarmAudioUtils';
 
 function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists = [] }) {
   const [vorname, setVorname] = useState(currentUser?.vorname || '');
@@ -16,6 +18,8 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState(null);
+
+  const [alarmSoundKey, setAlarmSoundKey] = useState(() => getAlarmSoundPreference());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,6 +138,38 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
             {message.text}
           </div>
         )}
+        <div className="personal-data-section-divider" />
+        <section className="personal-data-alarm-section">
+          <h3 className="personal-data-section-title">Alarmton</h3>
+          <div className="alarm-sound-options">
+            {ALARM_SOUNDS.map(sound => (
+              <div key={sound.key} className="alarm-sound-option">
+                <label className="alarm-sound-label">
+                  <input
+                    type="radio"
+                    name="alarmSound"
+                    value={sound.key}
+                    checked={alarmSoundKey === sound.key}
+                    onChange={() => {
+                      setAlarmSoundKey(sound.key);
+                      saveAlarmSoundPreference(sound.key);
+                    }}
+                  />
+                  <span>{sound.label}</span>
+                </label>
+                <button
+                  className="alarm-sound-preview-btn"
+                  onClick={() => previewAlarmSound(sound.key)}
+                  title={`${sound.label} abspielen`}
+                  aria-label={`${sound.label} abspielen`}
+                  type="button"
+                >
+                  ▶
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
         <div className="personal-data-actions">
           <button type="button" className="personal-data-cancel-btn" onClick={onBack}>
             Abbrechen
