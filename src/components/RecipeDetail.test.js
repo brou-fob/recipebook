@@ -1809,3 +1809,46 @@ describe('RecipeDetail - Edit Button visibility during shopping list planning', 
     expect(screen.getByTitle('Rezept bearbeiten')).toBeInTheDocument();
   });
 });
+
+describe('RecipeDetail - Step Numbering with Headings', () => {
+  const currentUser = { id: 'user-1', vorname: 'Test', nachname: 'User' };
+
+  test('headings are excluded from step numbering', () => {
+    const recipe = {
+      id: 'recipe-1',
+      title: 'Test Recipe',
+      authorId: 'user-1',
+      portionen: 4,
+      ingredients: [],
+      steps: [
+        { type: 'step', text: 'Schritt 1' },
+        { type: 'heading', text: 'Überschrift' },
+        { type: 'step', text: 'Schritt 2' },
+      ],
+    };
+
+    const { container } = render(
+      <RecipeDetail
+        recipe={recipe}
+        onBack={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        currentUser={currentUser}
+      />
+    );
+
+    const stepsList = container.querySelector('.steps-list');
+    const listItems = stepsList.querySelectorAll('li');
+
+    // Heading item should have no value attribute (or be the step-heading class)
+    const headingItem = Array.from(listItems).find(li => li.classList.contains('step-heading'));
+    expect(headingItem).toBeTruthy();
+    expect(headingItem.getAttribute('value')).toBeNull();
+
+    // Regular steps should have explicit value attributes
+    const regularItems = Array.from(listItems).filter(li => !li.classList.contains('step-heading'));
+    expect(regularItems.length).toBe(2);
+    expect(regularItems[0].getAttribute('value')).toBe('1');
+    expect(regularItems[1].getAttribute('value')).toBe('2');
+  });
+});
