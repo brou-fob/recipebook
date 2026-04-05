@@ -533,7 +533,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     setResetThumbnailLoading(true);
     try {
       await resetRecipeThumbnail(recipe.id);
-      setSelectedRecipe(prev => { const { imageThumbnail: _removed, ...rest } = prev; return rest; });
+      setSelectedRecipe(prev => { const updated = { ...prev }; delete updated.imageThumbnail; return updated; });
     } catch (error) {
       console.error('Error resetting thumbnail:', error);
       alert('Fehler beim Zurücksetzen des Thumbnails. Bitte versuchen Sie es erneut.');
