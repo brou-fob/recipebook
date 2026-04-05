@@ -46,6 +46,16 @@ jest.mock('../utils/customLists', () => ({
   },
   getEffectiveIcon: (icons, key) => icons[key] ?? '',
   getDarkModePreference: () => false,
+  ALARM_SOUNDS: [
+    { key: 'radar',   label: 'Radar' },
+    { key: 'chime',   label: 'Glockenspiel' },
+    { key: 'beep',    label: 'Piepton' },
+    { key: 'crystal', label: 'Kristall' },
+    { key: 'alert',   label: 'Alarm' },
+  ],
+  DEFAULT_ALARM_SOUND: 'radar',
+  getAlarmSoundPreference: () => 'radar',
+  saveAlarmSoundPreference: () => {},
 }));
 
 jest.mock('../utils/recipeLinks', () => ({

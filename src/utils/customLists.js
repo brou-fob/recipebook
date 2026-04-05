@@ -346,6 +346,40 @@ export function applyTileSizePreference(size) {
   document.documentElement.style.setProperty('--tile-size-min', tileSize);
 }
 
+// Alarm sound preference key
+const ALARM_SOUND_KEY = 'alarmSoundPreference';
+
+/** Default alarm sound identifier */
+export const DEFAULT_ALARM_SOUND = 'radar';
+
+/**
+ * Available alarm sounds for the cooking-mode timer.
+ * Each entry has a `key` (stored in localStorage) and a display `label`.
+ */
+export const ALARM_SOUNDS = [
+  { key: 'radar',   label: 'Radar' },
+  { key: 'chime',   label: 'Glockenspiel' },
+  { key: 'beep',    label: 'Piepton' },
+  { key: 'crystal', label: 'Kristall' },
+  { key: 'alert',   label: 'Alarm' },
+];
+
+/**
+ * Get the alarm sound preference from localStorage.
+ * @returns {string} The stored alarm sound key; defaults to DEFAULT_ALARM_SOUND.
+ */
+export function getAlarmSoundPreference() {
+  return localStorage.getItem(ALARM_SOUND_KEY) || DEFAULT_ALARM_SOUND;
+}
+
+/**
+ * Save the alarm sound preference to localStorage.
+ * @param {string} key - Alarm sound key (one of the keys in ALARM_SOUNDS)
+ */
+export function saveAlarmSoundPreference(key) {
+  localStorage.setItem(ALARM_SOUND_KEY, key);
+}
+
 // Dark mode preference key
 const DARK_MODE_KEY = 'darkModePreference';
 
