@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './PersonalDataPage.css';
 import { updateUserProfile, changePassword } from '../utils/userManagement';
-import { ALARM_SOUNDS, getAlarmSoundPreference, saveAlarmSoundPreference } from '../utils/customLists';
+import { ALARM_SOUNDS, getAlarmSoundPreference, saveAlarmSoundPreference, getDarkModeMode, saveDarkModePreference, applyDarkModePreference } from '../utils/customLists';
 import { previewAlarmSound } from '../utils/alarmAudioUtils';
 
 function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists = [] }) {
@@ -20,6 +20,13 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
   const [passwordMessage, setPasswordMessage] = useState(null);
 
   const [alarmSoundKey, setAlarmSoundKey] = useState(() => getAlarmSoundPreference());
+  const [darkMode, setDarkMode] = useState(getDarkModeMode);
+
+  const handleDarkModeSelect = (mode) => {
+    setDarkMode(mode);
+    saveDarkModePreference(mode);
+    applyDarkModePreference(mode);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -168,6 +175,39 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
                 </button>
               </div>
             ))}
+          </div>
+        </section>
+        <div className="personal-data-section-divider" />
+        <section className="personal-data-appearance-section">
+          <h3 className="personal-data-section-title">Erscheinungsbild</h3>
+          <div className="theme-options">
+            <button
+              type="button"
+              className={`theme-btn${darkMode === 'light' ? ' active' : ''}`}
+              onClick={() => handleDarkModeSelect('light')}
+            >
+              <span className="theme-btn-icon">☀️</span>
+              <span className="theme-btn-label">Hell</span>
+              <span className="theme-btn-desc">Helles Design</span>
+            </button>
+            <button
+              type="button"
+              className={`theme-btn${darkMode === 'dark' ? ' active' : ''}`}
+              onClick={() => handleDarkModeSelect('dark')}
+            >
+              <span className="theme-btn-icon">🌙</span>
+              <span className="theme-btn-label">Dunkel</span>
+              <span className="theme-btn-desc">Dunkles Design</span>
+            </button>
+            <button
+              type="button"
+              className={`theme-btn${darkMode === 'auto' ? ' active' : ''}`}
+              onClick={() => handleDarkModeSelect('auto')}
+            >
+              <span className="theme-btn-icon">⚙️</span>
+              <span className="theme-btn-label">Automatisch</span>
+              <span className="theme-btn-desc">Systemeinstellung</span>
+            </button>
           </div>
         </section>
         <div className="personal-data-actions">

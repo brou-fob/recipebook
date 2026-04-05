@@ -6,10 +6,6 @@ import Header from './Header';
 jest.mock('../utils/customLists', () => ({
   getHeaderSlogan: () => Promise.resolve('Test Slogan'),
   getAppLogoImage: () => Promise.resolve(null),
-  getDarkModeMode: () => 'auto',
-  getDarkModePreference: () => false,
-  saveDarkModePreference: jest.fn(),
-  applyDarkModePreference: jest.fn(),
 }));
 
 // Mock faqFirestore with a controllable subscribeToFaqs
@@ -231,37 +227,7 @@ describe('Header - openSearch imperative handle', () => {
 });
 
 describe('Header - Erscheinungsbild (themeToggle) permission', () => {
-  test('Erscheinungsbild section is visible when themeToggle is true', () => {
-    const userWithThemeToggle = { ...mockCurrentUser, themeToggle: true };
-    render(
-      <Header
-        currentView="recipes"
-        currentUser={userWithThemeToggle}
-        onViewChange={() => {}}
-        onLogout={() => {}}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    expect(screen.getByText('Erscheinungsbild')).toBeInTheDocument();
-  });
-
-  test('Erscheinungsbild section is hidden when themeToggle is false', () => {
-    const userWithoutThemeToggle = { ...mockCurrentUser, themeToggle: false };
-    render(
-      <Header
-        currentView="recipes"
-        currentUser={userWithoutThemeToggle}
-        onViewChange={() => {}}
-        onLogout={() => {}}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    expect(screen.queryByText('Erscheinungsbild')).not.toBeInTheDocument();
-  });
-
-  test('Erscheinungsbild section is visible when themeToggle is not set (backward compatibility)', () => {
+  test('Erscheinungsbild section is not shown in the hamburger menu', () => {
     render(
       <Header
         currentView="recipes"
@@ -272,77 +238,6 @@ describe('Header - Erscheinungsbild (themeToggle) permission', () => {
     );
 
     fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    expect(screen.getByText('Erscheinungsbild')).toBeInTheDocument();
-  });
-
-  test('single theme toggle button is shown in Erscheinungsbild section', () => {
-    const userWithThemeToggle = { ...mockCurrentUser, themeToggle: true };
-    render(
-      <Header
-        currentView="recipes"
-        currentUser={userWithThemeToggle}
-        onViewChange={() => {}}
-        onLogout={() => {}}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    // The current mode is 'auto' (from mock), so the button shows 'Automatisch'
-    expect(screen.getByText('Automatisch')).toBeInTheDocument();
-    // Old three-button labels should not be present
-    expect(screen.queryByText(/Hell$/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Dunkel$/)).not.toBeInTheDocument();
-  });
-
-  test('clicking the theme toggle cycles from auto to light', () => {
-    const { saveDarkModePreference, applyDarkModePreference } = jest.requireMock('../utils/customLists');
-    saveDarkModePreference.mockClear();
-    applyDarkModePreference.mockClear();
-
-    const userWithThemeToggle = { ...mockCurrentUser, themeToggle: true };
-    render(
-      <Header
-        currentView="recipes"
-        currentUser={userWithThemeToggle}
-        onViewChange={() => {}}
-        onLogout={() => {}}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    // Initial state is 'auto'; clicking should cycle to 'light'
-    fireEvent.click(screen.getByText('Automatisch'));
-
-    expect(saveDarkModePreference).toHaveBeenCalledWith('light');
-    expect(applyDarkModePreference).toHaveBeenCalledWith('light');
-  });
-
-  test('clicking the theme toggle cycles from light to dark to auto', () => {
-    const { saveDarkModePreference, applyDarkModePreference } = jest.requireMock('../utils/customLists');
-    saveDarkModePreference.mockClear();
-    applyDarkModePreference.mockClear();
-
-    const userWithThemeToggle = { ...mockCurrentUser, themeToggle: true };
-    render(
-      <Header
-        currentView="recipes"
-        currentUser={userWithThemeToggle}
-        onViewChange={() => {}}
-        onLogout={() => {}}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    // auto → light
-    fireEvent.click(screen.getByText('Automatisch'));
-    expect(saveDarkModePreference).toHaveBeenLastCalledWith('light');
-
-    // light → dark
-    fireEvent.click(screen.getByText('Helles Design'));
-    expect(saveDarkModePreference).toHaveBeenLastCalledWith('dark');
-
-    // dark → auto
-    fireEvent.click(screen.getByText('Dunkles Design'));
-    expect(saveDarkModePreference).toHaveBeenLastCalledWith('auto');
+    expect(screen.queryByText('Erscheinungsbild')).not.toBeInTheDocument();
   });
 });

@@ -8,6 +8,18 @@ jest.mock('../utils/userManagement', () => ({
   changePassword: jest.fn(),
 }));
 
+jest.mock('../utils/customLists', () => ({
+  ALARM_SOUNDS: [
+    { key: 'radar', label: 'Radar' },
+    { key: 'chime', label: 'Chime' },
+  ],
+  getAlarmSoundPreference: jest.fn(() => 'radar'),
+  saveAlarmSoundPreference: jest.fn(),
+  getDarkModeMode: jest.fn(() => 'auto'),
+  saveDarkModePreference: jest.fn(),
+  applyDarkModePreference: jest.fn(),
+}));
+
 describe('PersonalDataPage', () => {
   const mockUser = {
     id: 'user-1',
@@ -202,5 +214,71 @@ describe('PersonalDataPage', () => {
     render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
 
     expect(screen.getByText(/Mindestanforderungen/i)).toBeInTheDocument();
+  });
+});
+
+describe('PersonalDataPage - Erscheinungsbild', () => {
+  const mockUser = {
+    id: 'user-1',
+    vorname: 'John',
+    nachname: 'Doe',
+    email: 'john@example.com',
+    signatureSatz: '',
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    const { getDarkModeMode } = jest.requireMock('../utils/customLists');
+    getDarkModeMode.mockReturnValue('auto');
+  });
+
+  test('renders Erscheinungsbild section with three theme buttons', () => {
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    expect(screen.getByText('Erscheinungsbild')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Hell/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Dunkel/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Automatisch/i })).toBeInTheDocument();
+  });
+
+  test('auto button is active when darkMode is auto', () => {
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    const autoBtn = screen.getByRole('button', { name: /Automatisch/i });
+    expect(autoBtn).toHaveClass('active');
+  });
+
+  test('clicking Hell button saves light mode', () => {
+    const { saveDarkModePreference, applyDarkModePreference } = jest.requireMock('../utils/customLists');
+
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Hell/i }));
+
+    expect(saveDarkModePreference).toHaveBeenCalledWith('light');
+    expect(applyDarkModePreference).toHaveBeenCalledWith('light');
+  });
+
+  test('clicking Dunkel button saves dark mode', () => {
+    const { saveDarkModePreference, applyDarkModePreference } = jest.requireMock('../utils/customLists');
+
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Dunkel/i }));
+
+    expect(saveDarkModePreference).toHaveBeenCalledWith('dark');
+    expect(applyDarkModePreference).toHaveBeenCalledWith('dark');
+  });
+
+  test('clicking Automatisch button saves auto mode', () => {
+    const { saveDarkModePreference, applyDarkModePreference, getDarkModeMode } = jest.requireMock('../utils/customLists');
+    getDarkModeMode.mockReturnValue('light');
+
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Automatisch/i }));
+
+    expect(saveDarkModePreference).toHaveBeenCalledWith('auto');
+    expect(applyDarkModePreference).toHaveBeenCalledWith('auto');
   });
 });
