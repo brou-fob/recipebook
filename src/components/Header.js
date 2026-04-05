@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import './Header.css';
-import { getHeaderSlogan, getAppLogoImage, getDarkModeMode, saveDarkModePreference, applyDarkModePreference } from '../utils/customLists';
+import { getHeaderSlogan, getAppLogoImage } from '../utils/customLists';
 import { subscribeToFaqs } from '../utils/faqFirestore';
 import { ROLES } from '../utils/userManagement';
 import SearchIcon from './icons/SearchIcon';
@@ -41,7 +41,6 @@ const Header = forwardRef(function Header({
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [expandedFaqId, setExpandedFaqId] = useState(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-  const [darkMode, setDarkMode] = useState(getDarkModeMode);
   const menuRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -62,24 +61,6 @@ const Header = forwardRef(function Header({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Sync dark mode state when it changes from another component (e.g. Settings)
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'darkModePreference') {
-        setDarkMode(getDarkModeMode());
-      }
-    };
-    const handleDarkModeChange = () => {
-      setDarkMode(getDarkModeMode());
-    };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('darkModeChange', handleDarkModeChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('darkModeChange', handleDarkModeChange);
-    };
-  }, []);
-  
   useEffect(() => {
     if (!currentUser) return;
     const loadHeaderData = async () => {
@@ -179,23 +160,6 @@ const Header = forwardRef(function Header({
     setMenuOpen(false);
   };
 
-  const handleDarkModeSelect = (mode) => {
-    setDarkMode(mode);
-    saveDarkModePreference(mode);
-    applyDarkModePreference(mode);
-  };
-
-  const handleDarkModeCycle = () => {
-    const modes = ['light', 'dark', 'auto'];
-    const currentIndex = modes.indexOf(darkMode);
-    const nextMode = modes[(currentIndex + 1) % modes.length];
-    handleDarkModeSelect(nextMode);
-  };
-
-  const darkModeLabel = darkMode === 'light' ? 'Helles Design'
-    : darkMode === 'dark' ? 'Dunkles Design'
-    : 'Automatisch';
-  
   return (
     <>
     <header className={`header ${!visible ? 'header-hidden' : ''}`}> 
@@ -321,17 +285,6 @@ const Header = forwardRef(function Header({
                         </button>
                       )}
                     </div>
-                  )}
-                  {currentUser?.themeToggle !== false && (
-                  <div className="menu-section">
-                    <div className="menu-section-title">Erscheinungsbild</div>
-                    <button
-                      className="menu-item"
-                      onClick={handleDarkModeCycle}
-                    >
-                      {darkModeLabel}
-                    </button>
-                  </div>
                   )}
                   <div className="menu-section">
                     <div className="menu-section-title">Benutzer</div>
