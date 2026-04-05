@@ -131,15 +131,22 @@ function MenuList({ menus, recipes, onSelectMenu, onAddMenu, onToggleMenuFavorit
                 className="menu-card"
                 onClick={() => onSelectMenu(menu)}
               >
-                {(menu.image || (menu.gridImage && !menu.gridImage.startsWith('data:image/'))) && (
-                  <div className="menu-card-image">
-                    <img
-                      src={menu.image || menu.gridImage}
-                      alt={menu.name}
-                      className="menu-card-image-img"
-                    />
-                  </div>
-                )}
+                {(() => {
+                  const gridSrc = isDarkMode && menu.gridImageDark
+                    ? menu.gridImageDark
+                    : menu.gridImage;
+                  const displaySrc = menu.image || (gridSrc && !gridSrc.startsWith('data:image/') ? gridSrc : null);
+                  if (!displaySrc) return null;
+                  return (
+                    <div className="menu-card-image">
+                      <img
+                        src={displaySrc}
+                        alt={menu.name}
+                        className="menu-card-image-img"
+                      />
+                    </div>
+                  );
+                })()}
                 <div className="menu-card-badges">
                   {menu.privat && (
                     <div className="private-badge">Privat</div>
