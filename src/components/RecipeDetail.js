@@ -2250,20 +2250,24 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
             <section className="recipe-section recipe-section--steps">
               <h2>Zubereitungsschritte</h2>
               <ol className="steps-list">
-                {recipe.steps?.map((step, index) => {
-                  // Handle both old string format and new object format
-                  const item = typeof step === 'string' 
-                    ? { type: 'step', text: step }
-                    : step;
-                  
-                  // Render heading as non-numbered item
-                  if (item.type === 'heading') {
-                    return <li key={index} className="step-heading">{item.text}</li>;
-                  }
-                  
-                  // Regular step
-                  return <li key={index}>{item.text}</li>;
-                }) || <li>Keine Zubereitungsschritte aufgelistet</li>}
+                {(() => {
+                  let stepCount = 0;
+                  return recipe.steps?.map((step, index) => {
+                    // Handle both old string format and new object format
+                    const item = typeof step === 'string' 
+                      ? { type: 'step', text: step }
+                      : step;
+                    
+                    // Render heading as non-numbered item (not counted in step sequence)
+                    if (item.type === 'heading') {
+                      return <li key={index} className="step-heading">{item.text}</li>;
+                    }
+                    
+                    // Regular step with explicit value to skip headings in numbering
+                    stepCount += 1;
+                    return <li key={index} value={stepCount}>{item.text}</li>;
+                  }) || <li>Keine Zubereitungsschritte aufgelistet</li>;
+                })()}
               </ol>
             </section>
 
