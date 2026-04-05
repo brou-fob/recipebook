@@ -220,7 +220,7 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   const [newConversionGrams, setNewConversionGrams] = useState('');
   const [newConversionMl, setNewConversionMl] = useState('');
   const [headerSlogan, setHeaderSlogan] = useState('');
-  const [activeTab, setActiveTab] = useState(currentUser?.role === ROLES.MODERATOR ? 'lists' : 'general'); // 'general', 'lists', or 'users'
+  const [activeTab, setActiveTab] = useState(currentUser?.role === ROLES.MODERATOR ? 'lists' : 'general'); // 'general', 'lists', 'druck', or 'users'
   const isAdmin = isCurrentUserAdmin();
   const isModerator = currentUser?.role === ROLES.MODERATOR;
 
@@ -1341,6 +1341,14 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
           </button>
           {isAdmin && (
             <button
+              className={`tab-button ${activeTab === 'druck' ? 'active' : ''}`}
+              onClick={() => setActiveTab('druck')}
+            >
+              Drucklayout
+            </button>
+          )}
+          {isAdmin && (
+            <button
               className={`tab-button ${activeTab === 'tagesmenu' ? 'active' : ''}`}
               onClick={() => setActiveTab('tagesmenu')}
             >
@@ -2057,6 +2065,14 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
               </div>
             </div>
 
+            <div className="settings-actions">
+              <button className="save-button" onClick={handleSave}>
+                Einstellungen speichern
+              </button>
+            </div>
+          </>
+        ) : activeTab === 'druck' ? (
+          <>
             <div className="settings-section">
               <h3>Druckformate</h3>
               <p className="section-description">
@@ -2235,12 +2251,6 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                   {savingPrintFormats ? 'Speichern...' : 'Druckformate speichern'}
                 </button>
               </div>
-            </div>
-
-            <div className="settings-actions">
-              <button className="save-button" onClick={handleSave}>
-                Einstellungen speichern
-              </button>
             </div>
           </>
         ) : activeTab === 'tagesmenu' ? (
