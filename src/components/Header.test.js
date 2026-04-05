@@ -289,7 +289,7 @@ describe('Header - Chefkoch user name click', () => {
     );
 
     fireEvent.click(screen.getByLabelText('Menü öffnen'));
-    const userNameBtn = screen.getByText(`${mockCurrentUser.vorname} ${mockCurrentUser.nachname}`);
+    const userNameBtn = screen.getByRole('button', { name: `${mockCurrentUser.vorname} ${mockCurrentUser.nachname}` });
     expect(userNameBtn).toBeDisabled();
   });
 });
