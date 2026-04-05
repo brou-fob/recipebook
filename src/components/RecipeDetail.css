@@ -2208,7 +2208,7 @@
     display: flex !important;
     justify-content: center !important;
     text-align: center !important;
-    padding: 1.5rem 1rem 0.5rem !important;
+    padding: 0 !important;
   }
 
   h1.recipe-title {
@@ -2224,7 +2224,7 @@
     gap: 1.5rem !important;
     font-size: 0.85rem !important;
     color: #555 !important;
-    padding: 0.25rem 1rem !important;
+    padding: 0 !important;
   }
 
   /* Metadata row */
@@ -2233,10 +2233,10 @@
     flex-wrap: wrap !important;
     justify-content: center !important;
     gap: 1rem !important;
-    padding: 0.75rem 1rem !important;
+    padding: 0 !important;
     border-top: 1px solid #ddd !important;
     border-bottom: 1px solid #ddd !important;
-    margin: 0.5rem 0 !important;
+    margin: 0 !important;
   }
 
   .metadata-item {
@@ -2332,7 +2332,7 @@
   /* Ingredients and steps sections */
   .recipe-section {
     display: block !important;
-    padding: 0.75rem 1.5rem !important;
+    padding: 0 !important;
     page-break-inside: avoid !important;
   }
 
@@ -2369,7 +2369,7 @@
   .steps-list li {
     font-size: 0.95rem !important;
     line-height: 1.6 !important;
-    padding: 0.15rem 0 !important;
+    padding: 0 !important;
     color: black !important;
     display: list-item !important;
   }
@@ -2394,7 +2394,7 @@
   .notizen-section,
   .recipe-notes {
     display: block !important;
-    padding: 0.5rem 1.5rem 0.75rem !important;
+    padding: 0 !important;
     font-style: italic !important;
     font-size: 0.9rem !important;
     color: #444 !important;

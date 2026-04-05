@@ -828,7 +828,7 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     height: ${el.h.toFixed(2)}% !important;
     overflow: hidden !important;
     margin: 0 !important;
-    padding: 0.25rem !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
     ${rotationRule}
     ${textRules.join('\n    ')}
