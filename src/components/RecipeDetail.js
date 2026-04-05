@@ -1213,7 +1213,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
         await ctx.resume();
       }
       playAlarmPattern(ctx, soundKey);
-      // Close temporary context after the sound has faded out
+      // Close the temporary context once the longest pattern (crystal: ~1.1 s) has
+      // fully faded out. 1500 ms provides a safe margin across all alarm patterns.
       setTimeout(() => { try { ctx.close(); } catch (_) {} }, 1500);
     } catch (_) {
       // Audio API nicht verfügbar – ignorieren
