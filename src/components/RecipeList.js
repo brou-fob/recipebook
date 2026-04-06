@@ -461,6 +461,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
                 privateLists={privateLists}
                 onAddToPrivateList={onAddToPrivateList}
                 onRemoveFromPrivateList={onRemoveFromPrivateList}
+                swipeRightIcon={getEffectiveIcon(buttonIcons, 'recipeCardSwipeRight', isDarkMode)}
               />
             );
           })}

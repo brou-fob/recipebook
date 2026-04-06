@@ -28,7 +28,7 @@ function renderKulinarikTags(kulinarik) {
   );
 }
 
-function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, authorName, versionCount, currentUser, privateLists, onAddToPrivateList, onRemoveFromPrivateList }) {
+function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, authorName, versionCount, currentUser, privateLists, onAddToPrivateList, onRemoveFromPrivateList, swipeRightIcon }) {
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const isSwiping = useRef(false);
@@ -139,7 +139,11 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
     <div className="recipe-card-swipe-wrapper">
       {privateLists && privateLists.length > 0 && (
         <div className="recipe-card-list-reveal-button" aria-label="Zu Liste hinzufügen">
-          <span className="recipe-card-list-reveal-icon" aria-hidden="true">📋</span>
+          <span className="recipe-card-list-reveal-icon" aria-hidden="true">
+            {swipeRightIcon && isBase64Image(swipeRightIcon)
+              ? <img src={swipeRightIcon} alt="" className="button-icon-image" draggable="false" />
+              : (swipeRightIcon || '📋')}
+          </span>
           <select
             onChange={handleNativeSelectChange}
             onClick={(e) => e.stopPropagation()}

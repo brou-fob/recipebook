@@ -198,6 +198,7 @@ const DARK_MODE_ICON_ROWS = [
   { key: 'printRecipe', label: 'Rezept drucken' },
   { key: 'addSection', label: 'Abschnitt hinzufügen (Menü bearbeiten)' },
   { key: 'resetThumbnail', label: 'Thumbnail-Löschen-Button (FAB)' },
+  { key: 'recipeCardSwipeRight', label: 'Rezeptkarte: Rechts-Swipe-Button' },
 ];
 
 function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdateRecipe }) {
