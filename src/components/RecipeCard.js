@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import './RecipeList.css';
 import RecipeImageCarousel from './RecipeImageCarousel';
 import RecipeRating from './RecipeRating';
@@ -29,6 +29,8 @@ function renderKulinarikTags(kulinarik) {
 
 function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, authorName, versionCount, currentUser, privateLists, onAddToPrivateList, onRemoveFromPrivateList }) {
   const [showListSelect, setShowListSelect] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const closeTimerRef = useRef(null);
   const longPressTimer = useRef(null);
   const longPressed = useRef(false);
   const longPressJustFired = useRef(false);
@@ -39,6 +41,7 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
       if (privateLists && privateLists.length > 0) {
         longPressed.current = true;
         setShowListSelect(true);
+        requestAnimationFrame(() => setMenuVisible(true));
       }
     }, LONG_PRESS_DELAY_MS);
   };
@@ -86,8 +89,12 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
   };
 
   const closeListMenu = () => {
-    setShowListSelect(false);
+    setMenuVisible(false);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => setShowListSelect(false), 220);
   };
+
+  useEffect(() => () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); }, []);
   
   const handleListAction = (listId) => {
     if (!listId) {
@@ -140,7 +147,7 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
     >
       {showListSelect && privateLists && privateLists.length > 0 && (
         <div
-          className="recipe-card-list-menu-overlay"
+          className={`recipe-card-list-menu-overlay${menuVisible ? ' menu-overlay-visible' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             closeListMenu();
@@ -150,37 +157,27 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
             className="recipe-card-list-menu"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="recipe-card-list-menu-title">
-              Liste auswählen
-            </div>
-      
-            {privateLists.map((list) => {
+            {privateLists.map((list, index) => {
               const isInList = list.recipeIds?.includes(recipe.id);
       
               return (
-                <button
-                  key={list.id}
-                  type="button"
-                  className="recipe-card-list-menu-item"
-                  onClick={() => handleListAction(list.id)}
-                >
-                  <span className="recipe-card-list-menu-check">
-                    {isInList ? '✓' : ''}
-                  </span>
-                  <span className="recipe-card-list-menu-label">
-                    {list.name}
-                  </span>
-                </button>
+                <React.Fragment key={list.id}>
+                  {index > 0 && <div className="recipe-card-list-menu-divider" />}
+                  <button
+                    type="button"
+                    className="recipe-card-list-menu-item"
+                    onClick={() => handleListAction(list.id)}
+                  >
+                    <span className="recipe-card-list-menu-check">
+                      {isInList ? '✓' : ''}
+                    </span>
+                    <span className="recipe-card-list-menu-label">
+                      {list.name}
+                    </span>
+                  </button>
+                </React.Fragment>
               );
             })}
-      
-            <button
-              type="button"
-              className="recipe-card-list-menu-cancel"
-              onClick={closeListMenu}
-            >
-              Abbrechen
-            </button>
           </div>
         </div>
       )}
