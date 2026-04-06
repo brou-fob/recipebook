@@ -605,3 +605,34 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }*/
 
+
+
+/* ── Swipe-to-reveal wrapper ─────────────────────────────────────── */
+
+.recipe-card-swipe-wrapper {
+  position: relative;
+  overflow: visible;
+}
+
+.recipe-card-list-reveal-button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 72px;
+  background: #DF7A00;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.recipe-card-list-reveal-button:active {
+  background: #c46900;
+}
