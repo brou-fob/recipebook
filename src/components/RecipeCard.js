@@ -150,7 +150,7 @@ function RecipeCard({ recipe, onClick, isFavorite, favoriteActiveIcon, isNew, au
             value=""
             className="recipe-card-list-reveal-select"
           >
-            <option value="" disabled>Listen…</option>
+            <option value="" disabled>Zu Liste hinzufügen…</option>
             {privateLists.map((list) => {
               const isInList = list.recipeIds?.includes(recipe.id);
               return (
