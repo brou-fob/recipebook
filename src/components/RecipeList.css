@@ -614,6 +614,7 @@
 .recipe-card-swipe-wrapper {
   position: relative;
   overflow: visible;
+  min-width: 0;
 }
 
 .recipe-card-list-reveal-button {
