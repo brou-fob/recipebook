@@ -20,6 +20,10 @@ jest.mock('../utils/customLists', () => ({
   applyDarkModePreference: jest.fn(),
 }));
 
+jest.mock('../utils/alarmAudioUtils', () => ({
+  previewAlarmSound: jest.fn(),
+}));
+
 describe('PersonalDataPage', () => {
   const mockUser = {
     id: 'user-1',
@@ -280,5 +284,76 @@ describe('PersonalDataPage - Erscheinungsbild', () => {
 
     expect(saveDarkModePreference).toHaveBeenCalledWith('auto');
     expect(applyDarkModePreference).toHaveBeenCalledWith('auto');
+  });
+});
+
+describe('PersonalDataPage - Alarmton', () => {
+  const mockUser = {
+    id: 'user-1',
+    vorname: 'John',
+    nachname: 'Doe',
+    email: 'john@example.com',
+    signatureSatz: '',
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    const { getAlarmSoundPreference } = jest.requireMock('../utils/customLists');
+    getAlarmSoundPreference.mockReturnValue('radar');
+  });
+
+  test('renders Alarmton row with current selection and chevron', () => {
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    expect(screen.getByText('Alarmton')).toBeInTheDocument();
+    expect(screen.getByText('Radar')).toBeInTheDocument();
+  });
+
+  test('opens alarm sound picker when Alarmton row is clicked', () => {
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Alarmton/i }));
+
+    expect(screen.getByRole('heading', { name: 'Alarmton' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Chime/i })).toBeInTheDocument();
+  });
+
+  test('selected sound shows checkmark in picker', () => {
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Alarmton/i }));
+
+    const radarOption = screen.getByRole('option', { name: /Radar/i });
+    expect(radarOption).toHaveAttribute('aria-selected', 'true');
+    const chimeOption = screen.getByRole('option', { name: /Chime/i });
+    expect(chimeOption).toHaveAttribute('aria-selected', 'false');
+  });
+
+  test('clicking a sound in picker saves and previews it, and updates the row', () => {
+    const { saveAlarmSoundPreference } = jest.requireMock('../utils/customLists');
+    const { previewAlarmSound } = jest.requireMock('../utils/alarmAudioUtils');
+
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Alarmton/i }));
+    fireEvent.click(screen.getByRole('option', { name: /Chime/i }));
+
+    expect(saveAlarmSoundPreference).toHaveBeenCalledWith('chime');
+    expect(previewAlarmSound).toHaveBeenCalledWith('chime');
+
+    // Return to main page and verify row shows new selection
+    fireEvent.click(screen.getByRole('button', { name: /Zurück/i }));
+    expect(screen.getByText('Chime')).toBeInTheDocument();
+  });
+
+  test('back button in picker returns to main page', () => {
+    render(<PersonalDataPage currentUser={mockUser} onBack={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Alarmton/i }));
+    expect(screen.getByRole('heading', { name: 'Alarmton' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Zurück/i }));
+    expect(screen.queryByRole('heading', { name: 'Alarmton' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Chefkoch' })).toBeInTheDocument();
   });
 });

@@ -21,6 +21,7 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
 
   const [alarmSoundKey, setAlarmSoundKey] = useState(() => getAlarmSoundPreference());
   const [darkMode, setDarkMode] = useState(getDarkModeMode);
+  const [showAlarmPicker, setShowAlarmPicker] = useState(false);
 
   const handleDarkModeSelect = (mode) => {
     setDarkMode(mode);
@@ -79,6 +80,44 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
 
   return (
     <div className="personal-data-page">
+      {showAlarmPicker && (
+        <div className="alarm-sound-picker-page">
+          <div className="alarm-sound-picker-header">
+            <button
+              type="button"
+              className="alarm-sound-picker-back-btn"
+              onClick={() => setShowAlarmPicker(false)}
+              aria-label="Zurück"
+            >
+              ‹ Zurück
+            </button>
+            <h2 className="alarm-sound-picker-title">Alarmton</h2>
+          </div>
+          <ul className="alarm-sound-picker-list" aria-label="Alarmton auswählen">
+            {ALARM_SOUNDS.map(sound => (
+              <li key={sound.key}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={alarmSoundKey === sound.key}
+                  className={`alarm-sound-picker-item${alarmSoundKey === sound.key ? ' selected' : ''}`}
+                  onClick={() => {
+                    setAlarmSoundKey(sound.key);
+                    saveAlarmSoundPreference(sound.key);
+                    previewAlarmSound(sound.key);
+                  }}
+                >
+                  <span className="alarm-sound-picker-checkmark" aria-hidden="true">
+                    {alarmSoundKey === sound.key ? '✓' : ''}
+                  </span>
+                  <span className="alarm-sound-picker-name">{sound.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className={`personal-data-main${showAlarmPicker ? ' personal-data-main--hidden' : ''}`}>
       <div className="personal-data-header">
         <h2>Chefkoch</h2>
       </div>
@@ -147,35 +186,20 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
         )}
         <div className="personal-data-section-divider" />
         <section className="personal-data-alarm-section">
-          <h3 className="personal-data-section-title">Alarmton</h3>
-          <div className="alarm-sound-options">
-            {ALARM_SOUNDS.map(sound => (
-              <div key={sound.key} className="alarm-sound-option">
-                <label className="alarm-sound-label">
-                  <input
-                    type="radio"
-                    name="alarmSound"
-                    value={sound.key}
-                    checked={alarmSoundKey === sound.key}
-                    onChange={() => {
-                      setAlarmSoundKey(sound.key);
-                      saveAlarmSoundPreference(sound.key);
-                    }}
-                  />
-                  <span>{sound.label}</span>
-                </label>
-                <button
-                  className="alarm-sound-preview-btn"
-                  onClick={() => previewAlarmSound(sound.key)}
-                  title={`${sound.label} abspielen`}
-                  aria-label={`${sound.label} abspielen`}
-                  type="button"
-                >
-                  ▶
-                </button>
-              </div>
-            ))}
-          </div>
+          <button
+            type="button"
+            className="alarm-sound-row"
+            onClick={() => setShowAlarmPicker(true)}
+            aria-label={`Alarmton: ${ALARM_SOUNDS.find(s => s.key === alarmSoundKey)?.label || alarmSoundKey}. Zum Ändern klicken.`}
+          >
+            <span className="alarm-sound-row-label">Alarmton</span>
+            <span className="alarm-sound-row-right">
+              <span className="alarm-sound-row-value">
+                {ALARM_SOUNDS.find(s => s.key === alarmSoundKey)?.label || alarmSoundKey}
+              </span>
+              <span className="alarm-sound-row-chevron" aria-hidden="true">›</span>
+            </span>
+          </button>
         </section>
         <div className="personal-data-section-divider" />
         <section className="personal-data-appearance-section">
@@ -273,6 +297,7 @@ function PersonalDataPage({ currentUser, onBack, onProfileUpdated, privateLists 
           </div>
         </form>
       </section>
+      </div>
     </div>
   );
 }
