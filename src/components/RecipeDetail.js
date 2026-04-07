@@ -727,18 +727,21 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
     const root = document.documentElement;
     const fontFamily = format?.fontFamily || "Georgia, 'Times New Roman', serif";
     const orientation = format?.orientation || 'portrait';
+    // Default to DIN A4 (21.0 × 29.7 cm) when no explicit dimensions are configured
+    const pageWidthCm  = format?.pageWidthCm  ?? (orientation === 'landscape' ? 29.7 : 21.0);
+    const pageHeightCm = format?.pageHeightCm ?? (orientation === 'landscape' ? 21.0 : 29.7);
     const imageColumns = format?.imageColumns || 'auto';
 
     root.style.setProperty('--print-font-family', fontFamily);
 
-    // Inject a @page orientation rule
+    // Inject a @page size rule with explicit dimensions in cm
     let pageStyle = document.getElementById('print-page-format');
     if (!pageStyle) {
       pageStyle = document.createElement('style');
       pageStyle.id = 'print-page-format';
       document.head.appendChild(pageStyle);
     }
-    pageStyle.textContent = `@page { size: ${orientation}; }`;
+    pageStyle.textContent = `@page { size: ${pageWidthCm}cm ${pageHeightCm}cm; }`;
 
     // Inject image column override when a fixed column count is configured
     let columnStyle = document.getElementById('print-image-columns');
