@@ -109,6 +109,9 @@
   color: #e8e8e8;
 }
 
+[data-theme="dark"] .menu-version {
+   border-top-color: #3d3d3d;
+}
 /* ---- Mobile search overlay ---- */
 [data-theme="dark"] .mobile-search-panel {
   background: #1e1e1e;
