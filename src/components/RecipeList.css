@@ -151,7 +151,6 @@
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .add-button:active {
@@ -392,18 +391,24 @@
     left: 20px;
     z-index: 1101;
     color: white;
-    /*opacity: 0.85;*/
+    /*opacity: 0.85;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);*/
     /*Liquid Glass*/
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(2px) saturate(160%);
     -webkit-backdrop-filter: blur(2px) saturate(160%);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    
     width: 56px;
     height: 56px;
     min-width: 56px;
     max-width: 56px;
     border-radius: 50%;
     padding: 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -417,7 +422,23 @@
                 background 0.15s ease,
                 box-shadow 0.15s ease;
   }
+  
+  /*Liquid Glass*/
+  .filter-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0.28) 0%,
+      rgba(255,255,255,0.10) 38%,
+      rgba(255,255,255,0.02) 65%
+    );
+    pointer-events: none;
+  }
 
+  
   .filter-button.pressed {
     transform: var(--filter-transform, translateX(0)) scale(1.15);
     box-shadow: 0 8px 18px rgba(0,0,0,0.3);
@@ -446,7 +467,7 @@
   border-radius: 50%;
   padding: 0;
   opacity: 0.85;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: ;
   display: flex;
   align-items: center;
   justify-content: center;
