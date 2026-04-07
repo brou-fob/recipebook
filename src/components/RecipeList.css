@@ -448,12 +448,24 @@
     outline: none;
   }
 
+  .filter-button.has-active-filters {
+    /*Liquid Glass*/
+    background: rgba(223, 122, 0, 0.24);
+    backdrop-filter: blur(2px) saturate(160%);
+    -webkit-backdrop-filter: blur(2px) saturate(160%);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+  
   .filter-button.has-active-filters::after {
     top: 2px;
     right: 2px;
     border-color: white;
   }
-
+  
   /* Mobile: Add recipe button fixed at bottom right, mirrors fav button on the left */
 .add-icon-button {
   position: fixed;
