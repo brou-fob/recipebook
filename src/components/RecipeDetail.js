@@ -805,6 +805,8 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       // Image element IDs – these do not receive text formatting rules
       const WYSIWYG_IMAGE_ELEMENT_IDS = new Set(['photo1', 'photo2', 'photo3', 'photo4']);
 
+      const ratio = pageHeightCm / pageWidthCm;
+      
       const rules = mergedElements.map((el) => {
         const selector = ELEMENT_SELECTOR_MAP[el.id];
         if (!selector) return '';
@@ -828,14 +830,17 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           if (el.fontColor) textRules.push(`color: ${el.fontColor} !important;`);
         }
         const rotationRule = el.rotation ? `transform: rotate(${el.rotation}deg) !important;` : '';
-
+        
+        const cssTop = el.y / ratio;
+        const cssHeight = el.h / ratio;
+        
         return `@media print {
   ${selector} {
     ${displayRule}position: absolute !important;
     left: ${el.x.toFixed(2)}% !important;
-    top: ${el.y.toFixed(2)}% !important;
+    top: ${cssTop.toFixed(2)}% !important;
     width: ${el.w.toFixed(2)}% !important;
-    height: ${el.h.toFixed(2)}% !important;
+    height: ${cssHeight.toFixed(2)}% !important;
     overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
