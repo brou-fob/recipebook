@@ -188,11 +188,13 @@ export default function PrintPreview({ recipe, format }) {
           {elements.map((el) => {
             if (el.visible === false) return null;
             const rotation = el.rotation || 0;
+            const ratio = pageHeightCm / pageWidthCm;
+            
             const elStyle = {
               left: `${el.x}%`,
-              top: `${el.y}%`,
+              top: `${el.y / ratio}%`,
               width: `${el.w}%`,
-              height: `${el.h}%`,
+              height: `${el.h / ratio}%`,
             };
             if (rotation) {
               elStyle.transform = `rotate(${rotation}deg)`;
