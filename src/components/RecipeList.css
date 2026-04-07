@@ -1,8 +1,17 @@
+/* =========================================================
+   1. Page / Container
+   ========================================================= */
+
 .recipe-list-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
 }
+
+
+/* =========================================================
+   2. Header Layout
+   ========================================================= */
 
 .recipe-list-header {
   display: flex;
@@ -20,7 +29,6 @@
 .recipe-list-title-area {
   display: flex;
   align-items: center;
-  /*gap: 0.4rem;*/
   min-width: 0;
   flex: 1;
 }
@@ -29,32 +37,36 @@
   margin: 0;
   color: #333;
   font-size: 1.5rem;
+  text-align: left;
+  min-width: 0;
+  flex-shrink: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
-  flex-shrink: 1;
-  text-align: left;
 }
 
 .recipe-list-actions {
   display: flex;
-  gap: 0.75rem;
   align-items: center;
+  gap: 0.75rem;
   flex-shrink: 0;
 }
 
 .filter-group {
   display: flex;
-  gap: 0.5rem;
   align-items: center;
+  gap: 0.5rem;
 }
+
+
+/* =========================================================
+   3. Header Controls / Buttons
+   ========================================================= */
 
 .category-filter-arrow {
   appearance: none;
-  border: none;
   -webkit-appearance: none;
-  /*border: 1px solid #ddd;*/
+  border: none;
   background: transparent;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -63,14 +75,13 @@
   width: 28px;
   min-width: 28px;
   height: 28px;
+  margin-left: 6px;
+  padding: 0;
   border-radius: 50%;
   cursor: pointer;
   flex-shrink: 0;
   color: transparent;
   font-size: 1px;
-  margin-left: 6px;
-  padding: 0;
-  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);*/
   transition: all 0.3s ease;
 }
 
@@ -94,8 +105,8 @@
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
 .view-mode-button.active {
@@ -105,27 +116,28 @@
 }
 
 .filter-button {
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
-  padding: 0.75rem;
-  border-radius: 25px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-
   display: flex;
   align-items: center;
   justify-content: center;
 
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+
+  padding: 0.75rem;
   min-width: 50px;
+
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-
   transform: var(--filter-transform, translateX(0));
-
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background 0.15s ease,
-              box-shadow 0.15s ease;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .filter-button .button-icon-image {
@@ -136,7 +148,6 @@
 
 .filter-button.has-active-filters {
   background: #DF7A00;
-  border: 1px solid #DF7A00;
   border-color: #DF7A00;
 }
 
@@ -159,22 +170,24 @@
 }
 
 .add-icon-button {
-  background: white;
-  color: white;
-  border: 1px solid #ddd;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+
   width: 44px;
   height: 44px;
-  flex-shrink: 0;
+  padding: 0;
+
+  background: white;
+  color: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+
+  font-size: 1.1rem;
+  cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  
+  transition: all 0.3s ease;
 }
 
 .add-icon-button:active {
@@ -187,6 +200,18 @@
   height: 1.4rem;
   object-fit: contain;
 }
+
+.filter-button:focus,
+.filter-button:focus-visible,
+.add-icon-button:focus,
+.add-icon-button:focus-visible {
+  outline: none;
+}
+
+
+/* =========================================================
+   4. Empty State
+   ========================================================= */
 
 .empty-state {
   text-align: center;
@@ -204,6 +229,11 @@
   color: #999;
 }
 
+
+/* =========================================================
+   5. Grid Layout
+   ========================================================= */
+
 .recipe-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -212,55 +242,23 @@
   overflow: hidden;
 }
 
+
+/* =========================================================
+   6. Recipe Card
+   ========================================================= */
+
 .recipe-card {
-  background: white;
-  border-radius: 12px;
-  overflow: visible;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
   position: relative;
   max-width: 100%;
   min-width: 0;
-}
+  overflow: visible;
 
-.recipe-favorite-badge {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: #DF7A00;
-  color: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-}
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-.recipe-favorite-badge .button-icon-image {
-  width: 1.4rem;
-  height: 1.4rem;
-  object-fit: contain;
-}
-
-.new-badge {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  background: #2E7D32;
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  z-index: 1;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .recipe-card:hover {
@@ -269,14 +267,15 @@
 }
 
 .recipe-image {
+  position: relative;
   width: 100%;
   height: 200px;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
+
   background: #f0f0f0;
-  position: relative;
   border-radius: 12px 12px 0 0;
   will-change: transform;
-  aspect-ratio: 4 / 3;
 }
 
 .recipe-image img {
@@ -295,12 +294,67 @@
   margin: 0 0 0.75rem 0;
   color: #333;
   font-size: 1.25rem;
+  min-width: 0;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
-  max-width: 100%;
 }
+
+
+/* =========================================================
+   7. Card Badges
+   ========================================================= */
+
+.recipe-favorite-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  background: #DF7A00;
+  color: white;
+  border-radius: 6px;
+  font-size: 1.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-favorite-badge .button-icon-image {
+  width: 1.4rem;
+  height: 1.4rem;
+  object-fit: contain;
+}
+
+.new-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1;
+
+  background: #2E7D32;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+
+/* =========================================================
+   8. Tags / Kulinarik
+   ========================================================= */
 
 .recipe-kulinarik {
   display: flex;
@@ -308,7 +362,8 @@
   gap: 0.4rem;
   margin-top: 0.25rem;
   overflow: hidden;
-  /* Limits display to ~2 lines: 2 × (0.78rem font + 0.15rem top + 0.15rem bottom padding) + 0.4rem row gap ≈ 2.56rem; 3.2rem adds a small buffer */
+
+  /* ca. 2 Zeilen sichtbar */
   max-height: 3.2rem;
 }
 
@@ -327,14 +382,19 @@
   background: #F5F2EF;
 }
 
+
+/* =========================================================
+   9. Card Footer
+   ========================================================= */
+
 .recipe-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
   margin-top: 0.5rem;
   font-size: 0.75rem;
-  gap: 0.5rem;
-  flex-wrap: nowrap;
 }
 
 .version-count {
@@ -347,214 +407,35 @@
 .recipe-author {
   color: #666;
   text-align: left;
+  min-width: 0;
   flex-shrink: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
 }
 
 .recipe-footer .recipe-rating-compact {
+  margin-left: auto;
   flex-shrink: 0;
   white-space: nowrap;
-  margin-left: auto;
 }
 
-.filter-button:focus,
-.filter-button:focus-visible,
-.add-icon-button:focus,
-.add-icon-button:focus-visible {
-  outline: none;
-}
 
-@media (max-width: 768px) {
-  .recipe-grid {
-    grid-template-columns: repeat(auto-fill, minmax(var(--tile-size-min, 250px), 1fr));
-    gap: 1rem;
-  }
-  
-  .recipe-list-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .filter-group {
-    width: 100%;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  /* Mobile: Show filter button as fixed circular button at bottom left */
-  .filter-button {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1101;
-    color: white;
-    opacity: 0.85;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    /*Liquid Glass
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(2px) saturate(160%);
-    -webkit-backdrop-filter: blur(2px) saturate(160%);
-    box-shadow:
-      0 10px 24px rgba(0, 0, 0, 0.22),
-      inset 0 1px 0 rgba(255,255,255,0.4),
-      inset 0 -1px 0 rgba(255,255,255,0.08);
-    border: 1px solid rgba(255, 255, 255, 0.25);*/
-    
-    width: 56px;
-    height: 56px;
-    min-width: 56px;
-    max-width: 56px;
-    border-radius: 50%;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-appearance: none;
-    appearance: none;
-    touch-action: manipulation;
-    will-change: transform;
-    transform: var(--filter-transform, translateX(0));
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-                background 0.15s ease,
-                box-shadow 0.15s ease;
-  }
-  
-  /*Liquid Glass
-  .filter-button::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-      120deg,
-      rgba(255,255,255,0.28) 0%,
-      rgba(255,255,255,0.10) 38%,
-      rgba(255,255,255,0.02) 65%
-    );
-    pointer-events: none;
-  }*/
-
-  
-  .filter-button.pressed {
-    transform: var(--filter-transform, translateX(0)) scale(1.15);
-    box-shadow: 0 8px 18px rgba(0,0,0,0.3);
-  }
-
-  .filter-button:active {
-    outline: none;
-  }
-
-  .filter-button.has-active-filters {
-    /*Liquid Glass
-    background: rgba(223, 122, 0, 0.35);
-    backdrop-filter: blur(2px) saturate(160%);
-    -webkit-backdrop-filter: blur(2px) saturate(160%);
-    box-shadow:
-      0 10px 24px rgba(0, 0, 0, 0.22),
-      inset 0 1px 0 rgba(255,255,255,0.4),
-      inset 0 -1px 0 rgba(255,255,255,0.08);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-  }*/
-  
-  .filter-button.has-active-filters::after {
-    top: 2px;
-    right: 2px;
-    border-color: white;
-  }
-  
-  /* Mobile: Add recipe button fixed at bottom right, mirrors fav button on the left */
-.add-icon-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1101;
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  max-width: 56px;
-  border-radius: 50%;
-  padding: 0;
-  opacity: 0.85;
-  /*Liquid Glass
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(2px) saturate(160%);
-  -webkit-backdrop-filter: blur(2px) saturate(160%);
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255,255,255,0.4),
-    inset 0 -1px 0 rgba(255,255,255,0.08);
-  border: 1px solid rgba(255, 255, 255, 0.25);*/
-  
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-appearance: none;
-  appearance: none;
-  touch-action: manipulation;
-  will-change: transform;
-  transform: translateX(var(--add-shift, 0px));
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background 0.15s ease,
-              box-shadow 0.15s ease;
-}
-  
-.add-icon-button.pressed {
-  transform: translateX(var(--add-shift, 0px)) scale(1.15);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.3);
-}
-
-/*Liquid Glass
-  .add-icon-button::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-      120deg,
-      rgba(255,255,255,0.28) 0%,
-      rgba(255,255,255,0.10) 38%,
-      rgba(255,255,255,0.02) 65%
-    );
-    pointer-events: none;
-  }*/
-}
-@media (max-width: 768px) and (orientation: portrait) {
-  .recipe-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .recipe-list-header-top {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .recipe-list-actions {
-    width: 100%;
-  }
-  
-  .recipe-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Active-filters bar (single line in header) ──────────────────────────── */
+/* =========================================================
+   10. Active Filters Bar
+   ========================================================= */
 
 .active-filters-bar {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  gap: 0.375rem;
   align-items: center;
+  gap: 0.375rem;
+
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+
   animation: search-indicator-in 0.2s ease both;
 }
 
@@ -563,20 +444,28 @@
 }
 
 @keyframes search-indicator-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .active-filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.3125rem;
+  flex-shrink: 0;
+
   padding: 0.25rem 0.5rem 0.25rem 0.625rem;
   border-radius: 20px;
+
   font-size: 0.82rem;
   font-weight: 500;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .active-filter-chip svg {
@@ -607,15 +496,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+
   width: 1rem;
   height: 1rem;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-  touch-action: manipulation;
   margin-left: 0.125rem;
+  padding: 0;
+
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .active-filter-chip--search .active-filter-chip-clear {
@@ -641,35 +532,10 @@
   outline-offset: 2px;
 }
 
-/*.recipe-card-list-select {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 10;
-  border-radius: 12px;
-}
 
-.recipe-card-list-select select {
-  width: 80%;
-  max-width: 240px;
-  padding: 0.5rem;
-  font-size: 1rem;
-  border-radius: 8px;
-  border: none;
-  background: white;
-  color: #333;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}*/
-
-
-
-/* ── Swipe-to-reveal wrapper ─────────────────────────────────────── */
+/* =========================================================
+   11. Swipe-to-Reveal
+   ========================================================= */
 
 .recipe-card-swipe-wrapper {
   position: relative;
@@ -679,22 +545,26 @@
 
 .recipe-card-list-reveal-button {
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
   bottom: 0;
+
   width: 72px;
-  background: transparent;
-  border: none;
-  border-radius: 12px;
+  overflow: hidden;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  background: transparent;
+  color: #555;
+  border: none;
+  border-radius: 12px;
+
   font-size: 1.5rem;
   cursor: pointer;
-  color: #555;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  overflow: hidden;
   transition: all 0.3s ease;
 }
 
@@ -716,4 +586,208 @@
   width: 100%;
   height: 100%;
   cursor: pointer;
+}
+
+
+/* =========================================================
+   12. Responsive – Tablet / Mobile
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .recipe-grid {
+    grid-template-columns: repeat(auto-fill, minmax(var(--tile-size-min, 250px), 1fr));
+    gap: 1rem;
+  }
+
+  .recipe-list-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  /* Mobile: Filter button as floating action button */
+  .filter-button {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1101;
+
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    max-width: 56px;
+    padding: 0;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+    opacity: 0.85;
+
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+    will-change: transform;
+
+    transform: var(--filter-transform, translateX(0));
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background 0.15s ease,
+      box-shadow 0.15s ease;
+
+    /* Liquid Glass
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(2px) saturate(160%);
+    -webkit-backdrop-filter: blur(2px) saturate(160%);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    */
+  }
+
+  /* Liquid Glass
+  .filter-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0.28) 0%,
+      rgba(255,255,255,0.10) 38%,
+      rgba(255,255,255,0.02) 65%
+    );
+    pointer-events: none;
+  }
+  */
+
+  .filter-button.pressed {
+    transform: var(--filter-transform, translateX(0)) scale(1.15);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+  }
+
+  .filter-button:active {
+    outline: none;
+  }
+
+  .filter-button.has-active-filters {
+    /* Liquid Glass
+    background: rgba(223, 122, 0, 0.35);
+    backdrop-filter: blur(2px) saturate(160%);
+    -webkit-backdrop-filter: blur(2px) saturate(160%);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    */
+  }
+
+  .filter-button.has-active-filters::after {
+    top: 2px;
+    right: 2px;
+    border-color: white;
+  }
+
+  /* Mobile: Add recipe button fixed at bottom right */
+  .add-icon-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1101;
+
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    max-width: 56px;
+    padding: 0;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0.85;
+
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+    will-change: transform;
+
+    transform: translateX(var(--add-shift, 0px));
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background 0.15s ease,
+      box-shadow 0.15s ease;
+
+    /* Liquid Glass
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(2px) saturate(160%);
+    -webkit-backdrop-filter: blur(2px) saturate(160%);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    */
+  }
+
+  .add-icon-button.pressed {
+    transform: translateX(var(--add-shift, 0px)) scale(1.15);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Liquid Glass
+  .add-icon-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0.28) 0%,
+      rgba(255,255,255,0.10) 38%,
+      rgba(255,255,255,0.02) 65%
+    );
+    pointer-events: none;
+  }
+  */
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .recipe-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   13. Responsive – Small Mobile
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .recipe-list-header-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .recipe-list-actions {
+    width: 100%;
+  }
+
+  .recipe-grid {
+    grid-template-columns: 1fr;
+  }
 }
