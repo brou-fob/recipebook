@@ -450,7 +450,7 @@
 
   .filter-button.has-active-filters {
     /*Liquid Glass*/
-    background: rgba(223, 122, 0, 0.24);
+    background: rgba(223, 122, 0, 0.35);
     backdrop-filter: blur(2px) saturate(160%);
     -webkit-backdrop-filter: blur(2px) saturate(160%);
     box-shadow:
@@ -478,8 +478,17 @@
   max-width: 56px;
   border-radius: 50%;
   padding: 0;
-  opacity: 0.85;
-  box-shadow: ;
+  /*opacity: 0.85;*/
+  /*Liquid Glass*/
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(2px) saturate(160%);
+  -webkit-backdrop-filter: blur(2px) saturate(160%);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -1px 0 rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -498,8 +507,22 @@
   transform: translateX(var(--add-shift, 0px)) scale(1.15);
   box-shadow: 0 8px 18px rgba(0,0,0,0.3);
 }
-}
 
+/*Liquid Glass*/
+  .add-icon-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0.28) 0%,
+      rgba(255,255,255,0.10) 38%,
+      rgba(255,255,255,0.02) 65%
+    );
+    pointer-events: none;
+  }
+}
 @media (max-width: 768px) and (orientation: portrait) {
   .recipe-grid {
     grid-template-columns: 1fr;
