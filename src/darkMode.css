@@ -1265,6 +1265,13 @@
   color: #e8e8e8;
   border-color: #555;
 }
+[data-theme="dark"] .personal-data-save-btn {
+  background: #DF7A00;
+}
+
+[data-theme="dark"] .personal-data-section-divider {
+  border-top: 1px solid #3d3d3d;
+}
 
 /* ---- AppCallsPage ---- */
 [data-theme="dark"] .app-calls-container {
