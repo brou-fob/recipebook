@@ -129,7 +129,7 @@
   width: 100%;
   flex: 0 0 auto;
   height: auto;
-  max-height: 550px;          /* max rendered page height                 */
+  max-height: none;          /* max rendered page height                 */
   aspect-ratio: var(--pfe-aspect-ratio, 21 / 29.7);
   background: #fff;
   outline: 1.5px solid #bbb;
