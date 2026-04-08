@@ -128,17 +128,17 @@
   position: relative;
   width: 100%;
   flex: 0 0 auto;
-  height: 0;
-  max-width: 560px;           /* max rendered page width                  */
+  height: auto;
+  max-height: 550px;          /* max rendered page height                 */
+  aspect-ratio: var(--pfe-aspect-ratio, 21 / 29.7);
   background: #fff;
   outline: 1.5px solid #bbb;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   box-sizing: border-box;
   overflow: hidden;
-  /* padding-bottom is set inline to match A4 aspect ratio */
 }
 
-/* Inner layer fills the padding-bottom space */
+/* Inner layer fills the aspect-ratio space */
 .pfe-page-inner {
   position: absolute;
   inset: 0;
@@ -489,6 +489,7 @@
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .pfe-page {
+    max-height: none;
     max-width: 100%;
   }
 
