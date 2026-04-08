@@ -1277,6 +1277,10 @@
   border-bottom: 1px solid #3d3d3d;
 }
 
+[data-theme="dark"] .alarm-sound-picker-page {
+  background: #2A2A2A;
+}
+
 /* ---- AppCallsPage ---- */
 [data-theme="dark"] .app-calls-container {
   background: #121212;
