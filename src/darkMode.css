@@ -251,6 +251,11 @@
   background: transparent;
 }
 
+[data-theme="dark"] .recipe-card-list-reveal-select {
+  background: transparent;
+   -webkit-tap-highlight-color: transparent;
+}
+
 /* ---- Recipe Cards ---- */
 [data-theme="dark"] .recipe-card {
   background: #1e1e1e;
