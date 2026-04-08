@@ -366,8 +366,6 @@ export default function PrintFormatEditor({ format, onChange }) {
   );
 
   // ─── Page aspect ratio ───────────────────────────────────────────────────────
-  // Derive aspect ratio from configured page dimensions (default: DIN A4)
-  const pagePaddingBottom = `${(pageHeightCm / pageWidthCm) * 100}%`;
   // Max reachable y+h in % of page width (used for clamp bounds in the properties panel)
   const maxPageYPct = (pageHeightCm / pageWidthCm) * 100;
 
@@ -514,7 +512,7 @@ export default function PrintFormatEditor({ format, onChange }) {
           <div
             className="pfe-page"
             ref={pageRef}
-            style={{ paddingBottom: pagePaddingBottom }}
+            style={{ '--pfe-aspect-ratio': `${pageWidthCm} / ${pageHeightCm}` }}
             onMouseDown={(e) => {
               // Click on page background deselects
               if (e.target === pageRef.current || e.target.classList.contains('pfe-page-inner')) {

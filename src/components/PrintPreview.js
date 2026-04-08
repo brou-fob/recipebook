@@ -175,14 +175,13 @@ export default function PrintPreview({ recipe, format }) {
   const fontFamily = format?.fontFamily || "Georgia, 'Times New Roman', serif";
   const pageWidthCm = format?.pageWidthCm ?? (orientation === 'landscape' ? 29.7 : 21.0);
   const pageHeightCm = format?.pageHeightCm ?? (orientation === 'landscape' ? 21.0 : 29.7);
-  const pagePaddingBottom = `${(pageHeightCm / pageWidthCm) * 100}%`;
   const elements = mergePrintElementsWithDefaults(format?.elements, orientation);
 
   return (
     <div className="ppv-root">
       <div
         className="ppv-page"
-        style={{ paddingBottom: pagePaddingBottom, fontFamily }}
+        style={{ '--ppv-aspect-ratio': `${pageWidthCm} / ${pageHeightCm}`, fontFamily }}
       >
         <div className="ppv-page-inner">
           {elements.map((el) => {
