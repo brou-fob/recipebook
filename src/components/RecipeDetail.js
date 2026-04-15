@@ -891,13 +891,33 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
       if (columnStyle.parentNode) columnStyle.parentNode.removeChild(columnStyle);
       if (elemStyle.parentNode) elemStyle.parentNode.removeChild(elemStyle);
     };
-    // afterprint fires when the print dialog closes (including cancellation in most browsers)
-    window.addEventListener('afterprint', cleanup, { once: true });
-    // Fallback: clean up after a timeout in case afterprint does not fire (e.g. some older browsers)
-    const cleanupTimeout = setTimeout(cleanup, 30000);
-    window.addEventListener('afterprint', () => clearTimeout(cleanupTimeout), { once: true });
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Bitte erlaube Popups für diese Seite, um das Rezept zu drucken.');
+        cleanup();
+        return;
+      }
+      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(el => el.outerHTML)
+        .join('\n');
+      const bodyHtml = contentRef.current ? contentRef.current.outerHTML : '';
+      printWindow.document.write('<html><head>' + styles + '</head><body>' + bodyHtml + '</body></html>');
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+      cleanup();
+    } else {
+      // afterprint fires when the print dialog closes (including cancellation in most browsers)
+      window.addEventListener('afterprint', cleanup, { once: true });
+      // Fallback: clean up after a timeout in case afterprint does not fire (e.g. some older browsers)
+      const cleanupTimeout = setTimeout(cleanup, 30000);
+      window.addEventListener('afterprint', () => clearTimeout(cleanupTimeout), { once: true });
 
-    window.print();
+      window.print();
+    }
   };
 
   const scaleIngredient = (ingredient) => {
