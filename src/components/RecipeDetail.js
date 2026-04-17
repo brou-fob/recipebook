@@ -828,16 +828,24 @@ function RecipeDetail({ recipe: initialRecipe, onBack, onEdit, onDelete, onPubli
           if (el.fontColor) textRules.push(`color: ${el.fontColor} !important;`);
         }
         const rotationRule = el.rotation ? `transform: rotate(${el.rotation}deg) !important;` : '';
-        
-        const cssTop = el.y;
-        const cssHeight = el.h;
+
+        // Compensate for CSS rotate() rotating around element center (same as PrintPreview / PrintFormatEditor)
+        const rotR = el.rotation || 0;
+        const rotDx = (rotR === 90 || rotR === 270) ? (el.h - el.w) / 2 : 0;
+        const rotDy = (rotR === 90 || rotR === 270) ? (el.w - el.h) / 2 : 0;
+        const scaleY = pageWidthCm / pageHeightCm;
+
+        const cssLeft = el.x + rotDx;
+        const cssTop = (el.y + rotDy) * scaleY;
+        const cssWidth = el.w;
+        const cssHeight = el.h * scaleY;
         
         return `@media print {
   ${selector} {
     ${displayRule}position: absolute !important;
-    left: ${el.x.toFixed(2)}% !important;
+    left: ${cssLeft.toFixed(2)}% !important;
     top: ${cssTop.toFixed(2)}% !important;
-    width: ${el.w.toFixed(2)}% !important;
+    width: ${cssWidth.toFixed(2)}% !important;
     height: ${cssHeight.toFixed(2)}% !important;
     overflow: hidden !important;
     margin: 0 !important;
