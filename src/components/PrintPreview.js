@@ -4,6 +4,19 @@ import { mergePrintElementsWithDefaults } from '../utils/customLists';
 import { formatIngredientAsFraction } from '../utils/ingredientUtils';
 
 /**
+ * Returns the CSS left/top visual offset (in % of page width) to compensate
+ * for CSS rotate() rotating around the element center. This ensures the
+ * top-left corner of the rotated visual bounding box aligns with (el.x, el.y).
+ */
+function rotationCssOffset(el) {
+  const r = el.rotation || 0;
+  if (r === 90 || r === 270) {
+    return { dx: (el.h - el.w) / 2, dy: (el.w - el.h) / 2 };
+  }
+  return { dx: 0, dy: 0 };
+}
+
+/**
  * Renders recipe content for a given element id, with optional image aspect ratio.
  */
 function ElementContent({ id, recipe, aspectRatio }) {
@@ -189,10 +202,10 @@ export default function PrintPreview({ recipe, format }) {
           {elements.map((el) => {
             if (el.visible === false) return null;
             const rotation = el.rotation || 0;
-            
+            const { dx, dy } = rotationCssOffset(el);
             const elStyle = {
-              left: `${el.x}%`,
-              top: `${el.y * scaleY}%`,
+              left: `${el.x + dx}%`,
+              top: `${(el.y + dy) * scaleY}%`,
               width: `${el.w}%`,
               height: `${el.h * scaleY}%`,
             };
