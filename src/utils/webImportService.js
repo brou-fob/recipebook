@@ -115,7 +115,7 @@ export function isInstagramUrl(url) {
     const urlObj = new URL(url);
     return (
       (urlObj.hostname === 'www.instagram.com' || urlObj.hostname === 'instagram.com') &&
-      /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?/.test(urlObj.pathname)
+      /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(urlObj.pathname)
     );
   } catch {
     return false;

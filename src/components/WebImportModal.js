@@ -47,7 +47,7 @@ function WebImportModal({ onImport, onCancel, initialUrl = '', authorId = '' }) 
       let result;
 
       if (isInstagramUrl(urlToSubmit.trim())) {
-        // Instagram Reel path – extract caption and page text with Puppeteer + Gemini
+        // Instagram path (post, reel, or IGTV) – extract caption and page text with Puppeteer + Gemini
         result = await importInstagramReel(urlToSubmit.trim(), setProgress);
       } else if (isRecipeImportPageUrl(urlToSubmit.trim())) {
         // Direct HTML parsing path – no screenshot or AI needed
