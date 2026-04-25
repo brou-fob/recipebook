@@ -3732,7 +3732,7 @@ async function runAllImporterTests(apiKey) {
     // Test 3: HTTP connectivity for fetchRecipeHtml
     runTest('fetchRecipeHtml – HTTP-Abruf einer Rezept-URL', async () => {
       const testUrl =
-        'https://www.chefkoch.de/rezepte/313631109749735/Spaghetti-Carbonara.html';
+        'https://httpbin.org/html';
       const response = await fetch(testUrl, {
         headers: {
           'User-Agent':
