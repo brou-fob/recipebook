@@ -885,17 +885,18 @@ exports.processHtmlWithAI = onCall(
 );
 
 /**
- * Validate that a URL points to an Instagram Reel.
- * Accepts both www.instagram.com/reel/… and instagram.com/reel/…
+ * Validate that a URL points to an Instagram post, Reel, or IGTV.
+ * Accepts both www.instagram.com and instagram.com, and the path patterns
+ * /reel/…, /p/…, and /tv/….
  * @param {string} url - URL to check
  * @returns {boolean}
  */
-function isInstagramReelUrl(url) {
+function isInstagramUrl(url) {
   try {
     const urlObj = new URL(url);
     return (
       (urlObj.hostname === 'www.instagram.com' || urlObj.hostname === 'instagram.com') &&
-      /^\/reel\/[A-Za-z0-9_-]+\/?$/.test(urlObj.pathname)
+      /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(urlObj.pathname)
     );
   } catch {
     return false;
@@ -941,16 +942,16 @@ exports.scrapeInstagramReel = onCall(
       const isAuthenticated = auth.token.firebase?.sign_in_provider !== 'anonymous';
       const isAdmin = auth.token.admin === true;
 
-      console.log(`Instagram Reel scrape request from user ${userId} for URL: ${url}`);
+      console.log(`Instagram scrape request from user ${userId} for URL: ${url}`);
 
       // Validate URL
       if (!url || typeof url !== 'string') {
         throw new HttpsError('invalid-argument', 'URL must be a non-empty string');
       }
-      if (!isInstagramReelUrl(url)) {
+      if (!isInstagramUrl(url)) {
         throw new HttpsError(
             'invalid-argument',
-            'URL must be a valid Instagram Reel URL (e.g. https://www.instagram.com/reel/...)',
+            'URL must be a valid Instagram URL (e.g. https://www.instagram.com/reel/... or https://www.instagram.com/p/...)',
         );
       }
 
