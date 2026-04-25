@@ -3,7 +3,7 @@ import './WebImportModal.css';
 import {
   isRecipeImportPageUrl,
   parseRecipeImportPage,
-  isInstagramReelUrl,
+  isInstagramUrl,
   importInstagramReel,
   importRecipeFromUrl,
 } from '../utils/webImportService';
@@ -46,8 +46,8 @@ function WebImportModal({ onImport, onCancel, initialUrl = '', authorId = '' }) 
     try {
       let result;
 
-      if (isInstagramReelUrl(urlToSubmit.trim())) {
-        // Instagram Reel path – extract caption and page text with Puppeteer + Gemini
+      if (isInstagramUrl(urlToSubmit.trim())) {
+        // Instagram path (post, reel, or IGTV) – extract caption and page text with Puppeteer + Gemini
         result = await importInstagramReel(urlToSubmit.trim(), setProgress);
       } else if (isRecipeImportPageUrl(urlToSubmit.trim())) {
         // Direct HTML parsing path – no screenshot or AI needed
