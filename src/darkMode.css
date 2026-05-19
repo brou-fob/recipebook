@@ -516,6 +516,17 @@
   color: #ccc;
 }
 
+[data-theme="dark"] .toolbar-private-list select {
+  background: #2a2a2a;
+  color: #e8e8e8;
+  border-color: #555;
+}
+
+[data-theme="dark"] .toolbar-private-list select option {
+  background: #2a2a2a;
+  color: #e8e8e8;
+}
+
 [data-theme="dark"] .ingredient-row,
 [data-theme="dark"] .instruction-row {
   background: #2a2a2a;

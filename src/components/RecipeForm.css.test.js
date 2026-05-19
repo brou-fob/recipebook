@@ -6,6 +6,8 @@ describe('RecipeForm toolbar CSS layout', () => {
   const css = fs.readFileSync(cssPath, 'utf8');
   const recipeDetailCssPath = path.join(__dirname, 'RecipeDetail.css');
   const recipeDetailCss = fs.readFileSync(recipeDetailCssPath, 'utf8');
+  const darkModeCssPath = path.join(__dirname, '..', 'darkMode.css');
+  const darkModeCss = fs.readFileSync(darkModeCssPath, 'utf8');
   const getRuleBody = (source, selector) => {
     const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const match = source.match(new RegExp(`${escapedSelector}\\s*\\{([\\s\\S]*?)\\}`, 'm'));
@@ -53,5 +55,16 @@ describe('RecipeForm toolbar CSS layout', () => {
     expect(formGroupHeaderRule).toContain('align-items: flex-end;');
     expect(formGroupHeaderRule).toContain('margin-bottom: 0.5rem;');
     expect(formGroupLabelRule).toContain('margin-bottom: 0.5rem;');
+  });
+
+  test('defines a readable dark mode background for the private list selector', () => {
+    const selectRule = getRuleBody(darkModeCss, '[data-theme="dark"] .toolbar-private-list select');
+    const optionRule = getRuleBody(darkModeCss, '[data-theme="dark"] .toolbar-private-list select option');
+
+    expect(selectRule).toContain('background: #2a2a2a;');
+    expect(selectRule).toContain('color: #e8e8e8;');
+    expect(selectRule).toContain('border-color: #555;');
+    expect(optionRule).toContain('background: #2a2a2a;');
+    expect(optionRule).toContain('color: #e8e8e8;');
   });
 });
