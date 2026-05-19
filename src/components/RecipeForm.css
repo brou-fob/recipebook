@@ -214,7 +214,7 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
@@ -403,7 +403,7 @@
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid #e0e0e0;
+  border: 1px solid #e0e0e0;
   background: #f5f5f5;
   aspect-ratio: 1 / 1;
 }
@@ -532,7 +532,7 @@
 .form-section {
   margin-bottom: 2rem;
   padding-top: 1rem;
-  border-top: 2px solid #f0f0f0;
+  border-top: 1px solid #f0f0f0;
 }
 
 .section-header {
@@ -579,7 +579,7 @@
 .form-list-item textarea {
   flex: 1;
   padding: 0.75rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
@@ -805,7 +805,7 @@
 .add-item-button {
   background: #f5f5f5;
   color: #402C1C;
-  border: 2px dashed #402C1C;
+  border: 1px dashed #402C1C;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
@@ -825,7 +825,7 @@
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 2px solid #f0f0f0;
+  border-top: 1px solid #f0f0f0;
 }
 
 .cancel-button,
@@ -924,7 +924,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1063,7 +1063,7 @@
   -moz-appearance: none;
   width: 24px;
   height: 24px;
-  border: 2px solid #333;
+  border: 1px solid #333;
   background: #333;
   border-radius: 4px;
   cursor: pointer;
