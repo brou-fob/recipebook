@@ -20,7 +20,7 @@ const normalizeGroupThresholds = (thresholds) => ({
   ...(thresholds || {}),
 });
 
-const cleanupExpiredCalculatedSwipeFlagsForList = async (listId) => {
+const cleanupExpiredCalculatedFlagsForList = async (listId) => {
   if (!listId) return;
 
   const q = query(
@@ -118,7 +118,7 @@ export const setRecipeSwipeFlag = async (userId, listId, recipeId, flag, metadat
   if (!userId || !listId || !recipeId || !flag) return false;
 
   try {
-    await cleanupExpiredCalculatedSwipeFlagsForList(listId);
+    await cleanupExpiredCalculatedFlagsForList(listId);
 
     const {
       userName = '',

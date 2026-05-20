@@ -81,6 +81,8 @@ describe('recipeSwipeFlags write operations', () => {
     expect(mockWhere).toHaveBeenCalledWith('listID', '==', 'l');
     expect(mockDeleteDoc).toHaveBeenCalledTimes(1);
     expect(mockDeleteDoc).toHaveBeenCalledWith('expired-ref');
+    expect(mockDeleteDoc).not.toHaveBeenCalledWith('future-ref');
+    expect(mockDeleteDoc).not.toHaveBeenCalledWith('null-ref');
     expect(mockDoc).toHaveBeenCalledWith({}, 'recipeSwipeFlags', 'u_l_r');
     expect(mockSetDoc).toHaveBeenCalledWith(
       'flag-doc-ref',
