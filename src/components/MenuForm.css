@@ -56,7 +56,7 @@
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
@@ -121,7 +121,7 @@
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
-  border: 2px solid #e0d5c7;
+  border: 1px solid #e0d5c7;
 }
 
 .section-quick-select {
@@ -145,7 +145,7 @@
 .quick-select-button {
   background: white;
   color: #402C1C;
-  border: 2px solid #402C1C;
+  border: 1px solid #402C1C;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -181,7 +181,7 @@
 .input-with-button input {
   flex: 1;
   padding: 0.5rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 0.9rem;
 }
@@ -209,7 +209,7 @@
 
 .section-block {
   background: #f9f6f3;
-  border: 2px solid #e0d5c7;
+  border: 1px solid #e0d5c7;
   border-radius: 8px;
   padding: 1rem;
 }
@@ -302,7 +302,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -340,7 +340,7 @@
 .typeahead-input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
@@ -359,7 +359,7 @@
   left: 0;
   right: 0;
   background: white;
-  border: 2px solid #402C1C;
+  border: 1px solid #402C1C;
   border-top: none;
   border-radius: 0 0 8px 8px;
   max-height: 300px;
@@ -418,7 +418,7 @@
 .selected-recipe-item.dragging {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   background: #fff;
-  border: 2px solid #402C1C;
+  border: 1px solid #402C1C;
 }
 
 .drag-handle {
@@ -670,7 +670,7 @@
   height: 90px;
   object-fit: cover;
   border-radius: 8px;
-  border: 2px solid #e0d5c7;
+  border: 1px solid #e0d5c7;
 }
 
 .menu-image-actions {
@@ -698,7 +698,7 @@
 .menu-image-remove-btn {
   background: white;
   color: #dc3545;
-  border: 2px solid #dc3545;
+  border: 1px solid #dc3545;
   padding: 0.4rem 0.9rem;
   border-radius: 6px;
   cursor: pointer;
