@@ -65,14 +65,15 @@ function SortableIngredient({ id, item, index, onChange, onRemove, canRemove, on
 
   const baseTransform = CSS.Transform.toString(transform);
   const effectiveSwipeOffset = isDeleteActionVisible ? -SWIPE_DELETE_MAX_OFFSET : swipeOffset;
-  const combinedTransform = effectiveSwipeOffset
-    ? `${baseTransform ? `${baseTransform} ` : ''}translateX(${effectiveSwipeOffset}px)`
-    : baseTransform;
 
   const style = {
-    transform: combinedTransform,
+    transform: baseTransform,
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+  const swipeContentStyle = {
+    transform: `translateX(${effectiveSwipeOffset}px)`,
+    transition: isDragging ? transition : 'transform 0.15s ease',
   };
 
   // Handle both old string format and new object format
@@ -205,7 +206,7 @@ function SortableIngredient({ id, item, index, onChange, onRemove, canRemove, on
           )}
         </div>
       )}
-      <div className="input-wrapper has-drag-handle">
+      <div className="input-wrapper has-drag-handle" style={swipeContentStyle}>
         <input
           ref={inputRef}
           type="text"
@@ -277,14 +278,15 @@ function SortableStep({ id, item, index, stepNumber, onChange, onRemove, canRemo
 
   const baseTransform = CSS.Transform.toString(transform);
   const effectiveSwipeOffset = isDeleteActionVisible ? -SWIPE_DELETE_MAX_OFFSET : swipeOffset;
-  const combinedTransform = effectiveSwipeOffset
-    ? `${baseTransform ? `${baseTransform} ` : ''}translateX(${effectiveSwipeOffset}px)`
-    : baseTransform;
 
   const style = {
-    transform: combinedTransform,
+    transform: baseTransform,
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+  const swipeContentStyle = {
+    transform: `translateX(${effectiveSwipeOffset}px)`,
+    transition: isDragging ? transition : 'transform 0.15s ease',
   };
 
   // Handle both old string format and new object format
@@ -419,7 +421,7 @@ function SortableStep({ id, item, index, stepNumber, onChange, onRemove, canRemo
           )}
         </div>
       )}
-      <div className="input-wrapper has-drag-handle">
+      <div className="input-wrapper has-drag-handle" style={swipeContentStyle}>
         <textarea
           ref={textareaRef}
           value={text}
