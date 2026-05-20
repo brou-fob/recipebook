@@ -2577,7 +2577,7 @@
   background: transparent;
   color: #777;
   /*border-color: #555;*/
-  border: 1px solid #ddd;
+  border: 1px solid #555;
   border-left: none;
   border-radius: 0 8px 8px 0;
 }
@@ -2585,7 +2585,7 @@
 [data-theme="dark"] .drag-handle:hover {
   background: #333;
   color: #e8e8e8;
-  border-color: #c08060;
+  border-color: #555;
 }
 
 [data-theme="dark"] .multi-image-item {
