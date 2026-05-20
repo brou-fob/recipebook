@@ -1490,24 +1490,6 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         </div>
 
         <div className="form-group">
-          <input
-            type="text"
-            id="kulinarik-search"
-            className="recipe-form-cuisine-search"
-            value={newCuisineInput}
-            onChange={handleCuisineInputChange}
-            placeholder="Kulinarik oder Speisekategorien suchen …"
-            aria-label="Kulinarik und Speisekategorien suchen"
-            autoComplete="off"
-          />
-          {newCuisineDuplicateHint && (
-            <p className="recipe-form-cuisine-duplicate-hint">
-              Dieser Kulinariktyp ist bereits vorhanden und wurde ausgewählt.
-            </p>
-          )}
-        </div>
-
-        <div className="form-group">
           <label>Kulinarik (Mehrfachauswahl möglich)</label>
           {(orderedCuisinePills.length > 0 || newCuisineInput.trim()) && (
             <div className="recipe-form-cuisine-grid">
@@ -1540,6 +1522,24 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
                   </button>
                 )}
             </div>
+          )}
+        </div>
+            
+        <div className="form-group">
+          <input
+            type="text"
+            id="kulinarik-search"
+            className="recipe-form-cuisine-search"
+            value={newCuisineInput}
+            onChange={handleCuisineInputChange}
+            placeholder="Kulinarik oder Speisekategorien suchen …"
+            aria-label="Kulinarik und Speisekategorien suchen"
+            autoComplete="off"
+          />
+          {newCuisineDuplicateHint && (
+            <p className="recipe-form-cuisine-duplicate-hint">
+              Dieser Kulinariktyp ist bereits vorhanden und wurde ausgewählt.
+            </p>
           )}
         </div>
 
