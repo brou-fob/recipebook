@@ -2,12 +2,12 @@
  * Recipe Swipe Flags Firestore Utilities
  *
  * Important:
- * Write operations for recipeSwipeFlags are intentionally disabled.
- * This module only provides read and pure-computation helpers.
+ * Most write operations for recipeSwipeFlags are intentionally disabled.
+ * Only setRecipeSwipeFlag currently persists swipe data.
  */
 
 import { db } from '../firebase';
-import { getDocs, collection, query, where } from 'firebase/firestore';
+import { getDocs, collection, query, where, doc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 
 const DEFAULT_GROUP_THRESHOLDS = {
   groupThresholdKandidatMinKandidat: 50,
@@ -22,7 +22,36 @@ const normalizeGroupThresholds = (thresholds) => ({
 });
 
 const logSwipeFlagWriteDisabled = (operation) => {
-  console.warn(`recipeSwipeFlags write operation disabled: ${operation}`);
+  console.warn(`recipeSwipeFlags write operation not implemented: ${operation}`);
+};
+
+const cleanupExpiredCalculatedSwipeFlagsForList = async (listId) => {
+  if (!listId) return;
+
+  const q = query(
+    collection(db, 'recipeSwipeFlags'),
+    where('listID', '==', listId)
+  );
+  const snapshot = await getDocs(q);
+  const now = Date.now();
+  const deleteOperations = [];
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data?.() || {};
+    const calculatedExpiresAt = data.calculatedExpiresAt;
+    const calculatedExpiresAtMillis = calculatedExpiresAt?.toMillis?.();
+    const isExpiredCalculated =
+      calculatedExpiresAt !== null &&
+      calculatedExpiresAt !== undefined &&
+      typeof calculatedExpiresAtMillis === 'number' &&
+      calculatedExpiresAtMillis <= now;
+
+    if (isExpiredCalculated) {
+      deleteOperations.push(deleteDoc(docSnap.ref));
+    }
+  });
+
+  await Promise.all(deleteOperations);
 };
 
 /**
@@ -88,13 +117,54 @@ export const recalculateCalculatedFlagForRecipeInList = async () => {
 };
 
 /**
- * Write operation disabled.
+ * Store/update a swipe flag document for a user/list/recipe combination.
  *
- * @returns {Promise<boolean>} always false
+ * Before storing, remove all expired calculated flags in the same list where
+ * calculatedExpiresAt is set (not null) and already in the past.
+ *
+ * @param {string} userId
+ * @param {string} listId
+ * @param {string} recipeId
+ * @param {'kandidat'|'geparkt'|'archiv'} flag
+ * @param {Object} [metadata]
+ * @returns {Promise<boolean>}
  */
-export const setRecipeSwipeFlag = async () => {
-  logSwipeFlagWriteDisabled('setRecipeSwipeFlag');
-  return false;
+export const setRecipeSwipeFlag = async (userId, listId, recipeId, flag, metadata = {}) => {
+  if (!userId || !listId || !recipeId || !flag) return false;
+
+  try {
+    await cleanupExpiredCalculatedSwipeFlagsForList(listId);
+
+    const {
+      userName = '',
+      recipeTitle = '',
+      expiresAt = null,
+      calculatedFlag = flag,
+      calculatedExpiresAt = expiresAt ?? null,
+    } = metadata || {};
+
+    const flagDocRef = doc(db, 'recipeSwipeFlags', `${userId}_${listId}_${recipeId}`);
+    await setDoc(flagDocRef, {
+      userId,
+      userID: userId,
+      userName,
+      listId,
+      listID: listId,
+      recipeId,
+      recipeID: recipeId,
+      recipeTitle,
+      flag,
+      createdAt: Timestamp.now(),
+      expiresAt,
+      calculatedFlag,
+      calculatedExpiresAt,
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error setting recipe swipe flag:', error);
+    return false;
+  }
 };
 
 /**
