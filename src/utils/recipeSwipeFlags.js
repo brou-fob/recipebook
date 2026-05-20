@@ -48,16 +48,19 @@ const isStatusValiditySettingsMap = (value) =>
   value !== undefined &&
   typeof value === 'object' &&
   !Array.isArray(value) &&
-  (
-    Object.prototype.hasOwnProperty.call(value, 'kandidat') ||
-    Object.prototype.hasOwnProperty.call(value, 'geparkt') ||
-    Object.prototype.hasOwnProperty.call(value, 'archiv')
-  );
+  ['kandidat', 'geparkt', 'archiv'].every((key) => (
+    Object.prototype.hasOwnProperty.call(value, key) &&
+    (
+      value[key] === null ||
+      value[key] === undefined ||
+      (Number.isFinite(value[key]) && value[key] > 0)
+    )
+  ));
 
 const resolveExpiresAtForCalculatedFlag = (calculatedFlag, statusValiditySettingsByFlag) => {
   if (!calculatedFlag || !isStatusValiditySettingsMap(statusValiditySettingsByFlag)) return null;
   const validityDays = statusValiditySettingsByFlag[calculatedFlag];
-  if (validityDays != null && Number.isFinite(validityDays) && validityDays > 0) {
+  if (Number.isFinite(validityDays) && validityDays > 0) {
     return timestampInDays(validityDays);
   }
   return null;
@@ -168,11 +171,12 @@ const getListMemberIds = async (listId) => {
  * @param {string} listId
  * @param {string} recipeId
  * @param {Object} [thresholds]
- * @param {Timestamp|null|Object} [synchronizedExpiresAt] - When provided as Timestamp|null, this expiresAt value
- *   is written to all docs. When provided as { kandidat, geparkt, archiv }, expiresAt is derived from calculatedFlag.
+ * @param {Timestamp|null|{kandidat: number|null, geparkt: number|null, archiv: number|null}} [expiresAtOrValiditySettings]
+ *   - When provided as Timestamp|null, this expiresAt value is written to all docs.
+ *   When provided as a status validity map, expiresAt is derived from calculatedFlag.
  * @returns {Promise<boolean>}
  */
-export const recalculateCalculatedFlagForRecipeInList = async (listId, recipeId, thresholds, synchronizedExpiresAt) => {
+export const recalculateCalculatedFlagForRecipeInList = async (listId, recipeId, thresholds, expiresAtOrValiditySettings) => {
   if (!listId || !recipeId) return false;
 
   try {
@@ -205,11 +209,11 @@ export const recalculateCalculatedFlagForRecipeInList = async (listId, recipeId,
     const calculatedFlag = computeCalculatedRecipeSwipeFlag(memberIds, allMembersFlags, recipeId, thresholds);
     if (!calculatedFlag) return false;
 
-    const hasStatusValiditySettingsByFlag = isStatusValiditySettingsMap(synchronizedExpiresAt);
+    const hasStatusValiditySettingsByFlag = isStatusValiditySettingsMap(expiresAtOrValiditySettings);
     const syncedExpiresAt = hasStatusValiditySettingsByFlag
-      ? resolveExpiresAtForCalculatedFlag(calculatedFlag, synchronizedExpiresAt)
-      : synchronizedExpiresAt;
-    const shouldSyncExpiresAt = synchronizedExpiresAt !== undefined;
+      ? resolveExpiresAtForCalculatedFlag(calculatedFlag, expiresAtOrValiditySettings)
+      : expiresAtOrValiditySettings;
+    const shouldSyncExpiresAt = expiresAtOrValiditySettings !== undefined;
     const updates = docs
       .map((docSnap) => {
         const data = docSnap.data() || {};
@@ -275,8 +279,9 @@ const calculateProjectedCalculatedFlagForPendingSwipe = async (listId, recipeId,
  * @param {string} listId   - ID of the interactive list
  * @param {string} recipeId - ID of the recipe that was swiped
  * @param {'geparkt'|'archiv'|'kandidat'} flag - The flag to set
- * @param {number|null|Object} [validityDays] - Number of days until the flag expires, or null/undefined for permanent.
- *   Alternatively, pass { kandidat, geparkt, archiv } to derive expiresAt from calculatedFlag.
+ * @param {number|null|{kandidat: number|null, geparkt: number|null, archiv: number|null}} [validityDays]
+ *   - Number of days until the flag expires, or null/undefined for permanent.
+ *   Alternatively, pass a status validity map to derive expiresAt from calculatedFlag.
  * @returns {Promise<boolean>} true if saved successfully
  */
 export const setRecipeSwipeFlag = async (userId, listId, recipeId, flag, validityDays) => {

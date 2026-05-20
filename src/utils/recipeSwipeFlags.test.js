@@ -1161,7 +1161,8 @@ describe('recalculateCalculatedFlagForRecipeInList', () => {
   });
 
   it('derives synchronized expiresAt from calculatedFlag when status validity settings map is provided', async () => {
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000);
+    const mockedNow = 1_700_000_000_000;
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(mockedNow);
     try {
       mockGetDoc.mockResolvedValueOnce({
         exists: () => true,
@@ -1191,7 +1192,7 @@ describe('recalculateCalculatedFlagForRecipeInList', () => {
       });
 
       expect(result).toBe(true);
-      const expectedMillis = 1_000 + (9 * 24 * 60 * 60 * 1000);
+      const expectedMillis = mockedNow + (9 * 24 * 60 * 60 * 1000);
       expect(mockUpdateDoc).toHaveBeenCalledWith('ref-1', {
         calculatedFlag: 'geparkt',
         expiresAt: { toMillis: expect.any(Function), _isMock: true },
@@ -1212,7 +1213,8 @@ describe('recalculateCalculatedFlagForRecipeInList', () => {
   });
 
   it('sets synchronized expiresAt to null when calculatedFlag is archiv and archiv validity is empty', async () => {
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000);
+    const mockedNow = 1_700_000_000_000;
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(mockedNow);
     try {
       mockGetDoc.mockResolvedValueOnce({
         exists: () => true,
@@ -1228,7 +1230,7 @@ describe('recalculateCalculatedFlagForRecipeInList', () => {
               recipeId: 'recipe-1',
               flag: 'archiv',
               calculatedFlag: 'kandidat',
-              expiresAt: { toMillis: () => 99_999 },
+              expiresAt: { toMillis: () => mockedNow + 50_000 },
             }),
           });
           cb({
@@ -1239,7 +1241,7 @@ describe('recalculateCalculatedFlagForRecipeInList', () => {
               recipeId: 'recipe-1',
               flag: 'archiv',
               calculatedFlag: 'kandidat',
-              expiresAt: { toMillis: () => 99_999 },
+              expiresAt: { toMillis: () => mockedNow + 50_000 },
             }),
           });
         },
