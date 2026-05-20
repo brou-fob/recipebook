@@ -1979,6 +1979,27 @@ describe('RecipeForm - Swipe Delete', () => {
     expect(screen.getByPlaceholderText('Zutat 1')).toHaveValue('Mehl');
   });
 
+  test('keeps swipe delete background stationary while ingredient input slides left', () => {
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const ingredientInput = screen.getByPlaceholderText('Zutat 1');
+    swipeLeft(ingredientInput);
+
+    const item = ingredientInput.closest('.form-list-item');
+    const wrapper = ingredientInput.closest('.input-wrapper');
+
+    expect(item).toHaveClass('swipe-delete-active');
+    expect(item.style.transform).toBe('');
+    expect(wrapper.style.transform).toMatch(/translateX\(-\d+px\)/);
+  });
+
   test('reveals delete button on step swipe and deletes after click', async () => {
     render(
       <RecipeForm
@@ -2001,6 +2022,27 @@ describe('RecipeForm - Swipe Delete', () => {
     await waitFor(() => expect(screen.getAllByPlaceholderText(/Schritt/)).toHaveLength(1));
     expect(screen.getByText('Schritt gelöscht.')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Schritt 1')).toHaveValue('Backen');
+  });
+
+  test('keeps swipe delete background stationary while step input slides left', () => {
+    render(
+      <RecipeForm
+        recipe={null}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+        currentUser={regularUser}
+      />
+    );
+
+    const stepInput = screen.getByPlaceholderText('Schritt 1');
+    swipeLeft(stepInput);
+
+    const item = stepInput.closest('.form-list-item');
+    const wrapper = stepInput.closest('.input-wrapper');
+
+    expect(item).toHaveClass('swipe-delete-active');
+    expect(item.style.transform).toBe('');
+    expect(wrapper.style.transform).toMatch(/translateX\(-\d+px\)/);
   });
 
   test('deleting the last ingredient replaces it with a new empty ingredient input', async () => {
