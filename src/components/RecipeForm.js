@@ -513,6 +513,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const [stepDeleteBanners, setStepDeleteBanners] = useState([]);
   const ingredientDeleteBannerTimeoutsRef = useRef(new Map());
   const stepDeleteBannerTimeoutsRef = useRef(new Map());
+  const swipeDeleteBannerIdRef = useRef(0);
 
   // Derived cuisine pill lists for the pill-based cuisine selector
   const visibleCuisinePills = useMemo(() => {
@@ -753,7 +754,8 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   };
 
   const showTimedDeleteBanner = (setBanners, bannerTimeoutsRef, message) => {
-    const id = `${Date.now()}-${Math.random()}`;
+    const id = `swipe-delete-${swipeDeleteBannerIdRef.current}`;
+    swipeDeleteBannerIdRef.current += 1;
     setBanners((prev) => [...prev, { id, message }]);
     const timeoutId = setTimeout(() => {
       setBanners((prev) => prev.filter((banner) => banner.id !== id));

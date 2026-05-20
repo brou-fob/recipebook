@@ -2044,6 +2044,7 @@ describe('RecipeForm - Swipe Delete', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Zutat löschen' }));
 
       await waitFor(() => expect(screen.getAllByText('Zutat gelöscht.')).toHaveLength(2));
+      expect(screen.getAllByText('Zutat gelöscht.')).toHaveLength(2);
 
       act(() => {
         jest.advanceTimersByTime(10000);
