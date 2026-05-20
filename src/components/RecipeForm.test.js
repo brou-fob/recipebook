@@ -495,7 +495,7 @@ describe('RecipeForm - Multi-Select Fields', () => {
       />
     );
 
-    const kulinarikSearch = screen.getByLabelText('Kulinariktypen suchen');
+    const kulinarikSearch = screen.getByLabelText('Kulinarik und Speisekategorien suchen');
     expect(kulinarikSearch.tagName).toBe('INPUT');
     expect(kulinarikSearch).toHaveAttribute('type', 'text');
   });
@@ -552,7 +552,7 @@ describe('RecipeForm - Multi-Select Fields', () => {
     expect(screen.queryByText(/Ausgewählt:/i)).not.toBeInTheDocument();
   });
 
-  test('prevents creation of new meal categories in pill-based search', async () => {
+  test('uses one shared search input for cuisine and meal category pills', async () => {
     const regularUser = {
       id: 'user-1',
       vorname: 'Regular',
@@ -571,14 +571,22 @@ describe('RecipeForm - Multi-Select Fields', () => {
       />
     );
 
-    const speisekategorieSearch = screen.getByLabelText('Speisekategorien suchen');
-    expect(speisekategorieSearch.tagName).toBe('INPUT');
-    expect(speisekategorieSearch).toHaveAttribute('type', 'text');
+    const combinedSearch = screen.getByLabelText('Kulinarik und Speisekategorien suchen');
+    expect(combinedSearch.tagName).toBe('INPUT');
+    expect(combinedSearch).toHaveAttribute('type', 'text');
+    expect(screen.queryByLabelText('Speisekategorien suchen')).not.toBeInTheDocument();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Appetizer' })).toBeInTheDocument());
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Italian' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Appetizer' })).toBeInTheDocument();
+    });
 
-    fireEvent.change(speisekategorieSearch, { target: { value: 'Neue Kategorie' } });
-    expect(screen.queryByRole('button', { name: 'Neue Kategorie' })).not.toBeInTheDocument();
+    fireEvent.change(combinedSearch, { target: { value: 'App' } });
+    expect(screen.getByRole('button', { name: 'Appetizer' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Italian' })).not.toBeInTheDocument();
+
+    fireEvent.change(combinedSearch, { target: { value: 'zzzz' } });
+    expect(screen.queryByRole('button', { name: 'Appetizer' })).not.toBeInTheDocument();
   });
 
   test('can select multiple cuisines in Kulinarik field', async () => {
@@ -881,7 +889,7 @@ describe('RecipeForm - Multi-Select Fields', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Italian' })).toBeInTheDocument());
 
     // Type a cuisine name that does not exist yet
-    const kulinarikSearch = screen.getByLabelText('Kulinariktypen suchen');
+    const kulinarikSearch = screen.getByLabelText('Kulinarik und Speisekategorien suchen');
     fireEvent.change(kulinarikSearch, { target: { value: 'Peruanisch' } });
 
     // The new pill (dashed border) should appear showing the typed text
@@ -942,7 +950,7 @@ describe('RecipeForm - Multi-Select Fields', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Italian' })).toBeInTheDocument());
 
     // Type a new cuisine name
-    const kulinarikSearch = screen.getByLabelText('Kulinariktypen suchen');
+    const kulinarikSearch = screen.getByLabelText('Kulinarik und Speisekategorien suchen');
     fireEvent.change(kulinarikSearch, { target: { value: 'Mexikanisch' } });
 
     // Click the new cuisine pill

@@ -314,7 +314,6 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
   const [newCuisineInput, setNewCuisineInput] = useState('');
   const [newCuisineLoading, setNewCuisineLoading] = useState(false);
   const [newCuisineDuplicateHint, setNewCuisineDuplicateHint] = useState(false);
-  const [mealCategorySearchInput, setMealCategorySearchInput] = useState('');
   const [allUsers, setAllUsers] = useState([]);
   const [buttonIcons, setButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
   const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
@@ -351,10 +350,10 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
 
   const visibleMealCategoryPills = useMemo(() => {
     const allCategories = customLists.mealCategories || [];
-    const term = mealCategorySearchInput.trim().toLowerCase();
+    const term = newCuisineInput.trim().toLowerCase();
     if (!term) return allCategories;
     return allCategories.filter((name) => name.toLowerCase().includes(term));
-  }, [customLists.mealCategories, mealCategorySearchInput]);
+  }, [customLists.mealCategories, newCuisineInput]);
 
   const orderedMealCategoryPills = useMemo(() => {
     const active = visibleMealCategoryPills.filter((name) => speisekategorie.includes(name));
@@ -1297,15 +1296,14 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         </div>
 
         <div className="form-group">
-          <label htmlFor="kulinarik-search">Kulinarik (Mehrfachauswahl möglich)</label>
           <input
             type="text"
             id="kulinarik-search"
             className="recipe-form-cuisine-search"
             value={newCuisineInput}
             onChange={handleCuisineInputChange}
-            placeholder="Kulinariktypen suchen …"
-            aria-label="Kulinariktypen suchen"
+            placeholder="Kulinarik oder Speisekategorien suchen …"
+            aria-label="Kulinarik und Speisekategorien suchen"
             autoComplete="off"
           />
           {newCuisineDuplicateHint && (
@@ -1350,16 +1348,6 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
         <div className="form-group">
           <label htmlFor="speisekategorie">Speisekategorie (Mehrfachauswahl möglich)</label>
           <div className="recipe-form-mobile-only">
-            <input
-              type="text"
-              id="speisekategorie-search"
-              className="recipe-form-cuisine-search"
-              value={mealCategorySearchInput}
-              onChange={(e) => setMealCategorySearchInput(e.target.value)}
-              placeholder="Speisekategorien suchen …"
-              aria-label="Speisekategorien suchen"
-              autoComplete="off"
-            />
             {orderedMealCategoryPills.length > 0 && (
               <div className="recipe-form-cuisine-grid">
                 {orderedMealCategoryPills.map((category) => (
