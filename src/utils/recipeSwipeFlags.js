@@ -248,8 +248,9 @@ export const setRecipeSwipeFlag = async (userId, listId, recipeId, flag, metadat
 };
 
 /**
- * Load all active (non-expired) swipe flags for a given user and list.
- * A flag is active if calculatedExpiresAt is null (permanent) or calculatedExpiresAt is in the future.
+ * Load all active swipe flags for a given user and list.
+ * A flag is active if the user has an explicit, non-null flag value.
+ * Recipes with flag=null (e.g. reset by cleanup) are considered available for swiping again.
  *
  * @param {string} userId  - ID of the current user
  * @param {string} listId  - ID of the interactive list
@@ -264,16 +265,14 @@ export const getActiveSwipeFlags = async (userId, listId) => {
       where('listID', '==', listId)
     );
     const snapshot = await getDocs(q);
-    const now = Date.now();
     const activeFlags = {};
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const expired =
-        data.calculatedExpiresAt !== null &&
-        data.calculatedExpiresAt !== undefined &&
-        data.calculatedExpiresAt.toMillis() <= now;
-      if (!expired) {
-        activeFlags[data.recipeID] = data.calculatedFlag;
+      // Only treat as active if the user has an explicit, non-null flag.
+      // flag=null means the flag was reset (e.g. by cleanup) and the recipe
+      // should be available for swiping again.
+      if (data.flag !== null && data.flag !== undefined) {
+        activeFlags[data.recipeID] = data.flag;
       }
     });
     return activeFlags;
