@@ -248,8 +248,7 @@ export const bulkUpdateSwipeFlagsByListAndRecipe = async (listId, recipeId, flag
   try {
     await cleanupExpiredCalculatedFlagsForList(listId);
     const validitySettings = await getStatusValiditySettings();
-    const expiresAt = computeExpiresAtForFlag(flag, validitySettings);
-    const calculatedExpiresAt = computeExpiresAtForFlag(flag, validitySettings);
+    const sharedExpiresAt = computeExpiresAtForFlag(flag, validitySettings);
     const q = query(
       collection(db, 'recipeSwipeFlags'),
       where('listID', '==', listId),
@@ -261,9 +260,9 @@ export const bulkUpdateSwipeFlagsByListAndRecipe = async (listId, recipeId, flag
     snapshot.forEach((docSnap) => {
       updateOperations.push(updateDoc(docSnap.ref, {
         flag,
-        expiresAt,
+        expiresAt: sharedExpiresAt,
         calculatedFlag: flag,
-        calculatedExpiresAt,
+        calculatedExpiresAt: sharedExpiresAt,
       }));
     });
 

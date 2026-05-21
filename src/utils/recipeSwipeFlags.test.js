@@ -272,7 +272,7 @@ describe('recipeSwipeFlags write operations', () => {
       expect(result).toBe(true);
       expect(mockWhere).toHaveBeenCalledWith('listID', '==', 'l1');
       expect(mockWhere).toHaveBeenCalledWith('recipeID', '==', 'r1');
-      expect(mockTimestampFromDate).toHaveBeenCalledTimes(2);
+      expect(mockTimestampFromDate).toHaveBeenCalledTimes(1);
       expect(mockTimestampFromDate).toHaveBeenCalledWith(new Date(5_000_000 + 4 * 24 * 60 * 60 * 1000));
       expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
       expect(mockUpdateDoc).toHaveBeenCalledWith('ref-u1', {
