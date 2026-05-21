@@ -264,8 +264,11 @@ describe('Tagesmenu – swipe card consistency', () => {
   });
 
   test('shows and closes temporary swipe debug overlay after transition end', async () => {
+    const ownerId = 'user1';
+    const memberIds = ['user2'];
+    const expectedMemberCount = new Set([ownerId, ...memberIds]).size;
     await act(async () => {
-      renderMenuWithListOverrides(recipes, { ownerId: 'user1', memberIds: ['user2'] });
+      renderMenuWithListOverrides(recipes, { ownerId, memberIds });
     });
 
     const topCard = document.querySelector('.tagesmenu-card-top');
@@ -275,14 +278,12 @@ describe('Tagesmenu – swipe card consistency', () => {
     expect(document.body).toHaveTextContent('DEBUG (tap to close)');
     expect(document.body).toHaveTextContent('flag: kandidat');
     expect(document.body).toHaveTextContent('recipeId: r1');
-    expect(document.body).toHaveTextContent('memberIds (2):');
+    expect(document.body).toHaveTextContent(`memberIds (${expectedMemberCount}):`);
     expect(document.body).toHaveTextContent('- user1');
     expect(document.body).toHaveTextContent('- user2');
     expect(document.body).toHaveTextContent('thresholds:');
 
-    const debugOverlay = Array.from(document.querySelectorAll('div')).find(
-      (el) => el.textContent?.trim().startsWith('DEBUG (tap to close)')
-    );
+    const debugOverlay = document.querySelector('[data-testid="tagesmenu-debug-overlay"]');
     expect(debugOverlay).toBeTruthy();
     fireEvent.click(debugOverlay);
     expect(document.body).not.toHaveTextContent('DEBUG (tap to close)');

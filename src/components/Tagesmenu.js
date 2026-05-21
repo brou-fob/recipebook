@@ -435,13 +435,19 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
         const flag = flagMap[swipe.direction];
         if (flag && currentUser?.id && swipe.list?.id) {
           const userName = [currentUser?.vorname, currentUser?.nachname].filter(Boolean).join(' ').trim();
+          const debugPayload = {
+            memberIds: [...listMemberIdsRef.current],
+            flag,
+            recipeId: swipe.recipe.id,
+            thresholds: groupThresholdsRef.current,
+          };
           setRecipeSwipeFlag(currentUser.id, swipe.list.id, swipe.recipe.id, flag, {
             userName,
             recipeTitle: swipe.recipe.title || '',
-            memberIds: listMemberIdsRef.current,
-            thresholds: groupThresholdsRef.current,
+            memberIds: debugPayload.memberIds,
+            thresholds: debugPayload.thresholds,
           });
-          setDebugInfo({ memberIds: listMemberIdsRef.current, flag, recipeId: swipe.recipe.id, thresholds: groupThresholdsRef.current });
+          setDebugInfo(debugPayload);
           // Keep allMembersFlags in sync with the current user's new swipe
           setAllMembersFlags((prev) => ({
             ...prev,
@@ -1406,6 +1412,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
 
       {debugInfo && (
         <div
+          data-testid="tagesmenu-debug-overlay"
           onClick={() => setDebugInfo(null)}
           style={{
             position: 'fixed',
@@ -1425,8 +1432,8 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
           {`DEBUG (tap to close)
 flag: ${debugInfo.flag}
 recipeId: ${debugInfo.recipeId}
-memberIds (${Array.isArray(debugInfo.memberIds) ? debugInfo.memberIds.length : 0}):
-${Array.isArray(debugInfo.memberIds) ? debugInfo.memberIds.map((id) => `- ${id}`).join('\n') : ''}
+memberIds (${debugInfo.memberIds.length}):
+${debugInfo.memberIds.map((id) => `- ${id}`).join('\n')}
 thresholds: ${JSON.stringify(debugInfo.thresholds)}`}
         </div>
       )}
