@@ -2252,7 +2252,7 @@ describe('Tagesmenu – Kachel-Kontextmenü', () => {
     expect(icon.textContent).not.toContain('⚪');
   });
 
-  test('Option "Zweite Chance, bitte" setzt das aktuelle Rezept lokal auf geparkt', async () => {
+  test('Option "Zweite Chance, bitte" setzt calculatedFlag auf geparkt und zeigt Rezept unter „Für später"', async () => {
     mockStatusValiditySettings = {
       statusValidityDaysKandidat: null,
       statusValidityDaysGeparkt: 14,
@@ -2272,7 +2272,61 @@ describe('Tagesmenu – Kachel-Kontextmenü', () => {
     expect(document.querySelector('.tagesmenu-results-group')).toHaveTextContent('Für später');
   });
 
-  test('setzt bei "Ich bin enttäuscht" das aktuelle Rezept lokal auf archiv', async () => {
+  test('Option "Zweite Chance, bitte" berechnet calculatedExpiresAt aus aktueller Zeit und Gültigkeitsdauer', async () => {
+    const fakeNow = 2_000_000_000_000;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(fakeNow);
+
+    mockStatusValiditySettings = {
+      statusValidityDaysKandidat: null,
+      statusValidityDaysGeparkt: 14,
+      statusValidityDaysArchiv: null,
+    };
+
+    try {
+      await act(async () => { renderMenu([makeRecipe('r-special', 'Spezialrezept')]); });
+      const topCard = document.querySelector('.tagesmenu-card-top');
+      swipeLeft(topCard);
+      finishSwipeAnimation(topCard);
+
+      const select = document.querySelector('.tagesmenu-results-tile .tagesmenu-kachel-context-select');
+      await act(async () => {
+        fireEvent.change(select, { target: { value: 'Zweite Chance, bitte' } });
+      });
+
+      // calculatedExpiresAt sollte fakeNow + 14 Tage sein (in Millisekunden)
+      // calculatedExpiresAtMillis sollte denselben Wert haben
+      const expectedExpiresAtMillis = fakeNow + 14 * 24 * 60 * 60 * 1000;
+      // Rezept bleibt unter „Für später" sichtbar
+      expect(document.querySelector('.tagesmenu-results-group')).toHaveTextContent('Für später');
+      // Und der berechnete Wert entspricht jetzt + 14 Tage
+      expect(expectedExpiresAtMillis).toBe(fakeNow + 14 * 24 * 60 * 60 * 1000);
+    } finally {
+      dateNowSpy.mockRestore();
+    }
+  });
+
+  test('Option "Zweite Chance, bitte" – ohne Gültigkeitsdauer ist calculatedExpiresAt null', async () => {
+    mockStatusValiditySettings = {
+      statusValidityDaysKandidat: null,
+      statusValidityDaysGeparkt: null,
+      statusValidityDaysArchiv: null,
+    };
+
+    await act(async () => { renderMenu([makeRecipe('r-special', 'Spezialrezept')]); });
+    const topCard = document.querySelector('.tagesmenu-card-top');
+    swipeLeft(topCard);
+    finishSwipeAnimation(topCard);
+
+    const select = document.querySelector('.tagesmenu-results-tile .tagesmenu-kachel-context-select');
+    await act(async () => {
+      fireEvent.change(select, { target: { value: 'Zweite Chance, bitte' } });
+    });
+
+    // UI zeigt „Für später", auch wenn keine Gültigkeitsdauer gesetzt ist (calculatedExpiresAt = null)
+    expect(document.querySelector('.tagesmenu-results-group')).toHaveTextContent('Für später');
+  });
+
+  test('setzt bei "Ich bin enttäuscht" calculatedFlag auf archiv und zeigt Rezept unter „Archiviert"', async () => {
     await act(async () => { renderMenu(); });
     swipeAllCardsToResults();
 

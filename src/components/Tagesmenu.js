@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import './Tagesmenu.css';
 import { getSwipeFlagDocsByRecipeForUser, isRecipeAvailableForStack, getAllMembersSwipeFlags, getAllMembersSwipeFlagDocsForList, computeGroupRecipeStatus, computeCalculatedRecipeSwipeFlag, computeNegativeProjection, setRecipeSwipeFlag } from '../utils/recipeSwipeFlags';
-import { getGroupStatusThresholds, getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getMaxKandidatenSchwelle } from '../utils/customLists';
+import { getGroupStatusThresholds, getStatusValiditySettings, getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getMaxKandidatenSchwelle } from '../utils/customLists';
 import { updateRecipe } from '../utils/recipeFirestore';
 import { addRecipeToGroup, removeRecipeFromGroup } from '../utils/groupFirestore';
 import { addFavorite } from '../utils/userFavorites';
@@ -83,6 +83,13 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
     groupThresholdKandidatMaxArchiv: 50,
     groupThresholdArchivMinArchiv: 50,
     groupThresholdArchivMaxKandidat: 50,
+  });
+
+  // Status validity settings (days per flag) for computing calculatedExpiresAt
+  const [statusValiditySettings, setStatusValiditySettings] = useState({
+    statusValidityDaysKandidat: null,
+    statusValidityDaysGeparkt: null,
+    statusValidityDaysArchiv: null,
   });
 
   // Maximum candidate score threshold for ending the swipe stack early (null = disabled)
@@ -171,6 +178,7 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
   // Load status validity settings once on mount
   useEffect(() => {
     getGroupStatusThresholds().then(setGroupThresholds).catch(() => {});
+    getStatusValiditySettings().then(setStatusValiditySettings).catch(() => {});
     getMaxKandidatenSchwelle()
       .then((val) => { setMaxKandidatenSchwelle(val); setMaxKandidatenSchwelleLoaded(true); })
       .catch(() => { setMaxKandidatenSchwelleLoaded(true); });
@@ -790,7 +798,9 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
       setCurrentUserSwipeDocs((prev) => ({
         ...prev,
         [targetRecipeId]: {
-          flag: 'archiv',
+          calculatedFlag: 'archiv',
+          calculatedExpiresAt: null,
+          calculatedExpiresAtMillis: null,
           expiresAt: null,
           expiresAtMillis: null,
           isExpired: false,
@@ -811,11 +821,15 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
       targetListId &&
       targetRecipeId
     ) {
+      const geparktDays = statusValiditySettings.statusValidityDaysGeparkt;
+      const calculatedExpiresAtMillis = geparktDays ? Date.now() + geparktDays * 24 * 60 * 60 * 1000 : null;
       setSwipeResults((prev) => ({ ...prev, [targetRecipeId]: 'geparkt' }));
       setCurrentUserSwipeDocs((prev) => ({
         ...prev,
         [targetRecipeId]: {
-          flag: 'geparkt',
+          calculatedFlag: 'geparkt',
+          calculatedExpiresAt: calculatedExpiresAtMillis,
+          calculatedExpiresAtMillis,
           expiresAt: null,
           expiresAtMillis: null,
           isExpired: false,
@@ -863,7 +877,8 @@ function Tagesmenu({ interactiveLists, recipes, allUsers, onSelectRecipe, curren
     selectedList,
     allListRecipes,
     currentUser,
-    contextMenuRecipeId
+    contextMenuRecipeId,
+    statusValiditySettings,
   ]);
 
   // ---- Render ---------------------------------------------------------
