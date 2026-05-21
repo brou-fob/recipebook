@@ -375,19 +375,23 @@ describe('getActiveSwipeFlags', () => {
     expect(mockGetDocs).not.toHaveBeenCalled();
   });
 
-  it('returns only non-expired flags', async () => {
-    const now = Date.now();
+  it('returns only recipes with a non-null flag value', async () => {
     mockGetDocs.mockResolvedValueOnce({
       forEach: (cb) => {
-        cb({ data: () => ({ recipeID: 'a', calculatedFlag: 'kandidat', calculatedExpiresAt: null }) });
-        cb({ data: () => ({ recipeID: 'b', calculatedFlag: 'archiv', calculatedExpiresAt: { toMillis: () => now - 1000 } }) });
-        cb({ data: () => ({ recipeID: 'c', calculatedFlag: 'geparkt', calculatedExpiresAt: { toMillis: () => now + 1000 } }) });
+        // flag=null → reset by cleanup, should be available for swiping
+        cb({ data: () => ({ recipeID: 'a', flag: null, calculatedFlag: 'kandidat', calculatedExpiresAt: null }) });
+        // flag=undefined → no doc data, should be available for swiping
+        cb({ data: () => ({ recipeID: 'b', flag: undefined, calculatedFlag: 'archiv' }) });
+        // active flag → not available for swiping
+        cb({ data: () => ({ recipeID: 'c', flag: 'geparkt', calculatedFlag: 'geparkt' }) });
+        // active flag → not available for swiping
+        cb({ data: () => ({ recipeID: 'd', flag: 'kandidat', calculatedFlag: 'kandidat' }) });
       },
     });
 
     const result = await getActiveSwipeFlags('user-1', 'list-1');
 
-    expect(result).toEqual({ a: 'kandidat', c: 'geparkt' });
+    expect(result).toEqual({ c: 'geparkt', d: 'kandidat' });
     expect(mockWhere).toHaveBeenCalledWith('userID', '==', 'user-1');
     expect(mockWhere).toHaveBeenCalledWith('listID', '==', 'list-1');
   });
