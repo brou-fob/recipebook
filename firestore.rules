@@ -197,7 +197,15 @@ service cloud.firestore {
       allow read: if isAuthenticated()
                   && (request.auth.uid == resource.data.userID
                       || isListMemberOf(resource.data.listID));
-      allow create, update: if isAuthenticated() && request.auth.uid == request.resource.data.userID;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userID;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userID
+        || (
+          isListMemberOf(resource.data.listID)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['calculatedFlag', 'calculatedExpiresAt'])
+        )
+      );
       allow delete: if (isAuthenticated() && request.auth.uid == resource.data.userID)
                     || isAdmin();
     }
