@@ -240,6 +240,8 @@
 /* Recipe tiles section */
 .group-recipes-section {
   margin-top: 1.25rem;
+  background: transparent;
+  padding: 0;
 }
 
 .group-section-header {
@@ -329,10 +331,7 @@
   border-radius: 6px;
 }
 
-.group-recipe-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+.recipe-grid.group-recipe-grid {
   margin-top: 0.5rem;
 }
 
