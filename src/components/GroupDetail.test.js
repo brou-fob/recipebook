@@ -339,6 +339,51 @@ describe('GroupDetail – edit list properties feature', () => {
   });
 });
 
+describe('GroupDetail – FAB visibility when modals are open', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('hides the edit and delete FABs when the portion selector is open', () => {
+    const { container } = render(<GroupDetail {...defaultProps} recipes={mockRecipes} />);
+
+    expect(container.querySelector('.group-edit-fab-button')).toBeInTheDocument();
+    expect(container.querySelector('.delete-fab-button')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+
+    expect(screen.getByText('Portionen für Einkaufsliste')).toBeInTheDocument();
+    expect(container.querySelector('.group-edit-fab-button')).not.toBeInTheDocument();
+    expect(container.querySelector('.delete-fab-button')).not.toBeInTheDocument();
+  });
+
+  it('hides the edit and delete FABs when the shopping list modal is open', () => {
+    const { container } = render(<GroupDetail {...defaultProps} recipes={mockRecipes} />);
+
+    expect(container.querySelector('.group-edit-fab-button')).toBeInTheDocument();
+    expect(container.querySelector('.delete-fab-button')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+    fireEvent.click(screen.getByText('Einkaufsliste erstellen'));
+
+    expect(screen.getByLabelText('Einkaufsliste')).toBeInTheDocument();
+    expect(container.querySelector('.group-edit-fab-button')).not.toBeInTheDocument();
+    expect(container.querySelector('.delete-fab-button')).not.toBeInTheDocument();
+  });
+
+  it('shows the FABs again after the portion selector is closed', () => {
+    const { container } = render(<GroupDetail {...defaultProps} recipes={mockRecipes} />);
+
+    fireEvent.click(screen.getByLabelText('Einkaufsliste öffnen'));
+    expect(container.querySelector('.group-edit-fab-button')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Portionsauswahl schließen'));
+
+    expect(container.querySelector('.group-edit-fab-button')).toBeInTheDocument();
+    expect(container.querySelector('.delete-fab-button')).toBeInTheDocument();
+  });
+});
+
 describe('GroupDetail – longpress on minus button in portion selector', () => {
   beforeEach(() => {
     jest.useFakeTimers();
