@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLongPress } from '../utils/useLongPress';
 import './MenuDetail.css';
 import { getUserFavorites } from '../utils/userFavorites';
 import { getUserMenuFavorites } from '../utils/menuFavorites';
@@ -42,6 +43,12 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onPu
   const [linkedPortionCounts, setLinkedPortionCounts] = useState({});
   const [conversionTable, setConversionTable] = useState([]);
   const missingSavedRef = useRef(false);
+  const {
+    activeId: portionMinusLongPressActiveId,
+    triggeredRef: portionMinusLongPressTriggeredRef,
+    start: handlePortionMinusPressStart,
+    end: handlePortionMinusPressEnd,
+  } = useLongPress();
 
   // Load close button icon from settings
   useEffect(() => {
@@ -615,16 +622,29 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onPu
             <div className="portion-selector-body">
               {recipeSections.flatMap(s => s.recipes).map(recipe => {
                 const current = portionCounts[recipe.id] ?? (recipe.portionen || 4);
+                const portionMinusId = `main-${recipe.id}`;
                 return (
                   <div key={recipe.id} className="portion-selector-item">
                     <span className="portion-selector-recipe-name">{recipe.title}</span>
                     <div className="portion-selector-controls">
                       <button
-                        className="portion-selector-btn"
-                        onClick={() => setPortionCounts(prev => ({
-                          ...prev,
-                          [recipe.id]: Math.max(0, current - 1)
-                        }))}
+                        className={`portion-selector-btn${portionMinusLongPressActiveId === portionMinusId ? ' longpress-active' : ''}`}
+                        onClick={() => {
+                          if (portionMinusLongPressTriggeredRef.current) {
+                            portionMinusLongPressTriggeredRef.current = false;
+                            return;
+                          }
+                          setPortionCounts(prev => ({
+                            ...prev,
+                            [recipe.id]: Math.max(0, current - 1)
+                          }));
+                        }}
+                        onMouseDown={() => handlePortionMinusPressStart(portionMinusId, () => setPortionCounts(prev => ({ ...prev, [recipe.id]: 0 })))}
+                        onMouseUp={handlePortionMinusPressEnd}
+                        onMouseLeave={handlePortionMinusPressEnd}
+                        onTouchStart={() => handlePortionMinusPressStart(portionMinusId, () => setPortionCounts(prev => ({ ...prev, [recipe.id]: 0 })))}
+                        onTouchEnd={handlePortionMinusPressEnd}
+                        onTouchCancel={handlePortionMinusPressEnd}
                         aria-label="Portionen verringern"
                         disabled={current === 0}
                       >
@@ -650,16 +670,29 @@ function MenuDetail({ menu: initialMenu, recipes, onBack, onEdit, onDelete, onPu
                   <div className="portion-selector-section-label">Verlinkte Rezepte</div>
                   {allLinkedRecipes.map(linkedRecipe => {
                     const current = linkedPortionCounts[linkedRecipe.id] ?? (linkedRecipe.portionen || 4);
+                    const linkedPortionMinusId = `linked-${linkedRecipe.id}`;
                     return (
                       <div key={linkedRecipe.id} className="portion-selector-item">
                         <span className="portion-selector-recipe-name">{linkedRecipe.title}</span>
                         <div className="portion-selector-controls">
                           <button
-                            className="portion-selector-btn"
-                            onClick={() => setLinkedPortionCounts(prev => ({
-                              ...prev,
-                              [linkedRecipe.id]: Math.max(0, current - 1)
-                            }))}
+                            className={`portion-selector-btn${portionMinusLongPressActiveId === linkedPortionMinusId ? ' longpress-active' : ''}`}
+                            onClick={() => {
+                              if (portionMinusLongPressTriggeredRef.current) {
+                                portionMinusLongPressTriggeredRef.current = false;
+                                return;
+                              }
+                              setLinkedPortionCounts(prev => ({
+                                ...prev,
+                                [linkedRecipe.id]: Math.max(0, current - 1)
+                              }));
+                            }}
+                            onMouseDown={() => handlePortionMinusPressStart(linkedPortionMinusId, () => setLinkedPortionCounts(prev => ({ ...prev, [linkedRecipe.id]: 0 })))}
+                            onMouseUp={handlePortionMinusPressEnd}
+                            onMouseLeave={handlePortionMinusPressEnd}
+                            onTouchStart={() => handlePortionMinusPressStart(linkedPortionMinusId, () => setLinkedPortionCounts(prev => ({ ...prev, [linkedRecipe.id]: 0 })))}
+                            onTouchEnd={handlePortionMinusPressEnd}
+                            onTouchCancel={handlePortionMinusPressEnd}
                             aria-label="Portionen verringern"
                             disabled={current === 0}
                           >
