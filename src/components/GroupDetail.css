@@ -450,8 +450,7 @@
   transition: background 0.15s, transform 0.15s;
 }
 
-/* Tab bar */
-/* List info section in Einstellungen tab */
+/* List info section in Einstellungen view */
 .group-info-section {
   margin-bottom: 1rem;
 }
