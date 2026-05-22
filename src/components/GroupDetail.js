@@ -409,7 +409,7 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
             </button>
         </div>
       )}
-      {isOwner && !isPublic && (
+      {isOwner && !isPublic && !showPortionSelector && !showShoppingListModal && (
         <>
           <button
             className={`delete-fab-button${deleteFabPressed ? ' pressed' : ''}`}
