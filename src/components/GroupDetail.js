@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLongPress } from '../utils/useLongPress';
 import './GroupDetail.css';
 import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import { isWaterIngredient, scaleIngredient } from '../utils/ingredientUtils';
 import { sendGroupInvitation, LIST_KIND_OPTIONS } from '../utils/groupFirestore';
+import { getUserFavorites } from '../utils/userFavorites';
 import ShoppingListModal from './ShoppingListModal';
 import GroupEditDialog from './GroupEditDialog';
 import RecipeCard from './RecipeCard';
@@ -19,6 +20,8 @@ const resolveListSettingsActiveIcon = (icons, isDarkMode) => (
   || DEFAULT_BUTTON_ICONS.listSettings
   || DEFAULT_LIST_SETTINGS_ICON
 );
+const LONG_PRESS_DELAY_MS = 500;
+const LONG_PRESS_CLICK_SUPPRESSION_MS = 500;
 
 /**
  * Displays details of a single group including members and associated recipes.
@@ -37,7 +40,24 @@ const resolveListSettingsActiveIcon = (icons, isDarkMode) => (
  * @param {Array}  [props.privateLists] - Private lists available as target lists when editing an interactive list
  * @param {Function} [props.onEditGroupProperties] - Called with (groupId, editData) to save list property changes
  */
-function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDeleteGroup, onAddRecipe, recipes, onSelectRecipe, privateLists = [], onEditGroupProperties }) {
+function GroupDetail({
+  group,
+  allUsers,
+  currentUser,
+  onBack,
+  onUpdateGroup,
+  onDeleteGroup,
+  onAddRecipe,
+  recipes,
+  onSelectRecipe,
+  privateLists = [],
+  onEditGroupProperties,
+  searchTerm,
+  onOpenSearch,
+  onClearAllFilters,
+  activeFilters,
+  showFavoritesOnly = false
+}) {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(TAB_RECIPES);
   const [backIcon, setBackIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
@@ -56,9 +76,14 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   const [inviteEmail, setInviteEmail] = useState('');
   const [addMemberError, setAddMemberError] = useState('');
   const [addMemberSuccess, setAddMemberSuccess] = useState('');
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editFabPressed, setEditFabPressed] = useState(false);
   const [deleteFabPressed, setDeleteFabPressed] = useState(false);
+  const [filterPressed, setFilterPressed] = useState(false);
+  const filterLongPressTimer = useRef(null);
+  const filterLongPressed = useRef(false);
+  const filterLongPressJustFired = useRef(false);
   const {
     activeId: portionMinusLongPressActiveId,
     triggeredRef: portionMinusLongPressTriggeredRef,
@@ -89,6 +114,18 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   }, []);
 
   useEffect(() => {
+    const loadFavorites = async () => {
+      if (currentUser?.id) {
+        const favorites = await getUserFavorites(currentUser.id);
+        setFavoriteIds(favorites);
+      } else {
+        setFavoriteIds([]);
+      }
+    };
+    loadFavorites();
+  }, [currentUser?.id]);
+
+  useEffect(() => {
     if (!showPortionSelector) return;
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -106,11 +143,41 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   const isMember = (group.memberIds || []).includes(currentUser?.id);
 
   const groupRecipes = recipes || [];
+  const hasActiveFilters = !!(searchTerm?.trim() || showFavoritesOnly || (activeFilters && (
+    activeFilters.selectedGroup ||
+    activeFilters.selectedCuisines?.length > 0 ||
+    activeFilters.selectedAuthors?.length > 0 ||
+    activeFilters.selectedPrivateLists?.length > 0
+  )));
+
+  // searchTerm/showFavoritesOnly are filtered locally here; the remaining overlay
+  // filters (draft/cuisine/author/private-list) are applied in App before `recipes`
+  // are passed to this component.
+  const filteredGroupRecipes = useMemo(() => {
+    let filtered = groupRecipes;
+
+    if (showFavoritesOnly) {
+      filtered = filtered.filter(recipe => favoriteIds.includes(recipe.id));
+    }
+
+    if (searchTerm?.trim()) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter(recipe =>
+        recipe.title?.toLowerCase().includes(lowerSearchTerm)
+      );
+    }
+
+    return filtered;
+  }, [groupRecipes, showFavoritesOnly, favoriteIds, searchTerm]);
+
   const addRecipeLabel = isPublic ? 'Rezept hinzufügen' : 'Privates Rezept hinzufügen';
   const addRecipeIcon = getEffectiveIcon(allButtonIcons, isPublic ? 'addRecipe' : 'addPrivateRecipe', isDarkMode);
   const editGroupIcon = getEffectiveIcon(allButtonIcons, 'editRecipe', isDarkMode);
   const deleteGroupIcon = getEffectiveIcon(allButtonIcons, 'deleteRecipe', isDarkMode);
   const activeListSettingsIcon = activeTab === TAB_SETTINGS ? listSettingsActiveIcon : listSettingsIcon;
+  const filterIcon = hasActiveFilters
+    ? getEffectiveIcon(allButtonIcons, 'filterButtonActive', isDarkMode)
+    : getEffectiveIcon(allButtonIcons, 'filterButton', isDarkMode);
 
   const getMemberName = (userId) => {
     const user = (allUsers || []).find((u) => u.id === userId);
@@ -233,6 +300,48 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
     setShowPortionSelector(true);
   };
 
+  const handleFilterTouchStart = () => {
+    setFilterPressed(true);
+    filterLongPressed.current = false;
+    filterLongPressTimer.current = setTimeout(() => {
+      filterLongPressed.current = true;
+    }, LONG_PRESS_DELAY_MS);
+  };
+
+  const handleFilterTouchEnd = (e) => {
+    setFilterPressed(false);
+    if (filterLongPressTimer.current) {
+      clearTimeout(filterLongPressTimer.current);
+      filterLongPressTimer.current = null;
+    }
+    e.preventDefault();
+    if (filterLongPressed.current) {
+      filterLongPressed.current = false;
+      filterLongPressJustFired.current = true;
+      setTimeout(() => { filterLongPressJustFired.current = false; }, LONG_PRESS_CLICK_SUPPRESSION_MS);
+      onClearAllFilters?.();
+    } else {
+      onOpenSearch?.();
+    }
+  };
+
+  const handleFilterTouchCancel = () => {
+    setFilterPressed(false);
+    if (filterLongPressTimer.current) {
+      clearTimeout(filterLongPressTimer.current);
+      filterLongPressTimer.current = null;
+    }
+    filterLongPressed.current = false;
+  };
+
+  const handleFilterClick = () => {
+    if (filterLongPressJustFired.current) {
+      filterLongPressJustFired.current = false;
+      return;
+    }
+    onOpenSearch?.();
+  };
+
   const getGroupShoppingListIngredients = () => {
     const ingredients = [];
     for (const recipe of groupRecipes) {
@@ -261,6 +370,26 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
           )}
         </div>
         <div className="group-header-actions">
+          {!isPublic && activeTab === TAB_RECIPES && (
+            <button
+              className={`filter-button ${hasActiveFilters ? 'has-active-filters' : ''} ${filterPressed ? 'pressed' : ''}`}
+              onTouchStart={handleFilterTouchStart}
+              onTouchEnd={handleFilterTouchEnd}
+              onTouchCancel={handleFilterTouchCancel}
+              onClick={handleFilterClick}
+              onMouseDown={() => setFilterPressed(true)}
+              onMouseUp={() => setFilterPressed(false)}
+              onMouseLeave={() => setFilterPressed(false)}
+              title="Weitere Filter"
+              aria-label="Weitere Filter"
+            >
+              {isBase64Image(filterIcon) ? (
+                <img src={filterIcon} alt={hasActiveFilters ? 'Filter aktiv' : 'Filter'} className="button-icon-image" draggable="false" />
+              ) : (
+                filterIcon
+              )}
+            </button>
+          )}
           {onAddRecipe && (isOwner || isMember) && !showPortionSelector && !showShoppingListModal && (isPublic || activeTab === TAB_RECIPES) && (
             <button
               className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
@@ -321,12 +450,12 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
 
       {(isPublic || activeTab === TAB_RECIPES) && (
         <div className="group-detail-section group-recipes-section">
-          <h3>Rezepte ({groupRecipes.length})</h3>
-          {groupRecipes.length === 0 ? (
+          {isPublic && <h3>Rezepte ({groupRecipes.length})</h3>}
+          {filteredGroupRecipes.length === 0 ? (
             <p className="group-empty-hint">Noch keine Rezepte in dieser Liste.</p>
           ) : (
             <div className="recipe-grid group-recipe-grid">
-              {groupRecipes.map((recipe) => (
+              {filteredGroupRecipes.map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
                   recipe={recipe}
