@@ -10,6 +10,12 @@ import GroupEditDialog from './GroupEditDialog';
 import RecipeCard from './RecipeCard';
 
 const DEFAULT_PORTIONS = 4;
+const resolveListSettingsActiveIcon = (icons, isDarkMode) => (
+  getEffectiveIcon(icons, 'listSettingsActive', isDarkMode)
+  || DEFAULT_BUTTON_ICONS.listSettingsActive
+  || DEFAULT_BUTTON_ICONS.listSettings
+  || '⚙'
+);
 
 /**
  * Displays details of a single group including members and associated recipes.
@@ -34,7 +40,7 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   const [backIcon, setBackIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
   const [shoppingListIcon, setShoppingListIcon] = useState(DEFAULT_BUTTON_ICONS.shoppingList || 'Einkauf');
   const [listSettingsIcon, setListSettingsIcon] = useState(DEFAULT_BUTTON_ICONS.listSettings || '⚙');
-  const [listSettingsActiveIcon, setListSettingsActiveIcon] = useState(DEFAULT_BUTTON_ICONS.listSettingsActive || DEFAULT_BUTTON_ICONS.listSettings || '⚙');
+  const [listSettingsActiveIcon, setListSettingsActiveIcon] = useState(resolveListSettingsActiveIcon(DEFAULT_BUTTON_ICONS, getDarkModePreference()));
   const [addMemberIcon, setAddMemberIcon] = useState(DEFAULT_BUTTON_ICONS.addGroupMember || '👤+');
   const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
   const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
@@ -69,12 +75,7 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
     setBackIcon(getEffectiveIcon(allButtonIcons, 'privateListBack', isDarkMode) || DEFAULT_BUTTON_ICONS.privateListBack);
     setShoppingListIcon(getEffectiveIcon(allButtonIcons, 'shoppingList', isDarkMode) || DEFAULT_BUTTON_ICONS.shoppingList || 'Einkauf');
     setListSettingsIcon(getEffectiveIcon(allButtonIcons, 'listSettings', isDarkMode) || DEFAULT_BUTTON_ICONS.listSettings || '⚙');
-    setListSettingsActiveIcon(
-      getEffectiveIcon(allButtonIcons, 'listSettingsActive', isDarkMode)
-      || DEFAULT_BUTTON_ICONS.listSettingsActive
-      || DEFAULT_BUTTON_ICONS.listSettings
-      || '⚙'
-    );
+    setListSettingsActiveIcon(resolveListSettingsActiveIcon(allButtonIcons, isDarkMode));
     setAddMemberIcon(getEffectiveIcon(allButtonIcons, 'addGroupMember', isDarkMode) || DEFAULT_BUTTON_ICONS.addGroupMember || '👤+');
   }, [allButtonIcons, isDarkMode]);
 
