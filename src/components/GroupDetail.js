@@ -11,6 +11,15 @@ import GroupEditDialog from './GroupEditDialog';
 import RecipeCard from './RecipeCard';
 
 const DEFAULT_PORTIONS = 4;
+const TAB_RECIPES = 'rezepte';
+const TAB_SETTINGS = 'einstellungen';
+const DEFAULT_LIST_SETTINGS_ICON = '⚙';
+const resolveListSettingsActiveIcon = (icons, isDarkMode) => (
+  getEffectiveIcon(icons, 'listSettingsActive', isDarkMode)
+  || DEFAULT_BUTTON_ICONS.listSettingsActive
+  || DEFAULT_BUTTON_ICONS.listSettings
+  || DEFAULT_LIST_SETTINGS_ICON
+);
 const LONG_PRESS_DELAY_MS = 500;
 const LONG_PRESS_CLICK_SUPPRESSION_MS = 500;
 
@@ -50,10 +59,11 @@ function GroupDetail({
   showFavoritesOnly = false
 }) {
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('rezepte');
+  const [activeTab, setActiveTab] = useState(TAB_RECIPES);
   const [backIcon, setBackIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
   const [shoppingListIcon, setShoppingListIcon] = useState(DEFAULT_BUTTON_ICONS.shoppingList || 'Einkauf');
-  const [listSettingsIcon, setListSettingsIcon] = useState(DEFAULT_BUTTON_ICONS.listSettings || '⚙');
+  const [listSettingsIcon, setListSettingsIcon] = useState(DEFAULT_BUTTON_ICONS.listSettings || DEFAULT_LIST_SETTINGS_ICON);
+  const [listSettingsActiveIcon, setListSettingsActiveIcon] = useState(resolveListSettingsActiveIcon(DEFAULT_BUTTON_ICONS, getDarkModePreference()));
   const [addMemberIcon, setAddMemberIcon] = useState(DEFAULT_BUTTON_ICONS.addGroupMember || '👤+');
   const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
   const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
@@ -92,7 +102,8 @@ function GroupDetail({
   useEffect(() => {
     setBackIcon(getEffectiveIcon(allButtonIcons, 'privateListBack', isDarkMode) || DEFAULT_BUTTON_ICONS.privateListBack);
     setShoppingListIcon(getEffectiveIcon(allButtonIcons, 'shoppingList', isDarkMode) || DEFAULT_BUTTON_ICONS.shoppingList || 'Einkauf');
-    setListSettingsIcon(getEffectiveIcon(allButtonIcons, 'listSettings', isDarkMode) || DEFAULT_BUTTON_ICONS.listSettings || '⚙');
+    setListSettingsIcon(getEffectiveIcon(allButtonIcons, 'listSettings', isDarkMode) || DEFAULT_BUTTON_ICONS.listSettings || DEFAULT_LIST_SETTINGS_ICON);
+    setListSettingsActiveIcon(resolveListSettingsActiveIcon(allButtonIcons, isDarkMode));
     setAddMemberIcon(getEffectiveIcon(allButtonIcons, 'addGroupMember', isDarkMode) || DEFAULT_BUTTON_ICONS.addGroupMember || '👤+');
   }, [allButtonIcons, isDarkMode]);
 
@@ -105,14 +116,25 @@ function GroupDetail({
   useEffect(() => {
     const loadFavorites = async () => {
       if (currentUser?.id) {
-        const favorites = await getUserFavorites(currentUser.id);
-        setFavoriteIds(favorites);
+        try {
+          const favorites = await getUserFavorites(currentUser.id);
+          setFavoriteIds(favorites);
+        } catch {
+          setFavoriteIds([]);
+        }
       } else {
         setFavoriteIds([]);
       }
     };
     loadFavorites();
   }, [currentUser?.id]);
+
+  useEffect(() => () => {
+    if (filterLongPressTimer.current) {
+      clearTimeout(filterLongPressTimer.current);
+      filterLongPressTimer.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!showPortionSelector) return;
@@ -132,8 +154,11 @@ function GroupDetail({
   const isMember = (group.memberIds || []).includes(currentUser?.id);
 
   const groupRecipes = recipes || [];
+  const hasSelectedGroup = typeof activeFilters?.selectedGroup === 'string'
+    ? activeFilters.selectedGroup.trim().length > 0
+    : !!activeFilters?.selectedGroup;
   const hasActiveFilters = !!(searchTerm?.trim() || showFavoritesOnly || (activeFilters && (
-    activeFilters.selectedGroup ||
+    hasSelectedGroup ||
     activeFilters.selectedCuisines?.length > 0 ||
     activeFilters.selectedAuthors?.length > 0 ||
     activeFilters.selectedPrivateLists?.length > 0
@@ -163,6 +188,7 @@ function GroupDetail({
   const addRecipeIcon = getEffectiveIcon(allButtonIcons, isPublic ? 'addRecipe' : 'addPrivateRecipe', isDarkMode);
   const editGroupIcon = getEffectiveIcon(allButtonIcons, 'editRecipe', isDarkMode);
   const deleteGroupIcon = getEffectiveIcon(allButtonIcons, 'deleteRecipe', isDarkMode);
+  const activeListSettingsIcon = activeTab === TAB_SETTINGS ? listSettingsActiveIcon : listSettingsIcon;
   const filterIcon = hasActiveFilters
     ? getEffectiveIcon(allButtonIcons, 'filterButtonActive', isDarkMode)
     : getEffectiveIcon(allButtonIcons, 'filterButton', isDarkMode);
@@ -358,7 +384,7 @@ function GroupDetail({
           )}
         </div>
         <div className="group-header-actions">
-          {!isPublic && activeTab === 'rezepte' && (
+          {!isPublic && activeTab === TAB_RECIPES && (
             <button
               className={`filter-button ${hasActiveFilters ? 'has-active-filters' : ''} ${filterPressed ? 'pressed' : ''}`}
               onTouchStart={handleFilterTouchStart}
@@ -378,7 +404,7 @@ function GroupDetail({
               )}
             </button>
           )}
-          {onAddRecipe && (isOwner || isMember) && !showPortionSelector && !showShoppingListModal && (isPublic || activeTab === 'rezepte') && (
+          {onAddRecipe && (isOwner || isMember) && !showPortionSelector && !showShoppingListModal && (isPublic || activeTab === TAB_RECIPES) && (
             <button
               className={`add-icon-button ${addPressed ? 'pressed' : ''}`}
               onClick={() => onAddRecipe(group.id)}
@@ -415,14 +441,14 @@ function GroupDetail({
           {!isPublic && (
             <button
               className="list-settings-trigger-button"
-              onClick={() => setActiveTab(activeTab === 'einstellungen' ? 'rezepte' : 'einstellungen')}
+              onClick={() => setActiveTab(activeTab === TAB_SETTINGS ? TAB_RECIPES : TAB_SETTINGS)}
               title="Einstellungen anzeigen"
               aria-label="Einstellungen öffnen"
             >
-              {isBase64Image(listSettingsIcon) ? (
-                <img src={listSettingsIcon} alt="Einstellungen" className="shopping-list-icon-img" />
+              {isBase64Image(activeListSettingsIcon) ? (
+                <img src={activeListSettingsIcon} alt="Einstellungen" className="shopping-list-icon-img" />
               ) : (
-                listSettingsIcon
+                activeListSettingsIcon
               )}
             </button>
           )}
@@ -436,7 +462,7 @@ function GroupDetail({
         </div>
       </div>
 
-      {(isPublic || activeTab === 'rezepte') && (
+      {(isPublic || activeTab === TAB_RECIPES) && (
         <div className="group-detail-section group-recipes-section">
           {isPublic && <h3>Rezepte ({groupRecipes.length})</h3>}
           {filteredGroupRecipes.length === 0 ? (
@@ -456,7 +482,7 @@ function GroupDetail({
         </div>
       )}
 
-      {!isPublic && activeTab === 'einstellungen' && (
+      {!isPublic && activeTab === TAB_SETTINGS && (
         <>
           <div className="group-detail-section group-info-section">
             <h3>Listeneinstellungen</h3>
@@ -633,7 +659,7 @@ function GroupDetail({
         </div>
       )}
 
-      {isOwner && !isPublic && activeTab === 'einstellungen' && !showPortionSelector && !showShoppingListModal && (
+      {isOwner && !isPublic && activeTab === TAB_SETTINGS && !showPortionSelector && !showShoppingListModal && (
         <>
           <button
             className={`delete-fab-button${deleteFabPressed ? ' pressed' : ''}`}

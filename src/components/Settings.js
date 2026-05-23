@@ -175,6 +175,7 @@ const DARK_MODE_ICON_ROWS = [
   { key: 'privateListBack', label: 'Private Liste zurück' },
   { key: 'shoppingList', label: 'Einkaufslisten-Button' },
   { key: 'listSettings', label: 'Einstellungen-Button (private Liste)' },
+  { key: 'listSettingsActive', label: 'Einstellungen-Button (private Liste geöffnet)' },
   { key: 'bringButton', label: 'Bring!-Button' },
   { key: 'timerStart', label: 'Timer starten' },
   { key: 'timerStop', label: 'Timer stoppen' },

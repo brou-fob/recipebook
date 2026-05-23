@@ -7,8 +7,26 @@ jest.mock('./RecipeImageCarousel', () => () => <div data-testid="mock-carousel" 
 
 // Mock customLists utility so it resolves quickly in tests
 jest.mock('../utils/customLists', () => ({
-  getButtonIcons: () => Promise.resolve({ privateListBack: '←', editRecipe: '✎', deleteRecipe: '🗑', addGroupMember: '👤+', filterButton: '⚙', filterButtonActive: '🔽' }),
-  DEFAULT_BUTTON_ICONS: { privateListBack: '←', editRecipe: '✎', deleteRecipe: '🗑', addGroupMember: '👤+', filterButton: '⚙', filterButtonActive: '🔽' },
+  getButtonIcons: () => Promise.resolve({
+    privateListBack: '←',
+    listSettings: '⚙',
+    listSettingsActive: '✎',
+    editRecipe: '✎',
+    deleteRecipe: '🗑',
+    addGroupMember: '👤+',
+    filterButton: '⚙',
+    filterButtonActive: '🔽'
+  }),
+  DEFAULT_BUTTON_ICONS: {
+    privateListBack: '←',
+    listSettings: '⚙',
+    listSettingsActive: '✎',
+    editRecipe: '✎',
+    deleteRecipe: '🗑',
+    addGroupMember: '👤+',
+    filterButton: '⚙',
+    filterButtonActive: '🔽'
+  },
   getEffectiveIcon: (icons, key) => icons[key] ?? '',
   getDarkModePreference: () => false,
 }));
@@ -639,41 +657,54 @@ describe('GroupDetail – settings button', () => {
     expect(container.querySelector('.delete-fab-button')).toBeInTheDocument();
   });
 
-  describe('GroupDetail – private list filter button', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
+  it('uses a different settings icon while settings view is open and resets on close', () => {
+    render(<GroupDetail {...defaultProps} />);
+    const settingsButton = screen.getByLabelText('Einstellungen öffnen');
 
-    it('shows filter button for private groups', () => {
-      render(<GroupDetail {...defaultProps} />);
-      expect(screen.getByRole('button', { name: 'Weitere Filter' })).toBeInTheDocument();
-    });
+    expect(settingsButton).toHaveTextContent('⚙');
 
-    it('does not show filter button for public groups', () => {
-      render(<GroupDetail {...defaultProps} group={mockPublicGroup} />);
-      expect(screen.queryByRole('button', { name: 'Weitere Filter' })).not.toBeInTheDocument();
-    });
+    fireEvent.click(settingsButton);
+    expect(settingsButton).toHaveTextContent('✎');
 
-    it('marks filter button as active when filters are active', () => {
-      render(<GroupDetail {...defaultProps} searchTerm="Suppe" />);
-      expect(screen.getByRole('button', { name: 'Weitere Filter' })).toHaveClass('has-active-filters');
-    });
+    fireEvent.click(settingsButton);
+    expect(settingsButton).toHaveTextContent('⚙');
+  });
+});
 
-    it('filters recipes by search term', async () => {
-      render(
-        <GroupDetail
-          {...defaultProps}
-          recipes={[
-            { id: 'r1', title: 'Kartoffelsuppe', portionen: 2, ingredients: [] },
-            { id: 'r2', title: 'Pasta', portionen: 2, ingredients: [] },
-          ]}
-          searchTerm="kartoffel"
-        />
-      );
-      expect(screen.getByText('Kartoffelsuppe')).toBeInTheDocument();
-      await waitFor(() => {
-        expect(screen.queryByText('Pasta')).not.toBeInTheDocument();
-      });
+describe('GroupDetail – private list filter button', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('shows filter button for private groups', () => {
+    render(<GroupDetail {...defaultProps} />);
+    expect(screen.getByRole('button', { name: 'Weitere Filter' })).toBeInTheDocument();
+  });
+
+  it('does not show filter button for public groups', () => {
+    render(<GroupDetail {...defaultProps} group={mockPublicGroup} />);
+    expect(screen.queryByRole('button', { name: 'Weitere Filter' })).not.toBeInTheDocument();
+  });
+
+  it('marks filter button as active when filters are active', () => {
+    render(<GroupDetail {...defaultProps} searchTerm="Suppe" />);
+    expect(screen.getByRole('button', { name: 'Weitere Filter' })).toHaveClass('has-active-filters');
+  });
+
+  it('filters recipes by search term', async () => {
+    render(
+      <GroupDetail
+        {...defaultProps}
+        recipes={[
+          { id: 'r1', title: 'Kartoffelsuppe', portionen: 2, ingredients: [] },
+          { id: 'r2', title: 'Pasta', portionen: 2, ingredients: [] },
+        ]}
+        searchTerm="kartoffel"
+      />
+    );
+    expect(screen.getByText('Kartoffelsuppe')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Pasta')).not.toBeInTheDocument();
     });
   });
 });
