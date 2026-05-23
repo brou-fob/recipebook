@@ -86,7 +86,7 @@ function GroupDetail({
   const [deleteFabPressed, setDeleteFabPressed] = useState(false);
   const privateListSortStorageKey = group?.id
     ? `${PRIVATE_LIST_SORT_STORAGE_KEY_PREFIX}_${group.id}_active_sort`
-    : `${PRIVATE_LIST_SORT_STORAGE_KEY_PREFIX}_active_sort`;
+    : null;
   const [activeSort, setActiveSort] = useState('alphabetical');
   const [sortSettings, setSortSettings] = useState(null);
   const [viewCounts, setViewCounts] = useState(null);
@@ -140,10 +140,15 @@ function GroupDetail({
   }, [currentUser?.id]);
 
   useEffect(() => {
+    if (!privateListSortStorageKey) {
+      setActiveSort('alphabetical');
+      return;
+    }
     setActiveSort(sessionStorage.getItem(privateListSortStorageKey) || 'alphabetical');
   }, [privateListSortStorageKey]);
 
   useEffect(() => {
+    if (!privateListSortStorageKey) return;
     sessionStorage.setItem(privateListSortStorageKey, activeSort);
   }, [activeSort, privateListSortStorageKey]);
 

@@ -196,6 +196,8 @@ function matchesPrivateListsFilter(recipe, selectedPrivateLists, groups) {
   });
 }
 
+const noop = () => {};
+
 function applyRolePermissionsToUser(user, permissionsMap = {}) {
   if (!user) return user;
   const rolePerms = (permissionsMap && permissionsMap[user.role]) || {};
@@ -1768,7 +1770,7 @@ function App() {
         onAuthorFilterChange={handleAuthorFilterChangeFromSearch}
         selectedAuthors={recipeFilters.selectedAuthors}
         privateLists={isPrivateListSearchContext ? [] : privateListsForSearch}
-        onPrivateListFilterChange={isPrivateListSearchContext ? undefined : handlePrivateListFilterChangeFromSearch}
+        onPrivateListFilterChange={isPrivateListSearchContext ? noop : handlePrivateListFilterChangeFromSearch}
         selectedPrivateLists={isPrivateListSearchContext ? [] : recipeFilters.selectedPrivateLists}
         showPrivateListFilters={!isPrivateListSearchContext}
       />
