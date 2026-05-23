@@ -48,6 +48,7 @@ describe('GroupDetail light mode styles', () => {
     const cssPath = path.join(__dirname, 'GroupDetail.css');
     const css = fs.readFileSync(cssPath, 'utf8');
     const settingsRule = getRuleBody(css, '.group-header-actions .list-settings-trigger-button');
+    const shoppingRule = getRuleBody(css, '.group-header-actions .shopping-list-trigger-button');
     const backRule = getRuleBody(css, '.group-header-actions .group-back-icon-btn');
 
     expect(settingsRule).toContain('background: #fff !important;');
@@ -58,6 +59,22 @@ describe('GroupDetail light mode styles', () => {
     expect(backRule).toContain('touch-action: manipulation;');
     expect(settingsRule).toContain('display: inline-flex;');
     expect(backRule).toContain('display: inline-flex;');
+    expect(settingsRule).toContain('-webkit-tap-highlight-color: transparent;');
+    expect(settingsRule).toContain('touch-action: manipulation;');
+    expect(shoppingRule).toContain('-webkit-tap-highlight-color: transparent;');
+    expect(shoppingRule).toContain('touch-action: manipulation;');
+  });
+
+  test('uses unified active feedback on settings and shopping list header action buttons', () => {
+    const cssPath = path.join(__dirname, 'GroupDetail.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    const settingsActiveRule = getRuleBody(css, '.group-header-actions .list-settings-trigger-button:active');
+    const shoppingActiveRule = getRuleBody(css, '.group-header-actions .shopping-list-trigger-button:active');
+
+    expect(settingsActiveRule).toContain('transform: scale(1.1);');
+    expect(settingsActiveRule).toContain('opacity: 0.2;');
+    expect(shoppingActiveRule).toContain('transform: scale(1.1);');
+    expect(shoppingActiveRule).toContain('opacity: 0.2;');
   });
 
   test('group-recipes-section removes the panel background and padding for recipe overview tiles', () => {
