@@ -234,6 +234,7 @@ function App() {
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentView, setCurrentView] = useState('recipes');
+  const [groupsOpenedFromStartseite, setGroupsOpenedFromStartseite] = useState(false);
   const [menus, setMenus] = useState([]);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [isMenuFormOpen, setIsMenuFormOpen] = useState(false);
@@ -882,6 +883,11 @@ function App() {
   };
 
   const handleViewChange = (view) => {
+    if (view === 'groups') {
+      setGroupsOpenedFromStartseite(currentView === 'startseite');
+    } else {
+      setGroupsOpenedFromStartseite(false);
+    }
     setCurrentView(view);
     setSelectedRecipe(null);
     setSelectedMenu(null);
@@ -1681,7 +1687,7 @@ function App() {
             currentUser={currentUser}
             onSelectGroup={handleSelectGroup}
             onCreateGroup={handleCreateGroup}
-            onBack={() => handleViewChange('kueche')}
+            onBack={() => handleViewChange(groupsOpenedFromStartseite ? 'startseite' : 'kueche')}
           />
         )
       ) : currentView === 'menus' ? (
