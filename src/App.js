@@ -196,7 +196,7 @@ function matchesPrivateListsFilter(recipe, selectedPrivateLists, groups) {
   });
 }
 
-const noop = () => {};
+const emptyPrivateListFilterHandler = () => {};
 
 function applyRolePermissionsToUser(user, permissionsMap = {}) {
   if (!user) return user;
@@ -315,7 +315,7 @@ function App() {
   }, [groups, recipeFilters.selectedGroup, recipeFilters.selectedPrivateLists]);
 
   // Recipes belonging to the currently selected group before cuisine/author/list filters
-  const selectedGroupBaseRecipes = useMemo(() => {
+  const selectedGroupUnfilteredRecipes = useMemo(() => {
     if (!selectedGroup) return [];
     if (selectedGroup.type === 'public') {
       // Public group shows recipes explicitly assigned to it, recipes with no group,
@@ -335,7 +335,7 @@ function App() {
   const selectedGroupRecipes = useMemo(() => {
     if (!selectedGroup) return [];
 
-    return selectedGroupBaseRecipes.filter((recipe) =>
+    return selectedGroupUnfilteredRecipes.filter((recipe) =>
       matchesCuisineFilter(recipe, recipeFilters.selectedCuisines, cuisineGroups) &&
       matchesAuthorFilter(recipe, recipeFilters.selectedAuthors) &&
       (
@@ -343,7 +343,7 @@ function App() {
         matchesPrivateListsFilter(recipe, recipeFilters.selectedPrivateLists, groups)
       )
     );
-  }, [selectedGroupBaseRecipes, selectedGroup, recipeFilters.selectedCuisines, recipeFilters.selectedAuthors, recipeFilters.selectedPrivateLists, cuisineGroups, groups]);
+  }, [selectedGroupUnfilteredRecipes, selectedGroup, recipeFilters.selectedCuisines, recipeFilters.selectedAuthors, recipeFilters.selectedPrivateLists, cuisineGroups, groups]);
 
   // Detect share URL: #share/:shareId or /share/:shareId (pathname)
   const getShareIdFromHash = () => {
@@ -1385,7 +1385,7 @@ function App() {
   );
 
   const isPrivateListSearchContext = currentView === 'groups' && selectedGroup?.type === 'private';
-  const overlayRecipes = isPrivateListSearchContext ? selectedGroupBaseRecipes : recipes;
+  const overlayRecipes = isPrivateListSearchContext ? selectedGroupUnfilteredRecipes : recipes;
   const overlayAvailableAuthors = useMemo(
     () => allUsers
       .filter((u) => overlayRecipes.some((r) => r.authorId === u.id))
@@ -1770,7 +1770,7 @@ function App() {
         onAuthorFilterChange={handleAuthorFilterChangeFromSearch}
         selectedAuthors={recipeFilters.selectedAuthors}
         privateLists={isPrivateListSearchContext ? [] : privateListsForSearch}
-        onPrivateListFilterChange={isPrivateListSearchContext ? noop : handlePrivateListFilterChangeFromSearch}
+        onPrivateListFilterChange={isPrivateListSearchContext ? emptyPrivateListFilterHandler : handlePrivateListFilterChangeFromSearch}
         selectedPrivateLists={isPrivateListSearchContext ? [] : recipeFilters.selectedPrivateLists}
         showPrivateListFilters={!isPrivateListSearchContext}
       />
