@@ -10,8 +10,13 @@ jest.mock('./components/RecipeList', () => function MockRecipeList() {
   return <div data-testid="recipe-list-view">Recipe List</div>;
 });
 
-jest.mock('./components/Startseite', () => function MockStartseite() {
-  return <div data-testid="startseite-view">Startseite</div>;
+jest.mock('./components/Startseite', () => function MockStartseite(props) {
+  return (
+    <div data-testid="startseite-view">
+      Startseite
+      <button type="button" onClick={() => props.onViewChange?.('groups')}>startseite-go-groups</button>
+    </div>
+  );
 });
 
 jest.mock('./components/RecipeDetail', () => function MockRecipeDetail() {
@@ -28,6 +33,7 @@ jest.mock('./components/Header', () => {
     return (
       <div ref={ref} data-testid="header" data-current-view={props.currentView}>
         <button type="button" onClick={() => props.onViewChange?.('recipes')}>go-recipes</button>
+        <button type="button" onClick={() => props.onViewChange?.('groups')}>go-groups</button>
         {props.startseiteEnabled && (
           <button type="button" onClick={() => props.onViewChange?.('startseite')}>go-startseite</button>
         )}
@@ -73,7 +79,7 @@ jest.mock('./components/PasswordChangeModal', () => function MockPasswordChangeM
 });
 
 jest.mock('./components/Kueche', () => function MockKueche() {
-  return null;
+  return <div data-testid="kueche-view">Kueche</div>;
 });
 
 jest.mock('./components/SharePage', () => function MockSharePage() {
@@ -84,12 +90,21 @@ jest.mock('./components/MenuSharePage', () => function MockMenuSharePage() {
   return null;
 });
 
-jest.mock('./components/GroupList', () => function MockGroupList() {
-  return null;
+jest.mock('./components/GroupList', () => function MockGroupList(props) {
+  return (
+    <div data-testid="group-list-view">
+      <button type="button" onClick={() => props.onSelectGroup?.({ id: 'private-1', type: 'private' })}>open-group</button>
+      <button type="button" onClick={() => props.onBack?.()}>close-groups</button>
+    </div>
+  );
 });
 
-jest.mock('./components/GroupDetail', () => function MockGroupDetail() {
-  return null;
+jest.mock('./components/GroupDetail', () => function MockGroupDetail(props) {
+  return (
+    <div data-testid="group-detail-view">
+      <button type="button" onClick={() => props.onBack?.()}>back-to-groups</button>
+    </div>
+  );
 });
 
 jest.mock('./components/AppCallsPage', () => function MockAppCallsPage() {
@@ -282,5 +297,92 @@ describe('App authentication view handling', () => {
 
     expect(screen.getByTestId('recipe-list-view')).toBeInTheDocument();
     expect(screen.queryByTestId('startseite-view')).not.toBeInTheDocument();
+  });
+
+  test('closing groups returns to startseite when groups were opened from startseite', async () => {
+    render(<App />);
+    expect(await screen.findByTestId('login-view')).toBeInTheDocument();
+
+    mockGetRolePermissions.mockResolvedValue({ user: { startseite: true } });
+
+    await act(async () => {
+      mockAuthStateCallback({
+        id: 'user-4',
+        vorname: 'Start',
+        nachname: 'Back',
+        email: 'start-back@example.com',
+        role: 'user',
+        startseite: true,
+      });
+    });
+
+    expect(await screen.findByTestId('startseite-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'startseite-go-groups' }));
+    expect(screen.getByTestId('group-list-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'close-groups' }));
+    expect(screen.getByTestId('startseite-view')).toBeInTheDocument();
+  });
+
+  test('closing groups still returns to kueche when groups were not opened from startseite', async () => {
+    render(<App />);
+    expect(await screen.findByTestId('login-view')).toBeInTheDocument();
+
+    mockGetRolePermissions.mockResolvedValue({ user: { startseite: true } });
+
+    await act(async () => {
+      mockAuthStateCallback({
+        id: 'user-5',
+        vorname: 'Kitchen',
+        nachname: 'Back',
+        email: 'kitchen-back@example.com',
+        role: 'user',
+        startseite: true,
+      });
+    });
+
+    expect(await screen.findByTestId('startseite-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'go-recipes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'go-groups' }));
+    expect(screen.getByTestId('group-list-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'close-groups' }));
+
+    expect(screen.getByTestId('kueche-view')).toBeInTheDocument();
+    expect(screen.queryByTestId('startseite-view')).not.toBeInTheDocument();
+  });
+
+  test('closing groups after opening a private list still returns to startseite when opened from startseite', async () => {
+    render(<App />);
+    expect(await screen.findByTestId('login-view')).toBeInTheDocument();
+
+    mockGetRolePermissions.mockResolvedValue({ user: { startseite: true } });
+
+    await act(async () => {
+      mockAuthStateCallback({
+        id: 'user-6',
+        vorname: 'Private',
+        nachname: 'List',
+        email: 'private-list@example.com',
+        role: 'user',
+        startseite: true,
+      });
+    });
+
+    expect(await screen.findByTestId('startseite-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'startseite-go-groups' }));
+    expect(screen.getByTestId('group-list-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'open-group' }));
+    expect(screen.getByTestId('group-detail-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'back-to-groups' }));
+    expect(screen.getByTestId('group-list-view')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'close-groups' }));
+    expect(screen.getByTestId('startseite-view')).toBeInTheDocument();
   });
 });
