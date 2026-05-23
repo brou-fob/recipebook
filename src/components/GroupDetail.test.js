@@ -7,8 +7,8 @@ jest.mock('./RecipeImageCarousel', () => () => <div data-testid="mock-carousel" 
 
 // Mock customLists utility so it resolves quickly in tests
 jest.mock('../utils/customLists', () => ({
-  getButtonIcons: () => Promise.resolve({ privateListBack: '←', editRecipe: '✎', deleteRecipe: '🗑', addGroupMember: '👤+' }),
-  DEFAULT_BUTTON_ICONS: { privateListBack: '←', editRecipe: '✎', deleteRecipe: '🗑', addGroupMember: '👤+' },
+  getButtonIcons: () => Promise.resolve({ privateListBack: '←', listSettings: '⚙', listSettingsActive: '✎', editRecipe: '✎', deleteRecipe: '🗑', addGroupMember: '👤+' }),
+  DEFAULT_BUTTON_ICONS: { privateListBack: '←', listSettings: '⚙', listSettingsActive: '✎', editRecipe: '✎', deleteRecipe: '🗑', addGroupMember: '👤+' },
   getEffectiveIcon: (icons, key) => icons[key] ?? '',
   getDarkModePreference: () => false,
 }));
@@ -628,6 +628,19 @@ describe('GroupDetail – settings button', () => {
 
     expect(container.querySelector('.group-edit-fab-button')).toBeInTheDocument();
     expect(container.querySelector('.delete-fab-button')).toBeInTheDocument();
+  });
+
+  it('uses a different settings icon while settings view is open and resets on close', () => {
+    render(<GroupDetail {...defaultProps} />);
+    const settingsButton = screen.getByLabelText('Einstellungen öffnen');
+
+    expect(settingsButton).toHaveTextContent('⚙');
+
+    fireEvent.click(settingsButton);
+    expect(settingsButton).toHaveTextContent('✎');
+
+    fireEvent.click(settingsButton);
+    expect(settingsButton).toHaveTextContent('⚙');
   });
 });
 

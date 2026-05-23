@@ -34,6 +34,7 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   const [backIcon, setBackIcon] = useState(DEFAULT_BUTTON_ICONS.privateListBack);
   const [shoppingListIcon, setShoppingListIcon] = useState(DEFAULT_BUTTON_ICONS.shoppingList || 'Einkauf');
   const [listSettingsIcon, setListSettingsIcon] = useState(DEFAULT_BUTTON_ICONS.listSettings || '⚙');
+  const [listSettingsActiveIcon, setListSettingsActiveIcon] = useState(DEFAULT_BUTTON_ICONS.listSettingsActive || DEFAULT_BUTTON_ICONS.listSettings || '⚙');
   const [addMemberIcon, setAddMemberIcon] = useState(DEFAULT_BUTTON_ICONS.addGroupMember || '👤+');
   const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
   const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
@@ -68,6 +69,12 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
     setBackIcon(getEffectiveIcon(allButtonIcons, 'privateListBack', isDarkMode) || DEFAULT_BUTTON_ICONS.privateListBack);
     setShoppingListIcon(getEffectiveIcon(allButtonIcons, 'shoppingList', isDarkMode) || DEFAULT_BUTTON_ICONS.shoppingList || 'Einkauf');
     setListSettingsIcon(getEffectiveIcon(allButtonIcons, 'listSettings', isDarkMode) || DEFAULT_BUTTON_ICONS.listSettings || '⚙');
+    setListSettingsActiveIcon(
+      getEffectiveIcon(allButtonIcons, 'listSettingsActive', isDarkMode)
+      || DEFAULT_BUTTON_ICONS.listSettingsActive
+      || DEFAULT_BUTTON_ICONS.listSettings
+      || '⚙'
+    );
     setAddMemberIcon(getEffectiveIcon(allButtonIcons, 'addGroupMember', isDarkMode) || DEFAULT_BUTTON_ICONS.addGroupMember || '👤+');
   }, [allButtonIcons, isDarkMode]);
 
@@ -99,6 +106,7 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
   const addRecipeIcon = getEffectiveIcon(allButtonIcons, isPublic ? 'addRecipe' : 'addPrivateRecipe', isDarkMode);
   const editGroupIcon = getEffectiveIcon(allButtonIcons, 'editRecipe', isDarkMode);
   const deleteGroupIcon = getEffectiveIcon(allButtonIcons, 'deleteRecipe', isDarkMode);
+  const activeListSettingsIcon = activeTab === 'einstellungen' ? listSettingsActiveIcon : listSettingsIcon;
 
   const getMemberName = (userId) => {
     const user = (allUsers || []).find((u) => u.id === userId);
@@ -290,10 +298,10 @@ function GroupDetail({ group, allUsers, currentUser, onBack, onUpdateGroup, onDe
               title="Einstellungen anzeigen"
               aria-label="Einstellungen öffnen"
             >
-              {isBase64Image(listSettingsIcon) ? (
-                <img src={listSettingsIcon} alt="Einstellungen" className="shopping-list-icon-img" />
+              {isBase64Image(activeListSettingsIcon) ? (
+                <img src={activeListSettingsIcon} alt="Einstellungen" className="shopping-list-icon-img" />
               ) : (
-                listSettingsIcon
+                activeListSettingsIcon
               )}
             </button>
           )}
