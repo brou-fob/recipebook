@@ -2,7 +2,20 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import './AppCallsPage.css';
 import { getAppCalls } from '../utils/appCallsFirestore';
 import { getRecipeCalls } from '../utils/recipeCallsFirestore';
-import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference, getCustomLists, saveCustomLists } from '../utils/customLists';
+import {
+  getButtonIcons,
+  DEFAULT_BUTTON_ICONS,
+  getEffectiveIcon,
+  getDarkModePreference,
+  getCustomLists,
+  saveCustomLists,
+  getInspirationListSettings,
+  saveInspirationListSettings,
+  DEFAULT_INSPIRATION_LIST_NAME,
+  DEFAULT_INSPIRATION_LIST_DESCRIPTION,
+  DEFAULT_INSPIRATION_TARGET_LIST_NAME,
+  DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION,
+} from '../utils/customLists';
 import { isBase64Image } from '../utils/imageUtils';
 import { enableRecipeSharing } from '../utils/recipeFirestore';
 import {
@@ -91,6 +104,20 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
   // Cuisine list management state
   const [newCuisineTypeName, setNewCuisineTypeName] = useState('');
   const [newCuisineGroupName, setNewCuisineGroupName] = useState('');
+  const [inspirationListName, setInspirationListName] = useState(DEFAULT_INSPIRATION_LIST_NAME);
+  const [inspirationListDescription, setInspirationListDescription] = useState(DEFAULT_INSPIRATION_LIST_DESCRIPTION);
+  const [inspirationTargetListName, setInspirationTargetListName] = useState(DEFAULT_INSPIRATION_TARGET_LIST_NAME);
+  const [inspirationTargetListDescription, setInspirationTargetListDescription] = useState(DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION);
+  const [savingKochatelierSettings, setSavingKochatelierSettings] = useState(false);
+  const [kochatelierSettingsFeedback, setKochatelierSettingsFeedback] = useState('');
+  const inspirationDescriptionRef = useRef(null);
+  const targetDescriptionRef = useRef(null);
+
+  const resizeTextarea = useCallback((textarea) => {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -111,6 +138,12 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
     getCuisineProposals().then((proposals) => {
       setCuisineProposals(proposals);
     }).catch(() => {});
+    getInspirationListSettings().then((settings) => {
+      setInspirationListName(settings.inspirationListName);
+      setInspirationListDescription(settings.inspirationListDescription);
+      setInspirationTargetListName(settings.inspirationTargetListName);
+      setInspirationTargetListDescription(settings.inspirationTargetListDescription);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -127,6 +160,11 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
     const id = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    resizeTextarea(inspirationDescriptionRef.current);
+    resizeTextarea(targetDescriptionRef.current);
+  }, [inspirationListDescription, inspirationTargetListDescription, resizeTextarea]);
 
   const recipesWithoutLink = useMemo(
     () => recipes.filter(r => r.publishedToPublic && !r.shareId && !sharedRecipeIds.has(r.id)),
@@ -400,6 +438,25 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
     await saveCuisineLists(cuisineTypes, updated);
   };
 
+  const handleSaveKochatelierSettings = async () => {
+    setSavingKochatelierSettings(true);
+    setKochatelierSettingsFeedback('');
+    try {
+      await saveInspirationListSettings({
+        inspirationListName,
+        inspirationListDescription,
+        inspirationTargetListName,
+        inspirationTargetListDescription,
+      });
+      setKochatelierSettingsFeedback('Kochateliereinstellungen gespeichert.');
+    } catch (err) {
+      console.error('Error saving kochatelier settings:', err);
+      setKochatelierSettingsFeedback('Fehler beim Speichern der Kochateliereinstellungen.');
+    } finally {
+      setSavingKochatelierSettings(false);
+    }
+  };
+
   if (!currentUser?.appCalls) {
     return (
       <div className="app-calls-container">
@@ -474,6 +531,12 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
           onClick={() => setActiveTab('kulinariktypen')}
         >
           Kulinariktypen
+        </button>
+        <button
+          className={`app-calls-tab${activeTab === 'kochatelier' ? ' active' : ''}`}
+          onClick={() => setActiveTab('kochatelier')}
+        >
+          Kochateliereinstellungen
         </button>
       </div>
       <div className="app-calls-content">
@@ -711,7 +774,7 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
               );
             })()}
           </>
-        ) : (
+        ) : activeTab === 'kulinariktypen' ? (
           <>
             {/* Offene Vorschläge section */}
             <div className="settings-section">
@@ -916,6 +979,72 @@ function AppCallsPage({ onBack, currentUser, recipes = [], onUpdateRecipe }) {
               </div>
             </div>
           </>
+        ) : (
+          <div className="kochatelier-settings-section">
+            <p className="app-calls-info-text">
+              Konfigurieren Sie Name und Beschreibung für Inspirationsliste und Zielliste. Beschreibungen sind mehrzeilig und wachsen automatisch mit dem Inhalt.
+            </p>
+            <div className="kochatelier-settings-grid">
+              <div className="kochatelier-settings-group">
+                <h3>Inspirationsliste (interaktiv)</h3>
+                <div className="kochatelier-settings-field">
+                  <label htmlFor="kochatelierInspirationListName">Name:</label>
+                  <input
+                    id="kochatelierInspirationListName"
+                    type="text"
+                    value={inspirationListName}
+                    onChange={(e) => setInspirationListName(e.target.value)}
+                  />
+                </div>
+                <div className="kochatelier-settings-field">
+                  <label htmlFor="kochatelierInspirationListDescription">Beschreibung:</label>
+                  <textarea
+                    id="kochatelierInspirationListDescription"
+                    ref={inspirationDescriptionRef}
+                    rows={2}
+                    value={inspirationListDescription}
+                    onChange={(e) => setInspirationListDescription(e.target.value)}
+                    onInput={(e) => resizeTextarea(e.target)}
+                  />
+                </div>
+              </div>
+              <div className="kochatelier-settings-group">
+                <h3>Zielliste (klassisch)</h3>
+                <div className="kochatelier-settings-field">
+                  <label htmlFor="kochatelierInspirationTargetListName">Name:</label>
+                  <input
+                    id="kochatelierInspirationTargetListName"
+                    type="text"
+                    value={inspirationTargetListName}
+                    onChange={(e) => setInspirationTargetListName(e.target.value)}
+                  />
+                </div>
+                <div className="kochatelier-settings-field">
+                  <label htmlFor="kochatelierInspirationTargetListDescription">Beschreibung:</label>
+                  <textarea
+                    id="kochatelierInspirationTargetListDescription"
+                    ref={targetDescriptionRef}
+                    rows={2}
+                    value={inspirationTargetListDescription}
+                    onChange={(e) => setInspirationTargetListDescription(e.target.value)}
+                    onInput={(e) => resizeTextarea(e.target)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="kochatelier-settings-actions">
+              <button
+                className="app-calls-share-btn"
+                onClick={handleSaveKochatelierSettings}
+                disabled={savingKochatelierSettings}
+              >
+                {savingKochatelierSettings ? 'Wird gespeichert…' : 'Kochateliereinstellungen speichern'}
+              </button>
+              {kochatelierSettingsFeedback && (
+                <span className="kochatelier-settings-feedback">{kochatelierSettingsFeedback}</span>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

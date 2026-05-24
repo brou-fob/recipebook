@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './Settings.css';
 import { getCustomLists, saveCustomLists, resetCustomLists, getHeaderSlogan, saveHeaderSlogan, getFaviconImage, saveFaviconImage, getFaviconText, saveFaviconText, getAppLogoImage, saveAppLogoImage, getAppLogoImageUrl, saveAppLogoImageUrl, getButtonIcons, saveButtonIcon, DEFAULT_BUTTON_ICONS, getTimelineBubbleIcon, saveTimelineBubbleIcon, getTimelineMenuBubbleIcon, saveTimelineMenuBubbleIcon, getTimelineMenuDefaultImage, saveTimelineMenuDefaultImage, getTimelineCookEventBubbleIcon, saveTimelineCookEventBubbleIcon, getTimelineCookEventDefaultImage, saveTimelineCookEventDefaultImage, getAIRecipePrompt, saveAIRecipePrompt, resetAIRecipePrompt, DEFAULT_AI_RECIPE_PROMPT, getTileSizePreference, saveTileSizePreference, applyTileSizePreference, TILE_SIZE_SMALL, TILE_SIZE_MEDIUM, TILE_SIZE_LARGE, getDarkModePreference, getDarkModeMode, saveDarkModePreference, applyDarkModePreference, getSortSettings, saveSortSettings, DEFAULT_TRENDING_DAYS, DEFAULT_TRENDING_MIN_VIEWS, DEFAULT_NEW_RECIPE_DAYS, DEFAULT_RATING_MIN_VOTES, getStatusValiditySettings, saveStatusValiditySettings, getGroupStatusThresholds, saveGroupStatusThresholds, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MIN_KANDIDAT, DEFAULT_GROUP_THRESHOLD_KANDIDAT_MAX_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MIN_ARCHIV, DEFAULT_GROUP_THRESHOLD_ARCHIV_MAX_KANDIDAT, getMaxKandidatenSchwelle, saveMaxKandidatenSchwelle, getStartseitenKandidatenLeertext, saveStartseitenKandidatenLeertext, DEFAULT_STARTSEITEN_KANDIDATEN_LEERTEXT, getInspirationListSettings, saveInspirationListSettings, DEFAULT_INSPIRATION_LIST_NAME, DEFAULT_INSPIRATION_LIST_DESCRIPTION, DEFAULT_INSPIRATION_TARGET_LIST_NAME, DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION, getPrintFormats, savePrintFormats, DEFAULT_PRINT_FORMATS, DEFAULT_PRINT_ELEMENTS_PORTRAIT, PRINT_FORMAT_LAYOUT_VERSION, selectPrintFormat } from '../utils/customLists';
 import PrintFormatEditor from './PrintFormatEditor';
@@ -334,6 +334,8 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   const [inspirationListDescription, setInspirationListDescription] = useState(DEFAULT_INSPIRATION_LIST_DESCRIPTION);
   const [inspirationTargetListName, setInspirationTargetListName] = useState(DEFAULT_INSPIRATION_TARGET_LIST_NAME);
   const [inspirationTargetListDescription, setInspirationTargetListDescription] = useState(DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION);
+  const inspirationListDescriptionRef = useRef(null);
+  const inspirationTargetListDescriptionRef = useRef(null);
 
   // Print format settings
   const [printFormats, setPrintFormats] = useState(DEFAULT_PRINT_FORMATS);
@@ -346,6 +348,12 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
 
   // Whether the current user can rename cuisine types and meal categories
   const canEditLists = isAdmin || rolePermissions?.[currentUser?.role]?.editLists === true;
+
+  const resizeInspirationTextarea = useCallback((textarea) => {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, []);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -412,6 +420,11 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   useEffect(() => {
     getRolePermissions().then(setRolePermissions);
   }, []);
+
+  useEffect(() => {
+    resizeInspirationTextarea(inspirationListDescriptionRef.current);
+    resizeInspirationTextarea(inspirationTargetListDescriptionRef.current);
+  }, [inspirationListDescription, inspirationTargetListDescription, resizeInspirationTextarea]);
 
   // Cleanup pending button icon save timeouts on unmount
   useEffect(() => {
@@ -2492,22 +2505,46 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                   <h4>Inspirationsliste (interaktiv)</h4>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationListName">Name:</label>
-                    <input id="inspirationListName" type="text" value={inspirationListName} onChange={(e) => setInspirationListName(e.target.value)} />
+                    <input
+                      id="inspirationListName"
+                      type="text"
+                      value={inspirationListName}
+                      onChange={(e) => setInspirationListName(e.target.value)}
+                    />
                   </div>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationListDescription">Beschreibung:</label>
-                    <input id="inspirationListDescription" type="text" value={inspirationListDescription} onChange={(e) => setInspirationListDescription(e.target.value)} />
+                    <textarea
+                      id="inspirationListDescription"
+                      ref={inspirationListDescriptionRef}
+                      rows={2}
+                      value={inspirationListDescription}
+                      onChange={(e) => setInspirationListDescription(e.target.value)}
+                      onInput={(e) => resizeInspirationTextarea(e.target)}
+                    />
                   </div>
                 </div>
                 <div className="sort-settings-group">
                   <h4>Zielliste (klassisch)</h4>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationTargetListName">Name:</label>
-                    <input id="inspirationTargetListName" type="text" value={inspirationTargetListName} onChange={(e) => setInspirationTargetListName(e.target.value)} />
+                    <input
+                      id="inspirationTargetListName"
+                      type="text"
+                      value={inspirationTargetListName}
+                      onChange={(e) => setInspirationTargetListName(e.target.value)}
+                    />
                   </div>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationTargetListDescription">Beschreibung:</label>
-                    <input id="inspirationTargetListDescription" type="text" value={inspirationTargetListDescription} onChange={(e) => setInspirationTargetListDescription(e.target.value)} />
+                    <textarea
+                      id="inspirationTargetListDescription"
+                      ref={inspirationTargetListDescriptionRef}
+                      rows={2}
+                      value={inspirationTargetListDescription}
+                      onChange={(e) => setInspirationTargetListDescription(e.target.value)}
+                      onInput={(e) => resizeInspirationTextarea(e.target)}
+                    />
                   </div>
                 </div>
               </div>
