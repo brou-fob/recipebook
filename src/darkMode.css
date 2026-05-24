@@ -1401,7 +1401,7 @@
 }
 
 [data-theme="dark"] .app-calls-tab {
-  background: #2a2a2a;
+  background: transparent;
   color: #ccc;
   border-color: #555;
 }

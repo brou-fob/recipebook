@@ -28,6 +28,17 @@ describe('AppCallsPage CSS layout', () => {
 });
 
 describe('AppCallsPage dark mode styles', () => {
+  test('removes inactive tab background while keeping active tab highlighted', () => {
+    const cssPath = path.join(__dirname, '..', 'darkMode.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    const tabRule = getRuleBody(css, '[data-theme="dark"] .app-calls-tab');
+    const activeTabRule = getRuleBody(css, '[data-theme="dark"] .app-calls-tab.active');
+
+    expect(tabRule).toContain('background: transparent;');
+    expect(activeTabRule).toContain('color: #DF7A00;');
+    expect(activeTabRule).toContain('border-bottom-color: #DF7A00;');
+  });
+
   test('styles kochatelier settings groups and fields for dark mode', () => {
     const cssPath = path.join(__dirname, '..', 'darkMode.css');
     const css = fs.readFileSync(cssPath, 'utf8');
