@@ -246,7 +246,6 @@
   .kochatelier-settings-field input,
   .kochatelier-settings-field textarea {
     min-height: 44px;
-    font-size: 16px;
     padding: 12px;
   }
 
@@ -410,7 +409,7 @@
   width: 100%;
   border: 1px solid #ced4da;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 16px;
   line-height: 1.4;
   padding: 10px 12px;
   box-sizing: border-box;
