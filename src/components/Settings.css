@@ -1817,10 +1817,39 @@
   font-size: 0.9rem;
 }
 
+.sort-settings-field input[type="text"],
+.sort-settings-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.sort-settings-field textarea {
+  min-height: 84px;
+  resize: none;
+  overflow: hidden;
+}
+
 .sort-settings-hint {
   font-size: 0.78rem;
   color: #888;
   line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+  .sort-settings-field input[type="text"],
+  .sort-settings-field textarea {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .sort-settings-field textarea {
+    min-height: 96px;
+  }
 }
 
 /* Cuisine groups management */

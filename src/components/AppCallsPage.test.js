@@ -24,6 +24,19 @@ jest.mock('../utils/customLists', () => ({
   DEFAULT_BUTTON_ICONS: { privateListBack: '✕' },
   getEffectiveIcon: jest.fn((icons, key) => icons[key] ?? ''),
   getDarkModePreference: jest.fn(() => false),
+  getInspirationListSettings: jest.fn(() =>
+    Promise.resolve({
+      inspirationListName: 'Inspirationen',
+      inspirationListDescription: 'Interaktive Liste',
+      inspirationTargetListName: 'Für jeden Tag',
+      inspirationTargetListDescription: 'Klassische Liste',
+    })
+  ),
+  saveInspirationListSettings: jest.fn(() => Promise.resolve()),
+  DEFAULT_INSPIRATION_LIST_NAME: 'Inspirationen',
+  DEFAULT_INSPIRATION_LIST_DESCRIPTION: '',
+  DEFAULT_INSPIRATION_TARGET_LIST_NAME: 'Für jeden Tag',
+  DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION: '',
   getCustomLists: jest.fn(() =>
     Promise.resolve({ cuisineTypes: ['Spanisch', 'Italienisch'], cuisineGroups: [] })
   ),
@@ -50,13 +63,19 @@ const adminUser = {
 describe('AppCallsPage – Kulinariktypen release with rename', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getCustomLists, saveCustomLists, getButtonIcons } = require('../utils/customLists');
+    const { getCustomLists, saveCustomLists, getButtonIcons, getInspirationListSettings } = require('../utils/customLists');
     getButtonIcons.mockResolvedValue({});
     getCustomLists.mockResolvedValue({
       cuisineTypes: ['Spanisch', 'Italienisch'],
       cuisineGroups: [],
     });
     saveCustomLists.mockResolvedValue();
+    getInspirationListSettings.mockResolvedValue({
+      inspirationListName: 'Inspirationen',
+      inspirationListDescription: 'Interaktive Liste',
+      inspirationTargetListName: 'Für jeden Tag',
+      inspirationTargetListDescription: 'Klassische Liste',
+    });
     const { getAppCalls } = require('../utils/appCallsFirestore');
     getAppCalls.mockResolvedValue([]);
     const { getRecipeCalls } = require('../utils/recipeCallsFirestore');
@@ -261,13 +280,19 @@ describe('AppCallsPage – Kulinariktypen release with rename', () => {
 describe('AppCallsPage – Kulinariktypen & Gruppen management', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getCustomLists, saveCustomLists, getButtonIcons } = require('../utils/customLists');
+    const { getCustomLists, saveCustomLists, getButtonIcons, getInspirationListSettings } = require('../utils/customLists');
     getButtonIcons.mockResolvedValue({});
     getCustomLists.mockResolvedValue({
       cuisineTypes: ['Spanisch', 'Italienisch'],
       cuisineGroups: [{ name: 'Europäisch', children: ['Spanisch'] }],
     });
     saveCustomLists.mockResolvedValue();
+    getInspirationListSettings.mockResolvedValue({
+      inspirationListName: 'Inspirationen',
+      inspirationListDescription: 'Interaktive Liste',
+      inspirationTargetListName: 'Für jeden Tag',
+      inspirationTargetListDescription: 'Klassische Liste',
+    });
     const { getAppCalls } = require('../utils/appCallsFirestore');
     getAppCalls.mockResolvedValue([]);
     const { getRecipeCalls } = require('../utils/recipeCallsFirestore');
@@ -392,9 +417,15 @@ describe('AppCallsPage – Kulinariktypen & Gruppen management', () => {
 describe('AppCallsPage – Nährwertberechnungen tab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getCustomLists, getButtonIcons } = require('../utils/customLists');
+    const { getCustomLists, getButtonIcons, getInspirationListSettings } = require('../utils/customLists');
     getButtonIcons.mockResolvedValue({});
     getCustomLists.mockResolvedValue({ cuisineTypes: [], cuisineGroups: [] });
+    getInspirationListSettings.mockResolvedValue({
+      inspirationListName: 'Inspirationen',
+      inspirationListDescription: 'Interaktive Liste',
+      inspirationTargetListName: 'Für jeden Tag',
+      inspirationTargetListDescription: 'Klassische Liste',
+    });
     const { getAppCalls } = require('../utils/appCallsFirestore');
     getAppCalls.mockResolvedValue([]);
     const { getRecipeCalls } = require('../utils/recipeCallsFirestore');
@@ -468,5 +499,78 @@ describe('AppCallsPage – Nährwertberechnungen tab', () => {
     fireEvent.click(await screen.findByText('Nährwertberechnungen'));
 
     expect(await screen.findByText('Keine aktiven Berechnungen vorhanden.')).toBeInTheDocument();
+  });
+});
+
+describe('AppCallsPage – Kochateliereinstellungen tab', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    const { getCustomLists, getButtonIcons, getInspirationListSettings } = require('../utils/customLists');
+    getButtonIcons.mockResolvedValue({});
+    getCustomLists.mockResolvedValue({ cuisineTypes: [], cuisineGroups: [] });
+    getInspirationListSettings.mockResolvedValue({
+      inspirationListName: 'Inspirationen',
+      inspirationListDescription: 'Interaktive Beschreibung',
+      inspirationTargetListName: 'Für jeden Tag',
+      inspirationTargetListDescription: 'Klassische Beschreibung',
+    });
+    const { getAppCalls } = require('../utils/appCallsFirestore');
+    getAppCalls.mockResolvedValue([]);
+    const { getRecipeCalls } = require('../utils/recipeCallsFirestore');
+    getRecipeCalls.mockResolvedValue([]);
+    const { getCuisineProposals } = require('../utils/cuisineProposalsFirestore');
+    getCuisineProposals.mockResolvedValue([]);
+  });
+
+  test('shows kochateliereinstellungen tab with multiline description fields', async () => {
+    render(
+      <AppCallsPage
+        onBack={jest.fn()}
+        currentUser={adminUser}
+        recipes={[]}
+        onUpdateRecipe={jest.fn()}
+      />
+    );
+
+    fireEvent.click(await screen.findByText('Kochateliereinstellungen'));
+
+    const nameFields = await screen.findAllByLabelText('Name:');
+    expect(nameFields).toHaveLength(2);
+    const descriptionFields = screen.getAllByLabelText('Beschreibung:');
+    expect(descriptionFields).toHaveLength(2);
+    descriptionFields.forEach((field) => {
+      expect(field.tagName).toBe('TEXTAREA');
+    });
+    expect(screen.getByDisplayValue('Inspirationen')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Für jeden Tag')).toBeInTheDocument();
+  });
+
+  test('saves kochateliereinstellungen values', async () => {
+    const { saveInspirationListSettings } = require('../utils/customLists');
+
+    render(
+      <AppCallsPage
+        onBack={jest.fn()}
+        currentUser={adminUser}
+        recipes={[]}
+        onUpdateRecipe={jest.fn()}
+      />
+    );
+
+    fireEvent.click(await screen.findByText('Kochateliereinstellungen'));
+
+    fireEvent.change(screen.getByDisplayValue('Inspirationen'), { target: { value: 'Neue Inspirationen' } });
+    fireEvent.change(screen.getByDisplayValue('Interaktive Beschreibung'), { target: { value: 'Mehrzeilige Interaktivbeschreibung' } });
+    fireEvent.change(screen.getByDisplayValue('Für jeden Tag'), { target: { value: 'Wochenplanung' } });
+    fireEvent.change(screen.getByDisplayValue('Klassische Beschreibung'), { target: { value: 'Mehrzeilige Zielbeschreibung' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kochateliereinstellungen speichern' }));
+
+    await waitFor(() => expect(saveInspirationListSettings).toHaveBeenCalledWith({
+      inspirationListName: 'Neue Inspirationen',
+      inspirationListDescription: 'Mehrzeilige Interaktivbeschreibung',
+      inspirationTargetListName: 'Wochenplanung',
+      inspirationTargetListDescription: 'Mehrzeilige Zielbeschreibung',
+    }));
   });
 });

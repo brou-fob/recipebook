@@ -334,6 +334,8 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   const [inspirationListDescription, setInspirationListDescription] = useState(DEFAULT_INSPIRATION_LIST_DESCRIPTION);
   const [inspirationTargetListName, setInspirationTargetListName] = useState(DEFAULT_INSPIRATION_TARGET_LIST_NAME);
   const [inspirationTargetListDescription, setInspirationTargetListDescription] = useState(DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION);
+  const inspirationListDescriptionRef = useRef(null);
+  const inspirationTargetListDescriptionRef = useRef(null);
 
   // Print format settings
   const [printFormats, setPrintFormats] = useState(DEFAULT_PRINT_FORMATS);
@@ -346,6 +348,12 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
 
   // Whether the current user can rename cuisine types and meal categories
   const canEditLists = isAdmin || rolePermissions?.[currentUser?.role]?.editLists === true;
+
+  const resizeInspirationTextarea = (textarea) => {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -412,6 +420,11 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
   useEffect(() => {
     getRolePermissions().then(setRolePermissions);
   }, []);
+
+  useEffect(() => {
+    resizeInspirationTextarea(inspirationListDescriptionRef.current);
+    resizeInspirationTextarea(inspirationTargetListDescriptionRef.current);
+  }, [inspirationListDescription, inspirationTargetListDescription]);
 
   // Cleanup pending button icon save timeouts on unmount
   useEffect(() => {
@@ -2492,22 +2505,46 @@ function Settings({ onBack, currentUser, allUsers = [], allRecipes = [], onUpdat
                   <h4>Inspirationsliste (interaktiv)</h4>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationListName">Name:</label>
-                    <input id="inspirationListName" type="text" value={inspirationListName} onChange={(e) => setInspirationListName(e.target.value)} />
+                    <input
+                      id="inspirationListName"
+                      type="text"
+                      value={inspirationListName}
+                      onChange={(e) => setInspirationListName(e.target.value)}
+                    />
                   </div>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationListDescription">Beschreibung:</label>
-                    <input id="inspirationListDescription" type="text" value={inspirationListDescription} onChange={(e) => setInspirationListDescription(e.target.value)} />
+                    <textarea
+                      id="inspirationListDescription"
+                      ref={inspirationListDescriptionRef}
+                      rows={2}
+                      value={inspirationListDescription}
+                      onChange={(e) => setInspirationListDescription(e.target.value)}
+                      onInput={(e) => resizeInspirationTextarea(e.target)}
+                    />
                   </div>
                 </div>
                 <div className="sort-settings-group">
                   <h4>Zielliste (klassisch)</h4>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationTargetListName">Name:</label>
-                    <input id="inspirationTargetListName" type="text" value={inspirationTargetListName} onChange={(e) => setInspirationTargetListName(e.target.value)} />
+                    <input
+                      id="inspirationTargetListName"
+                      type="text"
+                      value={inspirationTargetListName}
+                      onChange={(e) => setInspirationTargetListName(e.target.value)}
+                    />
                   </div>
                   <div className="sort-settings-field">
                     <label htmlFor="inspirationTargetListDescription">Beschreibung:</label>
-                    <input id="inspirationTargetListDescription" type="text" value={inspirationTargetListDescription} onChange={(e) => setInspirationTargetListDescription(e.target.value)} />
+                    <textarea
+                      id="inspirationTargetListDescription"
+                      ref={inspirationTargetListDescriptionRef}
+                      rows={2}
+                      value={inspirationTargetListDescription}
+                      onChange={(e) => setInspirationTargetListDescription(e.target.value)}
+                      onInput={(e) => resizeInspirationTextarea(e.target)}
+                    />
                   </div>
                 </div>
               </div>
