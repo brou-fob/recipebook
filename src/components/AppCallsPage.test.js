@@ -573,4 +573,30 @@ describe('AppCallsPage – Kochateliereinstellungen tab', () => {
       inspirationTargetListDescription: 'Mehrzeilige Zielbeschreibung',
     }));
   });
+
+  test('persists kochateliereinstellungen on blur', async () => {
+    const { saveInspirationListSettings } = require('../utils/customLists');
+
+    render(
+      <AppCallsPage
+        onBack={jest.fn()}
+        currentUser={adminUser}
+        recipes={[]}
+        onUpdateRecipe={jest.fn()}
+      />
+    );
+
+    fireEvent.click(await screen.findByText('Kochateliereinstellungen'));
+
+    const nameField = screen.getByDisplayValue('Inspirationen');
+    fireEvent.change(nameField, { target: { value: 'Neue Inspirationen Auto' } });
+    fireEvent.blur(nameField);
+
+    await waitFor(() => expect(saveInspirationListSettings).toHaveBeenCalledWith({
+      inspirationListName: 'Neue Inspirationen Auto',
+      inspirationListDescription: 'Interaktive Beschreibung',
+      inspirationTargetListName: 'Für jeden Tag',
+      inspirationTargetListDescription: 'Klassische Beschreibung',
+    }));
+  });
 });
