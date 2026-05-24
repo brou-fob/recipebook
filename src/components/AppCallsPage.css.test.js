@@ -15,6 +15,16 @@ describe('AppCallsPage CSS layout', () => {
 
     expect(gridRule).toContain('grid-template-columns: 1fr;');
   });
+
+  test('keeps kochatelier inputs at 16px without a mobile-only font-size override', () => {
+    const cssPath = path.join(__dirname, 'AppCallsPage.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    const fieldRule = getRuleBody(css, '.kochatelier-settings-field input,\n.kochatelier-settings-field textarea');
+    const fontSizeMatches = css.match(/font-size:\s*16px;/g) || [];
+
+    expect(fieldRule).toContain('font-size: 16px;');
+    expect(fontSizeMatches).toHaveLength(1);
+  });
 });
 
 describe('AppCallsPage dark mode styles', () => {
