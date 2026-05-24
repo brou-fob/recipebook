@@ -481,7 +481,7 @@
     object-fit: contain;
   }
 
-  .group-detail-delete-fab-button {
+  .delete-fab-button.at-publish-position {
     left: 20px !important;
     right: auto;
   }
