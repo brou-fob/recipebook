@@ -47,7 +47,7 @@ import {
 } from './utils/userFavorites';
 import { toggleMenuFavorite } from './utils/menuFavorites';
 import { applyFaviconSettings } from './utils/faviconUtils';
-import { applyTileSizePreference, applyDarkModePreference, getCustomLists, expandCuisineSelection, getInspirationListSettings, DEFAULT_INSPIRATION_LIST_NAME, DEFAULT_INSPIRATION_LIST_DESCRIPTION, DEFAULT_INSPIRATION_TARGET_LIST_NAME, DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION } from './utils/customLists';
+import { applyTileSizePreference, applyDarkModePreference, getCustomLists, expandCuisineSelection, getInspirationListSettings } from './utils/customLists';
 import { logRecipeCall } from './utils/recipeCallsFirestore';
 import { deleteRecipeThumbnail } from './utils/storageUtils';
 import { deleteField, serverTimestamp } from 'firebase/firestore';
@@ -1088,10 +1088,10 @@ function App() {
     try {
       // Load configurable names from settings
       const inspirationSettings = await getInspirationListSettings();
-      const targetListName = inspirationSettings.inspirationTargetListName || DEFAULT_INSPIRATION_TARGET_LIST_NAME;
-      const targetListDescription = inspirationSettings.inspirationTargetListDescription || DEFAULT_INSPIRATION_TARGET_LIST_DESCRIPTION;
-      const inspirationListName = inspirationSettings.inspirationListName || DEFAULT_INSPIRATION_LIST_NAME;
-      const inspirationListDescription = inspirationSettings.inspirationListDescription || DEFAULT_INSPIRATION_LIST_DESCRIPTION;
+      const targetListName = inspirationSettings.inspirationTargetListName;
+      const targetListDescription = inspirationSettings.inspirationTargetListDescription;
+      const inspirationListName = inspirationSettings.inspirationListName;
+      const inspirationListDescription = inspirationSettings.inspirationListDescription;
 
       // 1. Create classic target list
       const targetList = await addGroupToFirestore(
