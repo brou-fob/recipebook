@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './GroupList.css';
 import GroupCreateDialog from './GroupCreateDialog';
 import { getButtonIcons, DEFAULT_BUTTON_ICONS, getEffectiveIcon, getDarkModePreference } from '../utils/customLists';
@@ -23,6 +23,7 @@ function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup
   const [allButtonIcons, setAllButtonIcons] = useState({ ...DEFAULT_BUTTON_ICONS });
   const [isDarkMode, setIsDarkMode] = useState(getDarkModePreference);
   const [addFabPressed, setAddFabPressed] = useState(false);
+  const closeBtnRef = useRef(null);
 
   useEffect(() => {
     getButtonIcons().then((icons) => {
@@ -38,6 +39,12 @@ function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup
     const handler = (e) => setIsDarkMode(e.detail.isDark);
     window.addEventListener('darkModeChange', handler);
     return () => window.removeEventListener('darkModeChange', handler);
+  }, []);
+
+  useEffect(() => {
+    if (closeBtnRef.current) {
+      closeBtnRef.current.blur();
+    }
   }, []);
 
   const getOwnerName = (group) => {
@@ -61,6 +68,7 @@ function GroupList({ groups, allUsers, currentUser, onSelectGroup, onCreateGroup
         <h2>Meine Mise en Place</h2>
         {onBack && (
           <button
+            ref={closeBtnRef}
             className="group-list-close-btn"
             onClick={onBack}
             aria-label="Private Liste schließen"
