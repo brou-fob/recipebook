@@ -180,7 +180,9 @@ describe('GroupList', () => {
         onBack={jest.fn()}
       />
     );
-    expect(blurSpy).toHaveBeenCalled();
+    const closeButton = screen.getByRole('button', { name: /schließen/i });
+    expect(blurSpy).toHaveBeenCalledTimes(1);
+    expect(blurSpy.mock.instances[0]).toBe(closeButton);
     blurSpy.mockRestore();
   });
 
