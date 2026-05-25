@@ -52,6 +52,7 @@
   flex-shrink: 0;
   background: transparent;
   border: none;
+  outline: none;
   -webkit-appearance: none;
   appearance: none;
   border-radius: 12px;
@@ -76,12 +77,20 @@
 .group-list-close-btn:focus {
   outline: none;
   background: transparent;
+  box-shadow: none;
+  -webkit-box-shadow: none;
 }
 
 .group-list-close-btn:focus-visible {
   outline: 2px solid #5A2A4A;
   outline-offset: 2px;
   background: transparent;
+}
+
+.group-list-close-btn:focus:not(:focus-visible) {
+  background: transparent !important;
+  outline: none;
+  box-shadow: none;
 }
 
 .group-list-close-btn:active {

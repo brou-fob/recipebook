@@ -168,6 +168,22 @@ describe('GroupList', () => {
     expect(onBack).toHaveBeenCalled();
   });
 
+  it('blurs the close button on mount when onBack is provided', () => {
+    const blurSpy = jest.spyOn(HTMLButtonElement.prototype, 'blur');
+    render(
+      <GroupList
+        groups={[]}
+        allUsers={mockAllUsers}
+        currentUser={mockCurrentUser}
+        onSelectGroup={jest.fn()}
+        onCreateGroup={jest.fn()}
+        onBack={jest.fn()}
+      />
+    );
+    expect(blurSpy).toHaveBeenCalled();
+    blurSpy.mockRestore();
+  });
+
   it('does not render a close button when onBack is not provided', () => {
     render(
       <GroupList
