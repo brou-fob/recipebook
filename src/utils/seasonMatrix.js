@@ -109,3 +109,46 @@ export const deleteSeasonMatrixEntry = async (id) => {
     throw error;
   }
 };
+
+/**
+ * Season status label constants for the computed `currentSeasonStatus` field.
+ */
+export const CURRENT_SEASON_STATUS = {
+  HAUPTSAISON: 'Hauptsaison',
+  NEBENSAISON: 'Nebensaison',
+  BALD_SAISON: 'Bald_Saison',
+  KEINE_SAISON: 'Keine_Saison',
+};
+
+/**
+ * Computes the current season status for a season matrix entry based on the given date.
+ *
+ * Priority order:
+ * 1. Hauptsaison – if the current month is in mainSeasonMonths
+ * 2. Nebensaison – if the current month is in secondarySeasonMonths
+ * 3. Bald_Saison – if a main-season month begins within the next 7 days
+ * 4. Keine_Saison – otherwise
+ *
+ * @param {Object} entry - Season matrix entry with mainSeasonMonths and secondarySeasonMonths
+ * @param {Date} [date] - Reference date (defaults to today)
+ * @returns {string} One of CURRENT_SEASON_STATUS values
+ */
+export function computeCurrentSeasonStatus(entry, date = new Date()) {
+  const mainMonths = Array.isArray(entry.mainSeasonMonths) ? entry.mainSeasonMonths : [];
+  const secondaryMonths = Array.isArray(entry.secondarySeasonMonths) ? entry.secondarySeasonMonths : [];
+
+  const currentMonth = date.getMonth() + 1; // 1–12
+
+  if (mainMonths.includes(currentMonth)) return CURRENT_SEASON_STATUS.HAUPTSAISON;
+  if (secondaryMonths.includes(currentMonth)) return CURRENT_SEASON_STATUS.NEBENSAISON;
+
+  // Check if a main-season month starts within the next 7 days
+  for (let i = 1; i <= 7; i++) {
+    const futureDate = new Date(date);
+    futureDate.setDate(futureDate.getDate() + i);
+    const futureMonth = futureDate.getMonth() + 1;
+    if (mainMonths.includes(futureMonth)) return CURRENT_SEASON_STATUS.BALD_SAISON;
+  }
+
+  return CURRENT_SEASON_STATUS.KEINE_SAISON;
+}

@@ -3973,3 +3973,80 @@ exports.dailyAiImporterTest = onSchedule(
       }
     },
 );
+
+/**
+ * Season status constants – must stay in sync with
+ * src/utils/seasonMatrix.js CURRENT_SEASON_STATUS.
+ */
+const CURRENT_SEASON_STATUS = {
+  HAUPTSAISON: 'Hauptsaison',
+  NEBENSAISON: 'Nebensaison',
+  BALD_SAISON: 'Bald_Saison',
+  KEINE_SAISON: 'Keine_Saison',
+};
+
+/**
+ * Computes the current season status for one season matrix entry.
+ *
+ * @param {Object} entry - Firestore season matrix document data
+ * @param {Date} date - Reference date (defaults to today)
+ * @returns {string} One of CURRENT_SEASON_STATUS values
+ */
+function computeCurrentSeasonStatus(entry, date = new Date()) {
+  const mainMonths = Array.isArray(entry.mainSeasonMonths) ? entry.mainSeasonMonths : [];
+  const secondaryMonths = Array.isArray(entry.secondarySeasonMonths) ?
+    entry.secondarySeasonMonths :
+    [];
+
+  const currentMonth = date.getMonth() + 1; // 1–12
+
+  if (mainMonths.includes(currentMonth)) return CURRENT_SEASON_STATUS.HAUPTSAISON;
+  if (secondaryMonths.includes(currentMonth)) return CURRENT_SEASON_STATUS.NEBENSAISON;
+
+  // Check if a main-season month starts within the next 7 days
+  for (let i = 1; i <= 7; i++) {
+    const futureDate = new Date(date);
+    futureDate.setDate(futureDate.getDate() + i);
+    const futureMonth = futureDate.getMonth() + 1;
+    if (mainMonths.includes(futureMonth)) return CURRENT_SEASON_STATUS.BALD_SAISON;
+  }
+
+  return CURRENT_SEASON_STATUS.KEINE_SAISON;
+}
+
+/**
+ * Scheduled Cloud Function: update the `currentSeasonStatus` field on every
+ * season matrix entry once per day.
+ *
+ * Schedule: every day at 03:00 Europe/Berlin (MEZ/MESZ).
+ */
+exports.updateSeasonMatrixStatus = onSchedule(
+    {
+      schedule: '0 3 * * *',
+      timeZone: 'Europe/Berlin',
+    },
+    async (_event) => {
+      const db = admin.firestore();
+      const snapshot = await db.collection('seasonMatrix').get();
+
+      if (snapshot.empty) {
+        console.log('updateSeasonMatrixStatus: no entries found, nothing to update');
+        return;
+      }
+
+      const today = new Date();
+      const batch = db.batch();
+
+      snapshot.forEach((docSnap) => {
+        const entry = docSnap.data();
+        const status = computeCurrentSeasonStatus(entry, today);
+        batch.update(docSnap.ref, {currentSeasonStatus: status});
+      });
+
+      await batch.commit();
+      console.log(
+          `updateSeasonMatrixStatus: updated ${snapshot.size} entries` +
+          ` for ${today.toISOString().slice(0, 10)}`,
+      );
+    },
+);

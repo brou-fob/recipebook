@@ -31,6 +31,7 @@ Rezepte werden **nicht** manuell als „saisonal“ getaggt, sondern erhalten ih
 | `description` | string | optional | Begründung/Hinweistext |
 | `updatedAt` | timestamp | ✅ | Letzte Änderung |
 | `updatedBy` | string | optional | Bearbeitender User (für Nachvollziehbarkeit) |
+| `currentSeasonStatus` | string | berechnet | Tagesaktueller Saisonstatus: `Hauptsaison`, `Nebensaison`, `Bald_Saison` oder `Keine_Saison` |
 
 ### Technische Ablage (Vorschlag)
 - Firestore-Collection: `seasonMatrix`

@@ -4,7 +4,8 @@ import {
   subscribeToSeasonMatrix,
   addSeasonMatrixEntry,
   updateSeasonMatrixEntry,
-  deleteSeasonMatrixEntry
+  deleteSeasonMatrixEntry,
+  CURRENT_SEASON_STATUS
 } from '../utils/seasonMatrix';
 import { createSeasonMatrixTemplateCsv, parseSeasonMatrixImport } from '../utils/seasonMatrixImportExport';
 import { canManageSeasonMatrix } from '../utils/userManagement';
@@ -55,6 +56,13 @@ const formatGermanDate = (timestamp) => {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(date);
+};
+
+const SEASON_STATUS_CSS_CLASS = {
+  [CURRENT_SEASON_STATUS.HAUPTSAISON]: 'hauptsaison',
+  [CURRENT_SEASON_STATUS.NEBENSAISON]: 'nebensaison',
+  [CURRENT_SEASON_STATUS.BALD_SAISON]: 'bald-saison',
+  [CURRENT_SEASON_STATUS.KEINE_SAISON]: 'keine-saison',
 };
 
 const resolveUpdatedBy = (currentUser) => {
@@ -389,6 +397,7 @@ function SeasonMatrixTab({ currentUser }) {
               <th>Region</th>
               <th>Hauptsaison</th>
               <th>Score</th>
+              <th>Status</th>
               <th>Aktiv</th>
               <th>Letzte Änderung</th>
               <th>Aktionen</th>
@@ -397,7 +406,7 @@ function SeasonMatrixTab({ currentUser }) {
           <tbody>
             {filteredEntries.length === 0 ? (
               <tr>
-                <td colSpan={8} className="season-matrix-empty">Keine Einträge gefunden.</td>
+                <td colSpan={9} className="season-matrix-empty">Keine Einträge gefunden.</td>
               </tr>
             ) : (
               filteredEntries.map((entry) => (
@@ -407,6 +416,13 @@ function SeasonMatrixTab({ currentUser }) {
                   <td>{entry.region || '—'}</td>
                   <td>{formatMonthRange(entry.mainSeasonMonths)}</td>
                   <td>{entry.seasonScore ?? '—'}</td>
+                  <td>
+                    {entry.currentSeasonStatus ? (
+                      <span className={`current-season-badge ${SEASON_STATUS_CSS_CLASS[entry.currentSeasonStatus] || 'keine-saison'}`}>
+                        {entry.currentSeasonStatus}
+                      </span>
+                    ) : '—'}
+                  </td>
                   <td>
                     <span className={`season-status-badge ${entry.isActive ? 'active' : 'inactive'}`}>
                       {entry.isActive ? 'Aktiv' : 'Inaktiv'}
