@@ -16,7 +16,13 @@ jest.mock('../utils/seasonMatrix', () => ({
   subscribeToSeasonMatrix: jest.fn(),
   addSeasonMatrixEntry: jest.fn(),
   updateSeasonMatrixEntry: jest.fn(),
-  deleteSeasonMatrixEntry: jest.fn()
+  deleteSeasonMatrixEntry: jest.fn(),
+  CURRENT_SEASON_STATUS: {
+    HAUPTSAISON: 'Hauptsaison',
+    NEBENSAISON: 'Nebensaison',
+    BALD_SAISON: 'Bald_Saison',
+    KEINE_SAISON: 'Keine_Saison',
+  }
 }));
 
 jest.mock('../utils/seasonMatrixImportExport', () => ({

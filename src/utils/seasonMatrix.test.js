@@ -34,7 +34,9 @@ import {
   subscribeToSeasonMatrix,
   addSeasonMatrixEntry,
   updateSeasonMatrixEntry,
-  deleteSeasonMatrixEntry
+  deleteSeasonMatrixEntry,
+  computeCurrentSeasonStatus,
+  CURRENT_SEASON_STATUS
 } from './seasonMatrix';
 
 const { collection: mockCollection } = jest.requireMock('firebase/firestore');
@@ -117,5 +119,69 @@ describe('seasonMatrix utilities', () => {
   it('deletes an entry by id', async () => {
     await deleteSeasonMatrixEntry('kartoffel');
     expect(mockDeleteDoc).toHaveBeenCalledWith('mock-doc-ref-kartoffel');
+  });
+});
+
+describe('computeCurrentSeasonStatus', () => {
+  const makeEntry = (mainSeasonMonths, secondarySeasonMonths = []) => ({
+    mainSeasonMonths,
+    secondarySeasonMonths,
+  });
+
+  it('returns Hauptsaison when current month is in mainSeasonMonths', () => {
+    const entry = makeEntry([5, 6, 7]);
+    const date = new Date(2024, 4, 15); // May 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.HAUPTSAISON);
+  });
+
+  it('returns Nebensaison when current month is in secondarySeasonMonths', () => {
+    const entry = makeEntry([6, 7], [4, 5]);
+    const date = new Date(2024, 4, 10); // May 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.NEBENSAISON);
+  });
+
+  it('prioritises Hauptsaison over Nebensaison when both include current month', () => {
+    const entry = makeEntry([5], [5]);
+    const date = new Date(2024, 4, 1); // May 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.HAUPTSAISON);
+  });
+
+  it('returns Bald_Saison when a main season month starts within 7 days', () => {
+    // June (month 6) is main season; today is May 25 → June 1 is 7 days away
+    const entry = makeEntry([6]);
+    const date = new Date(2024, 4, 25); // May 25 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.BALD_SAISON);
+  });
+
+  it('returns Keine_Saison when main season starts in more than 7 days', () => {
+    // June is main season; today is May 23 → June 1 is 9 days away
+    const entry = makeEntry([6]);
+    const date = new Date(2024, 4, 23); // May 23 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.KEINE_SAISON);
+  });
+
+  it('returns Keine_Saison when no months match and main season is far away', () => {
+    const entry = makeEntry([9, 10, 11]);
+    const date = new Date(2024, 0, 15); // January 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.KEINE_SAISON);
+  });
+
+  it('handles year wrap-around: December date and January main season', () => {
+    // January is main season; today is Dec 25 → Jan 1 is 7 days away
+    const entry = makeEntry([1]);
+    const date = new Date(2024, 11, 25); // Dec 25 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.BALD_SAISON);
+  });
+
+  it('returns Keine_Saison when entry has empty mainSeasonMonths', () => {
+    const entry = makeEntry([]);
+    const date = new Date(2024, 5, 1); // June 2024
+    expect(computeCurrentSeasonStatus(entry, date)).toBe(CURRENT_SEASON_STATUS.KEINE_SAISON);
+  });
+
+  it('uses today as default date', () => {
+    const entry = makeEntry([]);
+    const result = computeCurrentSeasonStatus(entry);
+    expect(result).toBe(CURRENT_SEASON_STATUS.KEINE_SAISON);
   });
 });
