@@ -479,6 +479,8 @@ function App() {
     let cancelled = false;
     getSeasonMatrixOnce().then((entries) => {
       if (!cancelled) setSeasonMatrixEntries(entries);
+    }).catch(() => {
+      if (!cancelled) setSeasonMatrixEntries([]);
     });
     return () => { cancelled = true; };
   }, [currentUser?.id]);
@@ -492,6 +494,8 @@ function App() {
     let cancelled = false;
     getAllCookDatesForUser(currentUser.id).then((map) => {
       if (!cancelled) setCookDatesMap(map);
+    }).catch(() => {
+      if (!cancelled) setCookDatesMap(new Map());
     });
     return () => { cancelled = true; };
   }, [currentUser?.id]);

@@ -87,7 +87,10 @@ export const getAllCookDatesForUser = async (userId) => {
       const { recipeId } = data;
       if (!recipeId) return;
       const ms = data.date?.toDate ? data.date.toDate().getTime() : new Date(data.date).getTime();
-      if (Number.isNaN(ms)) return;
+      if (Number.isNaN(ms)) {
+        console.warn('Invalid cook date for recipe:', recipeId, data.date);
+        return;
+      }
       if (!latestByRecipe.has(recipeId) || ms > latestByRecipe.get(recipeId)) {
         latestByRecipe.set(recipeId, ms);
       }

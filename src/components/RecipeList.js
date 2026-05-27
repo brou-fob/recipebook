@@ -84,11 +84,12 @@ export function sortRecipeGroups(groups, sortType, sortSettings, viewCounts, ind
     const scoreCache = new Map();
     for (const group of sorted) {
       const recipe = group.primaryRecipe;
-      scoreCache.set(recipe?.id, calculateRecipeSortIndex({
-        isFavorite: favoriteIds.includes(recipe?.id),
-        lastCookDateMs: cookDatesMap.get(recipe?.id) ?? null,
+      if (!recipe?.id) continue;
+      scoreCache.set(recipe.id, calculateRecipeSortIndex({
+        isFavorite: favoriteIds.includes(recipe.id),
+        lastCookDateMs: cookDatesMap.get(recipe.id) ?? null,
         seasonMatrixEntries,
-        recipe: recipe || {},
+        recipe,
         currentMonth,
       }));
     }
