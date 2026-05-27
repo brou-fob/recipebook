@@ -524,6 +524,19 @@ describe('getSettings – settings/images document split', () => {
 });
 
 describe('button icons localStorage cache', () => {
+  test('uses button icon localStorage cache when settings cache exists without buttonIcons', async () => {
+    localStorage.setItem('appSettingsCache', JSON.stringify({ maxKandidatenSchwelle: 5 }));
+    localStorage.setItem('appSettingsCacheTimestamp', String(Date.now()));
+    localStorage.setItem('buttonIconsCache', JSON.stringify({ cookingMode: '🥘' }));
+    localStorage.setItem('buttonIconsCacheTimestamp', String(Date.now()));
+
+    await getSettings();
+    const icons = await getButtonIcons();
+
+    expect(icons).toEqual(expect.objectContaining({ cookingMode: '🥘' }));
+    expect(getDocs).not.toHaveBeenCalled();
+  });
+
   test('returns fresh localStorage cache without Firestore request', async () => {
     const cachedIcons = { cookingMode: '🥘' };
     localStorage.setItem('buttonIconsCache', JSON.stringify(cachedIcons));

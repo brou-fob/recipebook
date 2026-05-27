@@ -187,19 +187,29 @@ function Startseite({ currentUser, onViewChange, onSelectRecipe, recipes = [], g
   // with a future calculatedExpiresAt. Sorted alphabetically.
   // Note: in allMembersFlagDocs, `.flag` stores calculatedFlag, `.explicitFlag` stores the
   // explicit swipe flag, and `.expiresAtMillis` stores calculatedExpiresAt in ms.
+  const kandidatRecipeIds = useMemo(() => {
+    const ids = new Set();
+    for (const uid of listMemberIds) {
+      const userDocs = allMembersFlagDocs[uid] || {};
+      for (const [recipeId, doc] of Object.entries(userDocs)) {
+        if (doc && doc.explicitFlag !== null && doc.flag === 'kandidat' && !doc.isExpired && doc.expiresAtMillis !== null) {
+          ids.add(recipeId);
+        }
+      }
+    }
+    return ids;
+  }, [allMembersFlagDocs, listMemberIds]);
+
   const gemeinsameKandidaten = useMemo(() => {
     if (maxKandidatenSchwelle === null || listMemberIds.length <= 1) return [];
     const pool = allListRecipes.filter((r) => {
       const currentUserDoc = allMembersFlagDocs[currentUser?.id]?.[r.id];
       if (!currentUserDoc || currentUserDoc.explicitFlag === null) return false;
-      return listMemberIds.some((uid) => {
-        const doc = allMembersFlagDocs[uid]?.[r.id];
-        return doc && doc.explicitFlag !== null && doc.flag === 'kandidat' && !doc.isExpired && doc.expiresAtMillis !== null;
-      });
+      return kandidatRecipeIds.has(r.id);
     });
     const sorted = [...pool].sort((a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }));
     return sorted.slice(0, maxKandidatenSchwelle);
-  }, [allListRecipes, listMemberIds, allMembersFlagDocs, currentUser?.id, maxKandidatenSchwelle]);
+  }, [allListRecipes, listMemberIds, allMembersFlagDocs, currentUser?.id, maxKandidatenSchwelle, kandidatRecipeIds]);
 
   const handleKandidatenMehrClick = () => {
     onViewChange?.('tagesmenu');
