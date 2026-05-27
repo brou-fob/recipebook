@@ -28,6 +28,7 @@
     user-select: none;
     /* Allow vertical page-scroll while JS handles horizontal swipes */
     touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
     outline: none;
     /* Transitions deaktiviert bis zur ersten Messung, um Flash zu vermeiden */
     transition: none;

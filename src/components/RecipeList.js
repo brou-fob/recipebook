@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import './RecipeList.css';
 import { canEditRecipes, getUsers } from '../utils/userManagement';
 import { groupRecipesByParent, sortRecipeVersions } from '../utils/recipeVersioning';
@@ -131,6 +131,8 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     () => sessionStorage.getItem(SORT_STORAGE_KEY) || 'alphabetical'
   );
   const [carouselExpanded, setCarouselExpanded] = useState(false);
+  const handleSortChange = useCallback((sort) => setActiveSort(sort), []);
+  const handleCarouselExpandChange = useCallback((expanded) => setCarouselExpanded(expanded), []);
   const [allUsers, setAllUsers] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [customLists, setCustomLists] = useState({ mealCategories: [] });
@@ -477,7 +479,7 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
               )}
             </div>
             {currentUser?.sortCarousel && (
-              <SortCarousel activeSort={activeSort} onSortChange={setActiveSort} onExpandChange={setCarouselExpanded} />
+              <SortCarousel activeSort={activeSort} onSortChange={handleSortChange} onExpandChange={handleCarouselExpandChange} />
             )}
           </div>
         </div>

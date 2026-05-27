@@ -12,7 +12,7 @@ export const SORT_OPTIONS = [
   { id: 'trending', label: 'Im Trend' },
   { id: 'newest', label: 'Neue Rezepte' },
   { id: 'rating', label: 'Nach Bewertung' },
-  { id: 'index', label: 'Nach Index' },
+  { id: 'index', label: 'Nach Relevanz' },
 ];
 
 const LONG_PRESS_DELAY = 300;
@@ -449,4 +449,4 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
   );
 }
 
-export default SortCarousel;
+export default React.memo(SortCarousel);
