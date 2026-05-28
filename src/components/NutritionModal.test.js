@@ -1,4 +1,4 @@
-import { getRecipeCalcResult } from './NutritionModal';
+import { getRecipeCalcResult, buildNutritionCompositionRows } from './NutritionModal';
 
 jest.mock('../firebase', () => ({
   functions: {},
@@ -7,6 +7,32 @@ jest.mock('../firebase', () => ({
 describe('getRecipeCalcResult', () => {
   it('returns null when calc counters are missing', () => {
     expect(getRecipeCalcResult({ naehrwerte: { calcNotIncluded: [{ ingredient: 'x' }] } })).toBeNull();
+  });
+
+  describe('buildNutritionCompositionRows', () => {
+    it('builds composition rows with calculated, not included and accepted statuses', () => {
+      const recipe = {
+        ingredients: ['200 g Reis', '1 Teil #recipe:abc:Linsen', 'Salz'],
+        naehrwerte: {
+          calcNotIncluded: [{ ingredient: '200 g Reis', error: 'Nicht gefunden' }],
+        },
+      };
+
+      const rows = buildNutritionCompositionRows(
+        recipe,
+        {
+          notIncluded: [{ ingredient: '200 g Reis', error: 'Nicht gefunden' }],
+        },
+        {},
+        ['Salz']
+      );
+
+      expect(rows).toEqual([
+        expect.objectContaining({ ingredient: '200 g Reis', status: 'Nicht enthalten', source: 'Zutat' }),
+        expect.objectContaining({ ingredient: '1 Teil #recipe:abc:Linsen', status: 'Berechnet', source: expect.stringContaining('Rezeptlink') }),
+        expect.objectContaining({ ingredient: 'Salz', status: 'Akzeptiert', source: 'Zutat' }),
+      ]);
+    });
   });
 
   it('returns persisted calc payload including reformulations and accepted ingredients', () => {
