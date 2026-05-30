@@ -297,28 +297,40 @@ function createNutritionNormalizationUtils({GoogleGenerativeAI, env = process.en
         },
       }));
 
-    try {
-      const result = await withTimeout(
-          model.generateContent(buildNutritionEstimationPrompt(ingredientStr, parsed)),
-          options.timeoutMs ?? 15000,
-      );
-      const text = String(await result.response.text() || '').trim();
-      if (!text || /^null$/i.test(text)) {
+    const maxAttempts = options.retries ?? 1;
+    const retryDelayMs = options.retryDelayMs ?? 3000;
+
+    for (let attempt = 1; attempt <= maxAttempts + 1; attempt++) {
+      try {
+        const result = await withTimeout(
+            model.generateContent(buildNutritionEstimationPrompt(ingredientStr, parsed)),
+            options.timeoutMs ?? 20000,
+        );
+        const text = String(await result.response.text() || '').trim();
+        if (!text || /^null$/i.test(text)) {
+          return null;
+        }
+        const jsonText = extractJsonObject(text);
+        const per100g = normalizeGeminiNutritionEstimate(JSON.parse(jsonText));
+        if (!per100g) {
+          return null;
+        }
+        return {
+          per100g,
+          amountG: parsed.amountG,
+          name: parsed.name,
+        };
+      } catch (error) {
+        const isTimeout = /timeout/i.test(String(error?.message || ''));
+        if (isTimeout && attempt <= maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+          continue;
+        }
         return null;
       }
-      const jsonText = extractJsonObject(text);
-      const per100g = normalizeGeminiNutritionEstimate(JSON.parse(jsonText));
-      if (!per100g) {
-        return null;
-      }
-      return {
-        per100g,
-        amountG: parsed.amountG,
-        name: parsed.name,
-      };
-    } catch (error) {
-      return null;
     }
+
+    return null;
   }
 
   return {
