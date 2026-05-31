@@ -261,6 +261,7 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
     const uniqueNames = [...new Set(names)];
     const usedIds = new Set(rows.map((row) => getIngredientID(row)).filter(Boolean));
     let importedCount = 0;
+    const importOperations = [];
 
     for (const name of uniqueNames) {
       const normalizedName = normalizeNutritionReferenceId(name);
@@ -276,17 +277,18 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
 
       usedIds.add(candidate);
       existingNormalizedSynonyms.add(normalizedName);
-      await setDoc(
+      importOperations.push(setDoc(
         doc(db, 'nutritionReferences', candidate),
         buildPayload({
           ingredientID: candidate,
           synonyms: [name],
         }, 'recipe-import'),
         { merge: true }
-      );
+      ));
       importedCount += 1;
     }
 
+    await Promise.all(importOperations);
     await reload();
     setActionMessage(importedCount > 0
       ? `${importedCount} Zutaten aus Rezepten importiert.`
@@ -336,7 +338,12 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
 
   const handleImportCsv = async (event) => {
     const [file] = event.target.files || [];
-    if (!file) return;
+    if (!file) {
+      if (importInputRef.current) {
+        importInputRef.current.value = '';
+      }
+      return;
+    }
     setIsImportingCsv(true);
     setActionMessage('');
     setLookupError('');
@@ -345,20 +352,18 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
       const content = await readImportFile(file);
       const importedRows = parseNutritionReferenceCsv(content);
       const importedIds = new Set(importedRows.map((row) => row.ingredientID));
-
-      for (const importedRow of importedRows) {
-        await setDoc(
+      await Promise.all(importedRows.map((importedRow) => setDoc(
           doc(db, 'nutritionReferences', importedRow.ingredientID),
           buildPayload(importedRow, 'csv-import'),
           { merge: false }
-        );
-      }
+        )));
 
-      for (const row of rows) {
-        if (!importedIds.has(getIngredientID(row))) {
-          await deleteDoc(doc(db, 'nutritionReferences', row.id));
-        }
-      }
+      await Promise.all(rows
+        .filter((row) => {
+          const ingredientID = getIngredientID(row);
+          return row.id !== ingredientID || !importedIds.has(ingredientID);
+        })
+        .map((row) => deleteDoc(doc(db, 'nutritionReferences', row.id))));
 
       await reload();
       setActionMessage(`CSV importiert (${importedRows.length} Einträge).`);

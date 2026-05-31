@@ -23,26 +23,31 @@ const parseDelimitedLine = (line, delimiter) => {
   const values = [];
   let currentValue = '';
   let inQuotes = false;
+  let index = 0;
 
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
+  while (index < line.length) {
+    const char = line[index];
     if (char === '"') {
-      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+      if (inQuotes && index + 1 < line.length && line[index + 1] === '"') {
         currentValue += '"';
-        i += 1;
+        index += 2;
+        continue;
       } else {
         inQuotes = !inQuotes;
+        index += 1;
+        continue;
       }
-      continue;
     }
 
     if (!inQuotes && char === delimiter) {
       values.push(currentValue.trim());
       currentValue = '';
+      index += 1;
       continue;
     }
 
     currentValue += char;
+    index += 1;
   }
 
   values.push(currentValue.trim());
@@ -58,7 +63,7 @@ const detectDelimiter = (headerLine) => {
 const escapeCsvValue = (value) => {
   if (value == null) return '';
   const text = String(value);
-  if (/[;"\n,]/.test(text)) {
+  if (/[;"\n\r,]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }
   return text;
