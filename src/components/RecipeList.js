@@ -114,7 +114,17 @@ function RecipeList({ recipes, onSelectRecipe, onAddRecipe, categoryFilter, curr
     activeFilters.selectedAuthors?.length > 0 ||
     activeFilters.selectedPrivateLists?.length > 0
   )));
-  const showFavoritesOnly = showFavoritesOnlyProp ?? false;
+  const [internalShowFavoritesOnly, setInternalShowFavoritesOnly] = useState(false);
+  const isControlled = showFavoritesOnlyProp !== undefined;
+  const showFavoritesOnly = isControlled ? showFavoritesOnlyProp : internalShowFavoritesOnly;
+  const setShowFavoritesOnly = (value) => {
+    const newValue = typeof value === 'function' ? value(showFavoritesOnly) : value;
+    if (isControlled) {
+      onShowFavoritesOnlyChange?.(newValue);
+    } else {
+      setInternalShowFavoritesOnly(newValue);
+    }
+  };
   const [addPressed, setAddPressed] = useState(false);
   const [filterPressed, setFilterPressed] = useState(false);
   const filterLongPressTimer = useRef(null);

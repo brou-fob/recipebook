@@ -239,7 +239,7 @@ function SortCarousel({ activeSort = 'alphabetical', onSortChange, onExpandChang
         beginExpandedDrag(touch.clientX);
       }
     },
-    [beginExpandedDrag]
+    [beginExpandedDrag, expandWithFrozenViewport]
   );
 
   const onTouchMove = useCallback(
