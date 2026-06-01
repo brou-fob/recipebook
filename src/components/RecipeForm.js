@@ -1055,9 +1055,7 @@ function RecipeForm({ recipe, onSave, onBulkImport, onCancel, currentUser, isCre
 
     // Keep object format when headings or ingredient IDs are present
     const hasIngredientHeadings = formattedIngredients.some(item => item.type === 'heading');
-    const hasIngredientIds = formattedIngredients.some(
-      item => item && typeof item === 'object' && Object.prototype.hasOwnProperty.call(item, 'ingredientID')
-    );
+    const hasIngredientIds = formattedIngredients.some(item => item?.ingredientID !== undefined);
     
     // Convert to string format if no headings (backward compatibility)
     const ingredientsToSave = hasIngredientHeadings || hasIngredientIds
