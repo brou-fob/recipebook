@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { deleteDoc, deleteField, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../firebase';
@@ -40,6 +40,30 @@ const NUTRITION_BOOLEAN_LABELS = {
   isProcessed: 'Verarbeitet',
 };
 
+const NUTRITION_REFERENCE_TABLE_COLUMNS = [
+  { key: 'ingredientID', label: 'ingredientID' },
+  { key: 'displayName', label: 'Anzeigename' },
+  { key: 'nutritionFamily', label: 'nutritionFamily' },
+  { key: 'seasonalFamily', label: 'seasonalFamily' },
+  { key: 'category', label: 'category' },
+  { key: 'status', label: 'Status' },
+  { key: 'source', label: 'Quelle' },
+  { key: 'searchTerm', label: 'Suchbegriff' },
+  ...NUTRITION_REFERENCE_BOOLEAN_FIELDS.map((field) => ({
+    key: field,
+    label: NUTRITION_BOOLEAN_LABELS[field],
+    type: 'boolean',
+  })),
+  { key: 'synonyms', label: 'Synonyme' },
+  { key: 'possibleUnits', label: 'Mögliche Einheiten' },
+  { key: 'defaultAmountG', label: 'Fallbackgew. (g)' },
+  ...NUTRITION_REFERENCE_FIELDS.map((field) => ({
+    key: field,
+    label: NUTRITION_FIELD_LABELS[field],
+  })),
+];
+const NUTRITION_REFERENCE_BOOLEAN_FILTER_FIELDS = new Set(NUTRITION_REFERENCE_BOOLEAN_FIELDS);
+
 const getRecipeIngredientTexts = (recipe = {}) => {
   const rawIngredients = recipe.ingredients || recipe.zutaten || [];
   return rawIngredients
@@ -76,6 +100,7 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
   const [actionMessage, setActionMessage] = useState('');
   const [isImportingCsv, setIsImportingCsv] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
+  const [columnFilters, setColumnFilters] = useState({});
   const importInputRef = useRef(null);
 
   useEffect(() => {
@@ -444,9 +469,34 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
   }
 
   const normalizedStatusFilter = statusFilter.trim().toLowerCase();
+  const normalizedColumnFilters = useMemo(() => NUTRITION_REFERENCE_TABLE_COLUMNS.reduce((acc, column) => {
+    const rawValue = columnFilters[column.key];
+    if (rawValue == null) return acc;
+    const trimmed = String(rawValue).trim();
+    if (!trimmed || trimmed === 'all') return acc;
+    acc[column.key] = column.type === 'boolean' ? trimmed : trimmed.toLowerCase();
+    return acc;
+  }, {}), [columnFilters]);
+  const getRowFilterValue = useCallback((row, field) => {
+    if (field === 'ingredientID') return getIngredientID(row);
+    if (field === 'status') return parseNutritionReferenceStatus(row);
+    if (field === 'synonyms') return parseNutritionReferenceSynonyms(row).join(', ');
+    if (field === 'possibleUnits') return parseNutritionReferencePossibleUnits(row).join(';');
+    if (NUTRITION_REFERENCE_BOOLEAN_FILTER_FIELDS.has(field)) return row[field] === true ? 'true' : 'false';
+    return row[field] ?? '';
+  }, []);
+  const updateColumnFilter = useCallback((field, value) => {
+    setColumnFilters((prev) => ({ ...prev, [field]: value }));
+  }, []);
   const visibleRows = rows.filter((row) => {
-    if (!normalizedStatusFilter) return true;
-    return parseNutritionReferenceStatus(row).toLowerCase().includes(normalizedStatusFilter);
+    const matchesStatusFilter = !normalizedStatusFilter
+      || parseNutritionReferenceStatus(row).toLowerCase().includes(normalizedStatusFilter);
+    if (!matchesStatusFilter) return false;
+
+    return Object.entries(normalizedColumnFilters).every(([field, filterValue]) => {
+      const value = String(getRowFilterValue(row, field)).toLowerCase();
+      return value.includes(filterValue);
+    });
   });
 
   return (
@@ -516,6 +566,34 @@ function NutritionReferenceTab({ currentUser, allRecipes = [] }) {
                 <th>Fallbackgew. (g)</th>
                 {NUTRITION_REFERENCE_FIELDS.map((field) => (
                   <th key={field}>{NUTRITION_FIELD_LABELS[field]}</th>
+                ))}
+                <th />
+              </tr>
+              <tr className="conversion-table-filter-row">
+                {NUTRITION_REFERENCE_TABLE_COLUMNS.map((column) => (
+                  <th key={column.key}>
+                    {column.type === 'boolean' ? (
+                      <select
+                        className="conversion-table-input"
+                        aria-label={`Filter ${column.label}`}
+                        value={columnFilters[column.key] || 'all'}
+                        onChange={(e) => updateColumnFilter(column.key, e.target.value)}
+                      >
+                        <option value="all">Alle</option>
+                        <option value="true">Ja</option>
+                        <option value="false">Nein</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        className="conversion-table-input"
+                        aria-label={`Filter ${column.label}`}
+                        value={columnFilters[column.key] || ''}
+                        onChange={(e) => updateColumnFilter(column.key, e.target.value)}
+                        placeholder="Filtern..."
+                      />
+                    )}
+                  </th>
                 ))}
                 <th />
               </tr>
