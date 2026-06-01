@@ -8,20 +8,17 @@ describe('nutritionReferenceImportExport', () => {
         nutritionFamily: 'Gemüse',
         seasonalFamily: 'Fruchtgemüse',
         category: 'Nachtschatten',
-        source: 'manual',
-        searchTerm: 'Tomate frisch',
         seasonRelevant: true,
         nutritionRelevant: false,
         synonyms: ['Tomate', 'Paradeiser'],
         possibleUnits: ['g', 'kg', 'ml'],
         defaultAmountG: 100,
-        kalorien: 18,
       },
     ]);
 
     expect(csv.charCodeAt(0)).toBe(0xFEFF);
-    expect(csv).toContain('ingredientID;nutritionFamily;seasonalFamily;category;Quelle;Suchbegriff;seasonRelevant;nutritionRelevant;isFresh;isSpice;isProcessed;synonyms;possibleUnits;defaultAmountG;kalorien;protein;fett;kohlenhydrate;zucker;ballaststoffe;salz');
-    expect(csv).toContain('dummy-tomate;Gemüse;Fruchtgemüse;Nachtschatten;manual;Tomate frisch;true;false;;;;Tomate|Paradeiser;g|kg|ml;100;18');
+    expect(csv).toContain('ingredientID;nutritionFamily;seasonalFamily;category;seasonRelevant;nutritionRelevant;isFresh;isSpice;isProcessed;synonyms;possibleUnits;defaultAmountG');
+    expect(csv).toContain('dummy-tomate;Gemüse;Fruchtgemüse;Nachtschatten;true;false;;;;Tomate|Paradeiser;"g;kg;ml";100');
   });
 
   test('exports rows with empty possibleUnits', () => {
@@ -32,8 +29,8 @@ describe('nutritionReferenceImportExport', () => {
       },
     ]);
 
-    expect(csv).toContain('dummy-tomate;;;;;;;;;;;Tomate;');
-    expect(csv).not.toContain('g|kg|ml');
+    expect(csv).toContain('dummy-tomate;;;;;;;;;Tomate;;');
+    expect(csv).not.toContain('g;kg;ml');
   });
 
   test('parses imported CSV rows and validates required fields', () => {
@@ -50,8 +47,6 @@ describe('nutritionReferenceImportExport', () => {
         nutritionFamily: 'Gemüse',
         seasonalFamily: 'Knollen',
         category: 'Knolle',
-        source: 'csv-import',
-        searchTerm: 'kartoffel roh',
         seasonRelevant: true,
         nutritionRelevant: false,
         isFresh: true,
@@ -60,7 +55,6 @@ describe('nutritionReferenceImportExport', () => {
         synonyms: ['Kartoffel', 'Erdapfel'],
         possibleUnits: ['g', 'kg'],
         defaultAmountG: 150,
-        kalorien: '86',
       }),
     ]);
   });
@@ -93,7 +87,7 @@ describe('nutritionReferenceImportExport', () => {
     )).toThrow('Doppelte ingredientID gefunden');
   });
 
-  test('accepts legacy family/source/searchTerm headers for compatibility', () => {
+  test('accepts legacy family/source/searchTerm headers while ignoring source/searchTerm', () => {
     const rows = parseNutritionReferenceCsv(
       [
         'ingredientID;family;category;source;searchTerm;synonyms',
@@ -105,8 +99,6 @@ describe('nutritionReferenceImportExport', () => {
       expect.objectContaining({
         ingredientID: 'dummy-apfel',
         nutritionFamily: 'Obst',
-        source: 'legacy',
-        searchTerm: 'Apfel rot',
       }),
     ]);
   });
@@ -123,7 +115,6 @@ describe('nutritionReferenceImportExport', () => {
       expect.objectContaining({
         ingredientID: 'dummy-aepfel',
         nutritionFamily: 'Obst',
-        searchTerm: 'Äpfel in Öl süß',
         synonyms: ['Äpfel', 'Öl', 'süß'],
       }),
     ]);
